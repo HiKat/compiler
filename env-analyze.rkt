@@ -5,11 +5,11 @@
 
 ;構造体の型の参照は(stx:spec_st-type s)
 
-;(define env env:initial-env)
+(define env env:initial-env)
 ;大域変数にするとcompoundstatementを出たときにenvを捨てられない.
 
-;(struct obj (name lev kind type)#:transparent)完成形
-(struct obj (name)#:transparent)
+(struct obj (name lev kind type)#:transparent)
+;(struct obj (name)#:transparent)
 
 (define (analy-declaration_st env lv st) "under const")
 
@@ -135,7 +135,7 @@
           
           
           
-          ;テスト
+;テスト
 env
 (define p (open-input-file "test.c"))
 (port-count-lines! p)

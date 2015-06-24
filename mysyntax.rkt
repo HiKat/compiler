@@ -15,7 +15,8 @@
 
 (struct func_proto_st (type-spec func-declarator-st)#:transparent)
 (struct func_def_st (type-spec func-declarator-st compound-state-list)#:transparent)
-;例) (int funcname1 (id1 id2 *id3) compound_list) compound_listの中身は構造体declaration_listとstatement_listからなる.
+;例) (int funcname1 (id1 id2 *id3) compound_list) compound_listの中身は
+;構造体declaration_listとstatement_listからなる.
 
 (struct declarator_st (var)#:transparent)
 (struct declarator_ast_st (var)#:transparent)

@@ -6,58 +6,74 @@
 ;構造体の型の参照は(stx:spec_st-type s)
 
 (define env env:initial-env)
-;大域変数にするとcompoundstatementを出たときにenvを捨てられない.
+;大域変数にするとcompoundstatementを出たときにenvを捨てられないのであとで修正する
+;必要あり!!!!!!!!!!
 
-(struct obj (name lev kind type)#:transparent)
-;(struct obj (name)#:transparent)
+;(struct obj (name lev kind type)#:transparent)
+(struct obj (name)#:transparent)
 
 (define (analy-declaration_st env lv st) "under const")
 
 (define (analy-func_declarator_st env lv st)
   (let* ((name (stx:func_declarator_st-name st)))
-    (env:extend-env (obj name env lv st))))
+    ;(env:extend-env (obj name env lv st) env)
+    (env:extend-env (obj name) env)
+    ))
 
 (define (analy-func_declarator_null_st env lv st)
   (let* ((name (stx:func_declarator_null_st-name st)))
-    (env:extend-env (obj name env lv st))))
+    ;(env:extend-env (obj name env lv st) env)
+    (env:extend-env (obj name) env)
+    ))
 
 (define (analy-func_declarator_ast_st env lv st)
   (let* ((name (stx:func_declarator_ast_st-name st)))
-    (env:extend-env (obj name env lv st))))
+    ;(env:extend-env (obj name env lv st) env)
+    (env:extend-env (obj name) env)
+    ))
 
 (define (analy-func_declarator_ast_null_st env lv st)
   (let* ((name (stx:func_declarator_ast_null_st-name st)))
-    (env:extend-env (obj name env lv st))))
+    ;(env:extend-env (obj name env lv st))
+    (env:extend-env (obj name) env)
+    ))
 
 (define (anly-func_proto_st env lv st)
   (let* ((name (stx:func_declarator_st-name 
                 (stx:func_proto_st-func-declarator-st st))))
-    (env:extend-env (obj name) env)))
+    (env:extend-env (obj name) env)
+    ))
 
 (define (analy-func_def_st env lv st)
   (let* ((name (stx:func_declarator_st-name 
                 (stx:func_def_st-func-declarator-st st))))
-    (env:extend-env (obj name) env)))
+    (env:extend-env (obj name) env)
+    ))
 
 (define (analy-declarator_st env lv st)
   (let* ((name (stx:id_st-name (stx:declarator_st-var st))))
-    (env:extend-env (obj name) env)))
+    (env:extend-env (obj name) env)
+    ))
 
 (define (analy-declarator_ast_st env lv st)
   (let* ((name (stx:id_st-name (stx:declarator_st-var st))))
-    (env:extend-env (obj name) env)))
+    (env:extend-env (obj name) env)
+    ))
 
 (define (analy-id_st st)
   (let* ((name (stx:id_st-name env lv st)))
-    (env:extend-env (obj name) env)))
+    (env:extend-env (obj name) env)
+    ))
 
 (define (analy-id_ast_st st)
   (let* ((name (stx:id_ast_st-name env lv st)))
-    (env:extend-env (obj name) env)))
+    (env:extend-env (obj name) env)
+    ))
 
 (define (analy-array_st st)
   (let* ((name (stx:array_st-name env lv st)))
-    (env:extend-env (obj name) env)))
+    (env:extend-env (obj name) env)
+    ))
 
 ;構文木を引数に取りその意味解析を行う関数
 (define (analyze-tree t)

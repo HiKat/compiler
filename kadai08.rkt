@@ -299,7 +299,7 @@
                              ((argument_expression_list comma assign_expr)(cons $1 $3))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;テスト
+
 (define (parse-string s)
   (let ((p (open-input-string s)))
     (program-parser (lambda () (sub-program-lexer p)))))
@@ -308,9 +308,11 @@
   (program-parser (lambda () (sub-program-lexer p))))
 
 
-(define p (open-input-file "kadai01.sc"))
-(port-count-lines! p)
-(parse-port p)
+
+;テスト
+;(define p (open-input-file "test.c"))
+;(port-count-lines! p)
+;(parse-port p)
 
 ;(define p2 (open-input-file "test.c"))
 ;(port-count-lines! p2)

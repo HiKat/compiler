@@ -61,21 +61,23 @@
     ))
 
 (define (analy-id_st st)
-  (let* ((name (stx:id_st-name env lv st)))
+  (let* ((name (stx:id_st-name st)))
     (env:extend-env (obj name) env)
     ))
 
 (define (analy-id_ast_st st)
-  (let* ((name (stx:id_ast_st-name env lv st)))
+  (let* ((name (stx:id_ast_st-name st)))
     (env:extend-env (obj name) env)
     ))
 
 (define (analy-array_st st)
-  (let* ((name (stx:array_st-name env lv st)))
+  (let* ((name (stx:array_st-name env st)))
     (env:extend-env (obj name) env)
     ))
 
 ;構文木を引数に取りその意味解析を行う関数
+;構文木は一番外側から見てlist*になっているものと 
+;何らかの構造体になっているものに分けられる.
 (define (analyze-tree t)
   (cond ((#t)("always"))
         ((cons? t) ("analyze cons"))
@@ -89,7 +91,7 @@
         ((stx:func_declarator_ast_null_st? st) #t)
         ((stx:func_proto_st? st) #t)
         ((stx:func_def_st? st) #t)
-        ((stx:funcdeclarator_ast_st? st) #t)
+        ((stx:func_declarator_ast_st? st) #t)
         ((stx:para_declaration_st? st) #t)
         ((stx:exp_st? st) #t)
         ((stx:assign_exp_st? st) #t)
@@ -139,20 +141,9 @@
           
           
           
+            
           
-          
-          
-          
-          
-          
-          
-          
-          
-          
-          
-          
-;テスト
-env
-(define p (open-input-file "test.c"))
+;テストf
+(define p (open-input-file "list.c"))
 (port-count-lines! p)
-(k08:parse-port p)
+(cons? (k08:parse-port p))

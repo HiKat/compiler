@@ -7,10 +7,10 @@
 (struct declaration_st (type-spec declarator-list)#:transparent)
 ;例) (int (id1 id2 *id3))
 
-(struct func_declarator_st (name para-list)#:transparent)
-(struct func_declarator_null_st (name)#:transparent)
-(struct func_declarator_ast_st (name para-list)#:transparent)
-(struct func_declarator_ast_null_st (name)#:transparent)
+(struct func_declarator_st (name para-list pos)#:transparent)
+(struct func_declarator_null_st (name pos)#:transparent)
+(struct func_declarator_ast_st (name para-list pos)#:transparent)
+(struct func_declarator_ast_null_st (name pos)#:transparent)
 ;例)nameは関数名、para-listは引数のリスト.
 
 (struct func_proto_st (type-spec func-declarator-st)#:transparent)

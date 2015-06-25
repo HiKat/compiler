@@ -94,7 +94,8 @@
                 (stx:spec_st 'int 'print-proto)
                 (stx:func_declarator_st 'print 
                                         (stx:para_declaration_st (stx:spec_st 'int 'print-proto) 
-                                                                 (stx:id_st 'i 'print-proto)))) 
+                                                                 (stx:id_st 'i 'print-proto))
+                                        'print-proto)) 
                $1)));プログラムの冒頭に組込み関数 printのプロトタイプ宣言をつける.
 
     (program_with_print ((external_declaration) $1)
@@ -125,13 +126,13 @@
    (function_prototype ((type_specifier function_declarator semicolon)
                         (stx:func_proto_st $1 $2)))
    (function_declarator ((VAR l_small_paren parameter_type_list r_small_paren)
-                         (stx:func_declarator_st $1 $3))
+                         (stx:func_declarator_st $1 $3 $1-start-pos))
                         ((VAR l_small_paren r_small_paren)
-                         (stx:func_declarator_null_st $1))
+                         (stx:func_declarator_null_st $1 $1-start-pos))
                         ((* VAR l_small_paren parameter_type_list r_small_paren)
-                         (stx:func_declarator_ast_st (stx:id_ast_st $2 $2-start-pos) $4))
+                         (stx:func_declarator_ast_st $2 $4 $2-start-pos))
                         ((* VAR l_small_paren r_small_paren)
-                         (stx:func_declarator_ast_null_st (stx:id_ast_st $2 $2-start-pos))))
+                         (stx:func_declarator_ast_null_st $2 $2-start-pos)))
    
    (function_definition ((type_specifier function_declarator compound_statement)
                          (stx:func_def_st $1 $2 $3)))

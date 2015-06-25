@@ -12,10 +12,6 @@
 ;(struct obj (name lev kind type)#:transparent)
 (struct obj (name)#:transparent)
 
-(define (analy-declaration_st st) 
- 
-  
-  "under const")
 
 (define (analy-func_declarator_st st)
   (let* ((name (stx:func_declarator_st-name st)))
@@ -96,6 +92,48 @@
     (env:extend-env (obj name) env)
     ))
 
+(define (analy-compound_st st)
+  (cond ((and (cons? (stx:compound_st-declaration-list st)) 
+              (cons? (stx:compound_st-statement-list st)))
+         (cons (analy-declaration-list st)
+               (analy-statement-list st)))
+        
+        ((and (struct? (stx:compound_st-declaration-list st)) 
+              (cons? (stx:compound_st-statement-list st)))
+         (cons (analy-declaration_st st)
+               (analy-statement-list st)))
+        
+        ((and (struct? (stx:compound_st-declaration-list st))
+              (struct? (stx:compound_st-statement-list st)))
+         (cons (analy-declaration_st st)
+               (analy-statement st)))
+        
+        ((and (cons? (stx:compound_st-declaration-list st))
+              (struct? (stx:compound_st-statement-list)))
+         (cons (analy-declaration-list st)
+               (analy-statement st)))))
+(define (analy-compound_dec_st st)
+  (cond ((cons? (stx:compound_dec_st-declaration-list st)) #t)
+        ((struct? (stx:compound_dec_st-declaration-list st)) #t)))
+
+(define (analy-declaration_st st) 
+  (let* ((name (stx:declarator_st-var (stx:declaration_st-declarator-list st))))
+    (env:extend-env (obj name) env)))
+
+(define (analy-declaration-list st) #t)
+
+
+(define (analy-statement st) #t)
+(define (analy-statement-list st) #t)
+
+
+  
+#;(define (analy_compound_dec_st st)
+  (cond ((cons? (stx:compound_dec_st-declaration-list st))
+         (cons (analy-declaration_st )))))
+        
+  
+
 
 
 ;構文木を引数に取りその意味解析を行う関数
@@ -147,7 +185,7 @@
         ((stx:for_7_st? st) #t);;
         ((stx:return_st? st) #t);;
         ((stx:return_null_st? st) #t);;
-        ((stx:compound_st? st) #t);;
+        ((stx:compound_st? st) #t)
         ((stx:compound_dec_st? st) #t)
         ((stx:compound_sta_st? st) #t)
         ((stx:compound_null_st? st) #t)

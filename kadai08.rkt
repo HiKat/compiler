@@ -117,7 +117,8 @@
     (declarator ((direct_declarator) 
                  (stx:declarator_st $1))
                 ((* direct_declarator)
-                 (stx:declarator_ast_st $2)))
+                 (stx:declarator_ast_st $2)
+                 ))
     
     (direct_declarator ((VAR) (stx:id_st $1 $1-start-pos))
                        ((VAR l_mid_paren NUM r_mid_paren)
@@ -311,11 +312,11 @@
 
 
 ;テスト
-;(define p (open-input-file "test.c"))
-;(port-count-lines! p)
-;(parse-port p)
+(define p (open-input-file "kadai01.c"))
+(port-count-lines! p)
+(parse-port p)
 
-;(define p2 (open-input-file "test.c"))
+;(define p2 (open-input-file "kadai01.c"))
 ;(port-count-lines! p2)
 ;(k07u:syn-to-code (parse-port p2))
 

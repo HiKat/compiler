@@ -9,6 +9,9 @@
 ;大域変数にするとcompoundstatementを出たときにenvを捨てられないのであとで修正する
 ;必要あり!!!!!!!!!!
 
+(define current-lev 0)
+;意味解析を実行中の関数のレベルを入れる変数.
+
 ;(struct obj (name lev kind type)#:transparent)
 (struct obj (name)#:transparent)
 ;(struct obj (name lv)#:transparent) 現在作成中.
@@ -39,33 +42,67 @@
 
 
 (define (analy-func_proto_st st)
+  ;内部定義
+  ;(func_def_proto_st-func-declarator st)
+  ;を受け取ってを
+  ;作成する.
+  (define (analy-para_declarator-list st)
+    (let*((declarator (func_proto_st-func-declarator-list st))
+          (parameter-list
+           ;parameter-listに入るのは'noparameterか
+           ;(list* pada_declaration_st ,,,)か
+           ;para_declaration_st単体
+           ;あとでここから型を抜き出す必要がある.
+           ;型を抜き出す際に注意すべきは
+           ;para_declaration-paraが
+           ;id_stかid_ast_stかを調べる必要がある.
+           (cond ((stx:func_declarator_st? declarator) 
+                  (stx:func_declarator_st-para-list declarator))
+                 
+                 ((stx:func_declarator_null_st? declarator) 'noparameter)
+                 
+                 ((stx:func_declarator_ast_st? declarator) 
+                  (stx:func_declarator_ast_st-para-list declarator))
+                 
+            ((stx:func_declarator_ast_null_st? declarator) 'noparameter))
+           )
+          )
+      ))
+      ;ここまで内部定義
   (let* ((proto-name (cond ((stx:func_declarator_st? 
-                       (stx:func_proto_st-func-declarator-st st)) 
-                      (stx:func_declarator_st-name 
-                       (stx:func_proto_st-func-declarator-st st)))
-                     
-                     ((stx:func_declarator_null_st? 
-                       (stx:func_proto_st-func-declarator-st st))
-                      (stx:func_declarator_null_st-name 
-                       (stx:func_proto_st-func-declarator-st st)))
-                     
-                     ((stx:func_declarator_ast_st? 
-                       (stx:func_proto_st-func-declarator-st st)) 
-                      (stx:func_declarator_ast_st-name 
-                       (stx:func_proto_st-func-declarator-st st)))
-                     
-                     ((stx:func_declarator_ast_null_st? 
-                       (stx:func_proto_st-func-declarator-st st)) 
-                      (stx:func_declarator_ast_null_st-name 
-                       (stx:func_proto_st-func-declarator-st st)))
-                     ))
-         (proto-lev 0)
-         (proto-kind 'proto)
-         (proto-type "under const"))
-    (set! env (env:extend-env (obj proto-name proto-lev proto-kind proto-type) env))))
-
-
-
+                             (stx:func_proto_st-func-declarator-st st)) 
+                            (stx:func_declarator_st-name 
+                             (stx:func_proto_st-func-declarator-st st)))
+                           
+                           ((stx:func_declarator_null_st? 
+                             (stx:func_proto_st-func-declarator-st st))
+                            (stx:func_declarator_null_st-name 
+                             (stx:func_proto_st-func-declarator-st st)))
+                           
+                           ((stx:func_declarator_ast_st? 
+                             (stx:func_proto_st-func-declarator-st st)) 
+                            (stx:func_declarator_ast_st-name 
+                             (stx:func_proto_st-func-declarator-st st)))
+                           
+                           ((stx:func_declarator_ast_null_st? 
+                             (stx:func_proto_st-func-declarator-st st)) 
+                            (stx:func_declarator_ast_null_st-name 
+                             (stx:func_proto_st-func-declarator-st st)))
+                           ))
+         (lev 0)
+         (kind 'proto)
+         (func-type
+          (cons 'fun 
+                (if (stx:func_declarator_ast_st? (stx:func_proto_st-func-declarator-st st))
+                    (cons 'poiner (stx:spec_st-type (stx:func_proto_st-type-spec st)))
+                    (stx:spec_st-type (stx:func_proto_st-type-spec st)))))
+         (func-inputtype #t)
+         (type (cons func-type func-input))
+         (set! current-lev 0)
+         (set! env (env:extend-env (obj name lev kind type) env)))))
+  
+  
+  
 (define (analy-func_def_st st)
   (let* ((func-name (cond ((stx:func_declarator_st? 
                             (stx:func_def_st-func-declarator-st st)) 
@@ -90,6 +127,7 @@
          (func-lev 0)
          (func-kind 'fun)
          (func-type "under const"))
+    (set! current-lev 1)
     (set! env (env:extend-env (obj func-name func-lev func-kind func-type) env))))
 
 
@@ -147,12 +185,29 @@
 
 
 (define (analy-declaration_st st)
-  (let* ((name (extract-name-from-declarator_st (stx:declaration_st-declarator-list st))))
-        (set! env (env:extend-env (obj name) env))))
+  ;内部定義
+  ;関数separate-nameはextract-name-from-declarator_stの返り値
+  ;nameがlist*の形であった時にそれを分解して残りの情報を付加したobjを生成する関数.
+  (define (separate-name name lev kind type)
+    (cond ((cons? name) (let* ((meaningless 1)) 
+                          (separate-name (car name) lev kind type)
+                          (set! env (env:extend-env (obj (cdr name) lev kind type) env))))
+          (else (set! env (env:extend-env (obj name lev kind type) env)))))
+  ;ここまで内部定義
+  (let* ((name (extract-name-from-declarator_st (stx:declaration_st-declarator-list st)))
+         (lev current-lev);大域変数もしくはcompound-statement内のどちらか
+         (kind 'var)
+         (type (stx:spec_st-type (stx:declaration_st-type-spec st))))
+    (separate-name name)
+    ;(set! env (env:extend-env (obj name lev kind type) env))
+    ))
+
+
+        
 
 ;declarator_stもしくはdeclarator_ast_st
 ;およびそれらのlist*からvarを取り出す関数
-;このとき返されるのはvarの名前のlist*になっていることに注意
+;このとき返されるnameはvarの名前のlist*になっていることに注意
 (define (extract-name-from-declarator_st st)
   (cond ((struct? st)
          (cond ((stx:declarator_st? st) (stx:id_st-name (stx:declarator_st-var st)))
@@ -160,6 +215,29 @@
         ((cons? st)
          (cons (extract-name-from-declarator_st (car st))
                (extract-name-from-declarator_st (cdr st))))))
+
+;テスト
+;(require (prefix-in env: "myenv.rkt"))
+;(require (prefix-in stx: "mysyntax.rkt"))
+;(require (prefix-in k08: "kadai08.rkt"))
+#;(extract-name-from-declarator_st
+   (cons
+    (cons
+     (stx:declarator_st (stx:id_st 'j 'test))
+     (stx:declarator_st (stx:id_st 'k 'test)))
+    (stx:declarator_st (stx:id_st 'l 'test))))
+
+
+;function_de_stのcompound_stを意味解析する関数.
+;このcompound_st内にはmysyntax.rktの4種類のcompound_stが入ることに注意.
+(define (analy-all_compound_st st)
+  (cond ((stx:compound_st? st) (analy-compound_st st))
+        ((stx:compound_dec_st? st) (analy-compound_dec_st st))
+        ((stx:compound_sta_st? st) (analy-compound_sta_st st))
+        ((stx:compound_null_st? st) (analy-compound_null_st st))))
+
+  
+                           
                                                 
 
     

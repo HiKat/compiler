@@ -92,10 +92,10 @@
 ;return文を表す構造体.
 
 (struct compound_st (declaration-list statement-list)#:transparent)
-(struct compound_dec_st (declaration-list)#:transparent)
-(struct compound_sta_st (statement-list)#:transparent)
-(struct compound_null_st (null)#:transparent)
-;compound_statementを表す構造体.
+(struct compound_dec_st (declaration-list)#:transparent);declarationのみ
+(struct compound_sta_st (statement-list)#:transparent);statementのみ
+(struct compound_null_st (null)#:transparent);セミコロンのみ
+;compound_statementを表す構造体.compound-statement内部の文の種類で分類.
 
 
 (struct func_st (name para)#:transparent)

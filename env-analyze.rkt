@@ -16,6 +16,12 @@
 (struct obj (name)#:transparent)
 ;(struct obj (name lv)#:transparent) 現在作成中.
 
+
+;obj構造体のtypeの要素になりうる構造体.
+(struct type-pointer (pointer type))
+(struct array (type size))
+
+
 #;(define (analy-func_declarator_st st)
   (let* ((name (stx:func_declarator_st-name st)))
     ;(env:extend-env (obj name env lv st) env)
@@ -43,12 +49,14 @@
 
 (define (analy-func_proto_st st)
   ;内部定義
-  ;(func_def_proto_st-func-declarator st)
-  ;を受け取ってを
-  ;作成する.
-  (define (analy-para_declarator-list st)
-    (let*((declarator (func_proto_st-func-declarator-list st))
-          (parameter-list
+  ;(func_proto_st-func-declarator-st st)
+  ;を受け取ってを引数の型のlist*か
+  ;引数の型の単体を返す関数か
+  ;シンボル'noparameter
+  ;を返す関数.
+  (define (analy-para_declaration-list st)
+    (let*((declarator (stx:func_proto_st-func-declarator-st st))
+          (parameter-list 
            ;parameter-listに入るのは'noparameterか
            ;(list* pada_declaration_st ,,,)か
            ;para_declaration_st単体
@@ -64,12 +72,23 @@
                  ((stx:func_declarator_ast_st? declarator) 
                   (stx:func_declarator_ast_st-para-list declarator))
                  
-            ((stx:func_declarator_ast_null_st? declarator) 'noparameter))
-           )
-          )
-      ))
+                 ((stx:func_declarator_ast_null_st? declarator) 'noparameter))))
+      (cond ((eq? parameter-list 'noparameter) 'noparameter)
+            (else (extract-type-from-para parameter-list)))))
+  ;para_declaration_stもしくはそのlist*を受け取って
+  ;型のlist*を作成する関数の内部定義
+  (define (extract-type-from-para parameter-list)
+    (cond ((struct? parameter-list) 
+           (cond ((stx:id_ast_st? (stx:para_declaration_st-para parameter-list))
+                  (type-pointer 'pointer 
+                                (stx:spec_st-type (stx:para_declaration_st-type-spec parameter-list))))
+                 ((stx:id_st? (stx:para_declaration_st-para parameter-list)) 
+                  (stx:spec_st-type (stx:para_declaration_st-type-spec parameter-list)))))
+          ((cons? parameter-list) 
+           (cons (extract-type-from-para (car parameter-list))
+                 (extract-type-from-para (cdr parameter-list))))))
       ;ここまで内部定義
-  (let* ((proto-name (cond ((stx:func_declarator_st? 
+  (let* ((name (cond ((stx:func_declarator_st? 
                              (stx:func_proto_st-func-declarator-st st)) 
                             (stx:func_declarator_st-name 
                              (stx:func_proto_st-func-declarator-st st)))
@@ -91,20 +110,24 @@
                            ))
          (lev 0)
          (kind 'proto)
+         ;func_typeは関数の戻り値の型
          (func-type
           (cons 'fun 
                 (if (stx:func_declarator_ast_st? (stx:func_proto_st-func-declarator-st st))
-                    (cons 'poiner (stx:spec_st-type (stx:func_proto_st-type-spec st)))
+                    (type-pointer 'poiner (stx:spec_st-type (stx:func_proto_st-type-spec st)))
                     (stx:spec_st-type (stx:func_proto_st-type-spec st)))))
-         (func-inputtype #t)
-         (type (cons func-type func-input))
+         (func-inputtype (analy-para_declaration-list 
+                          (stx:func_proto_st-func-declarator-st st)))
+         (type (cons func-type func-inputtype)))
          (set! current-lev 0)
-         (set! env (env:extend-env (obj name lev kind type) env)))))
-  
+         (set! env (env:extend-env (obj name lev kind type) env))))
+
+
+
   
   
 (define (analy-func_def_st st)
-  (let* ((func-name (cond ((stx:func_declarator_st? 
+  (let* ((name (cond ((stx:func_declarator_st? 
                             (stx:func_def_st-func-declarator-st st)) 
                            (stx:func_declarator_st-name 
                             (stx:func_def_st-func-declarator-st st)))
@@ -122,11 +145,10 @@
                           ((stx:func_declarator_ast_null_st? 
                             (stx:func_def_st-func-declarator-st st)) 
                            (stx:func_declarator_ast_null_st-name 
-                            (stx:func_def_st-func-declarator-st st)))
-                          ))
-         (func-lev 0)
-         (func-kind 'fun)
-         (func-type "under const"))
+                            (stx:func_def_st-func-declarator-st st)))))
+         (lev 0)
+         (kind 'fun)
+         (type #t))
     (set! current-lev 1)
     (set! env (env:extend-env (obj func-name func-lev func-kind func-type) env))))
 

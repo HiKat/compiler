@@ -21,6 +21,9 @@
 (struct type-pointer (pointer type))
 (struct array (type size))
 
+(define (chekenv obj env)
+  "作成したobjがenvにすでに含まれていないかをenvを更新する前にチェックする.")
+
 
 #;(define (analy-func_declarator_st st)
   (let* ((name (stx:func_declarator_st-name st)))
@@ -67,12 +70,14 @@
            (cond ((stx:func_declarator_st? declarator) 
                   (stx:func_declarator_st-para-list declarator))
                  
-                 ((stx:func_declarator_null_st? declarator) 'noparameter)
+                 ((stx:func_declarator_null_st? declarator) 
+                  'noparameter)
                  
                  ((stx:func_declarator_ast_st? declarator) 
                   (stx:func_declarator_ast_st-para-list declarator))
                  
-                 ((stx:func_declarator_ast_null_st? declarator) 'noparameter))))
+                 ((stx:func_declarator_ast_null_st? declarator) 
+                  'noparameter))))
       (cond ((eq? parameter-list 'noparameter) 'noparameter)
             (else (extract-type-from-para parameter-list)))))
   ;para_declaration_stもしくはそのlist*を受け取って
@@ -127,6 +132,48 @@
   
   
 (define (analy-func_def_st st)
+  ;内部定義
+  ;(func_def_st-func-declarator-st st)
+  ;を受け取ってを引数の型のlist*か
+  ;引数の型の単体を返す関数か
+  ;シンボル'noparameter
+  ;を返す関数.
+  (define (analy-funcdef_declaration-list st)
+    (let*((declarator (stx:func_def_st-func-declarator-st st))
+          (parameter-list 
+           ;parameter-listに入るのは'noparameterか
+           ;(list* pada_declaration_st ,,,)か
+           ;para_declaration_st単体
+           ;あとでここから型を抜き出す必要がある.
+           ;型を抜き出す際に注意すべきは
+           ;para_declaration-paraが
+           ;id_stかid_ast_stかを調べる必要がある.
+           (cond ((stx:func_declarator_st? declarator) 
+                  (stx:func_declarator_st-para-list declarator))
+                 
+                 ((stx:func_declarator_null_st? declarator) 
+                  'noparameter)
+                 
+                 ((stx:func_declarator_ast_st? declarator) 
+                  (stx:func_declarator_ast_st-para-list declarator))
+                 
+                 ((stx:func_declarator_ast_null_st? declarator) 
+                  'noparameter))))
+      (cond ((eq? parameter-list 'noparameter) 'noparameter)
+            (else (extract-type-from-para parameter-list)))))
+  ;para_declaration_stもしくはそのlist*を受け取って
+  ;型のlist*を作成する関数の内部定義
+  (define (extract-type-from-para parameter-list)
+    (cond ((struct? parameter-list) 
+           (cond ((stx:id_ast_st? (stx:para_declaration_st-para parameter-list))
+                  (type-pointer 'pointer 
+                                (stx:spec_st-type (stx:para_declaration_st-type-spec parameter-list))))
+                 ((stx:id_st? (stx:para_declaration_st-para parameter-list)) 
+                  (stx:spec_st-type (stx:para_declaration_st-type-spec parameter-list)))))
+          ((cons? parameter-list) 
+           (cons (extract-type-from-para (car parameter-list))
+                 (extract-type-from-para (cdr parameter-list))))))
+  ;ここまで内部定義
   (let* ((name (cond ((stx:func_declarator_st? 
                             (stx:func_def_st-func-declarator-st st)) 
                            (stx:func_declarator_st-name 
@@ -148,9 +195,17 @@
                             (stx:func_def_st-func-declarator-st st)))))
          (lev 0)
          (kind 'fun)
-         (type #t))
+         ;func_typeは関数の戻り値の型
+         (func-type
+          (cons 'fun 
+                (if (stx:func_declarator_ast_st? (stx:func_def_st-func-declarator-st st))
+                    (type-pointer 'poiner (stx:spec_st-type (stx:func_def_st-type-spec st)))
+                    (stx:spec_st-type (stx:func_def_st-type-spec st)))))
+         (func-inputtype (analy-funcdef_declaration-list 
+                          (stx:func_def_st-func-declarator-st st)))
+         (type (cons func-type func-inputtype)))
     (set! current-lev 1)
-    (set! env (env:extend-env (obj func-name func-lev func-kind func-type) env))))
+    (set! env (env:extend-env (obj name lev kind type) env))))
 
 
 #;(define (analy-declarator_st st)
@@ -177,27 +232,6 @@
   (let* ((name (stx:array_st-name env st)))
     (set! env (env:extend-env (obj name) env))
     ))
-
-#;(define (analy-compound_st st)
-  (cond ((and (cons? (stx:compound_st-declaration-list st)) 
-              (cons? (stx:compound_st-statement-list st)))
-         (cons (analy-declaration-list st)
-               (analy-statement-list st)))
-        
-        ((and (struct? (stx:compound_st-declaration-list st)) 
-              (cons? (stx:compound_st-statement-list st)))
-         (cons (analy-declaration_st st)
-               (analy-statement-list st)))
-        
-        ((and (struct? (stx:compound_st-declaration-list st))
-              (struct? (stx:compound_st-statement-list st)))
-         (cons (analy-declaration_st st)
-               (analy-statement st)))
-        
-        ((and (cons? (stx:compound_st-declaration-list st))
-              (struct? (stx:compound_st-statement-list)))
-         (cons (analy-declaration-list st)
-               (analy-statement st)))))
 
 #;(define (analy-compound_dec_st st)
   (cond ((cons? (stx:compound_dec_st-declaration-list st)) 
@@ -238,19 +272,9 @@
          (cons (extract-name-from-declarator_st (car st))
                (extract-name-from-declarator_st (cdr st))))))
 
-;テスト
-;(require (prefix-in env: "myenv.rkt"))
-;(require (prefix-in stx: "mysyntax.rkt"))
-;(require (prefix-in k08: "kadai08.rkt"))
-#;(extract-name-from-declarator_st
-   (cons
-    (cons
-     (stx:declarator_st (stx:id_st 'j 'test))
-     (stx:declarator_st (stx:id_st 'k 'test)))
-    (stx:declarator_st (stx:id_st 'l 'test))))
 
 
-;function_de_stのcompound_stを意味解析する関数.
+;function_def_stのcompound_stを意味解析する関数.
 ;このcompound_st内にはmysyntax.rktの4種類のcompound_stが入ることに注意.
 (define (analy-all_compound_st st)
   (cond ((stx:compound_st? st) (analy-compound_st st))
@@ -258,24 +282,53 @@
         ((stx:compound_sta_st? st) (analy-compound_sta_st st))
         ((stx:compound_null_st? st) (analy-compound_null_st st))))
 
-  
-                           
-                                                
+;compound-statement内の(list* declaration_st...)
+;もしくはdeclaration_st単体とcomp-lev引数に取り
+;objのlist*を返す関数.
+(define (analy-comp-decl-list st comp-lev)
+  ;;;;;;;;;;;;
+  (define (analy-comp-declaration st lev)
+    ;;;;;;
+    (define (separate-name name lev kind type)
+      (cond ((cons? name) (let* ((meaningless 1)) 
+                            (cons (separate-name (car name) lev kind type)
+                                  (separate-name (cdr name) lev kind type))))
+            (else (obj name lev kind type))))
+    ;;;;;;
+    (let* ((name (extract-name-from-declarator_st (stx:declaration_st-declarator-list st)))
+           (lev comp-lev);大域変数もしくはcompound-statement内のどちらか
+           (kind 'var)
+           (type (stx:spec_st-type (stx:declaration_st-type-spec st))))
+      (separate-name name)
+      ;(set! env (env:extend-env (obj name lev kind type) env))
+      ))
+  ;;;;;;;;;;;;
+  (cond ((cons? st) (cons (analy-comp-decl-list (car st) comp-lev)
+                          (analy-comp-decl-list (cdr st) comp-lev)))
+        ;analy-comp-declarationはcurrent-levを引数levに換え、
+        ;戻り値がobjであるようなanaly-declaration_stを修正した関数
+        ((struct? st) (analy-comp-declaration st lev))))
 
-    
 
 
-;(define (analy-declaration-list st) #t)
-;(define (analy-statement st) #t)
-;(define (analy-statement-list st) #t)
+;analy-compound_st-declaration-listを分析する関数
+(define (analy-compound_st st) 
+  (let* ((comp-lev (+ 1 current-lev))
+         (comp-env 'empty))
+    (cond ((cons? (stx:compound_st-declaration-list st)) 
+           (cons (analy_declaration (car (stx:compound_st-declaration-list st)))
+                 (analy_declaration (cdr (stx:compound_st-declaration-list st))))))))
 
-        
+
+
+
+
 
 ;構文木を引数に取りその意味解析を行う関数
 ;構文木は一番外側から見てlist*になっているものと 
 ;何らかの構造体になっているものに分けられる.
 (define (analyze-tree t)
-  (cond ((cons? t) (cons (analyze-st (car t)) 
+  (cond ((cons? t) (cons (analyze-tree (car t)) 
                          (analyze-tree (cdr t))))
         ((struct? t) (analyze-st t))
         (else "ERROR! WRONG TREE?")))

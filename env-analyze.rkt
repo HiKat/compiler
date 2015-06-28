@@ -3,21 +3,17 @@
 (require (prefix-in stx: "mysyntax.rkt"))
 (require (prefix-in k08: "kadai08.rkt"))
 
-;構造体の型の参照は(stx:spec_st-type s)
-
 (define env 'empty)
-;大域変数にするとcompoundstatementを出たときにenvを捨てられないのであとで修正する
-;必要あり!!!!!!!!!!
 
-(define current-lev 0)
 ;意味解析を実行中の関数のレベルを入れる変数.
-
+(define current-lev 0)
+;意味解析のオブジェクト
 (struct obj (name lev kind type)#:transparent)
-
 ;obj構造体のtypeの要素になりうる構造体.
 (struct type-pointer (pointer type))
 (struct array (type size))
 
+;環境操作関数
 ;myenv.rkt内でも定義
 (define (name-env? x e)
   (cond
@@ -26,45 +22,11 @@
    [else (name-env? x (cdr e))]))
 
 (define (extract-env name e)
-  (if (eq? e initial-env) 
+  (if (eq? e env:initial-env) 
       #f
       (if (equal? (obj-name (car e)) name)
           (car e)
           (extract-env name (cdr e)))))
-
-;変数宣言を読み取って作成したobjをenvに照らし合わせてチェックする.
-;適切なobjであれば#tを返す.
-(define (check-decl obj env)
-  (if (name-env? obj env) 
-      (cond ((obj-lev (extract-env (obj-name) env)
-  
-  
-  
-
-
-#;(define (analy-func_declarator_st st)
-  (let* ((name (stx:func_declarator_st-name st)))
-    ;(env:extend-env (obj name env lv st) env)
-    (set! env (env:extend-env (obj name) env))
-    ))
-
-#;(define (analy-func_declarator_null_st st)
-  (let* ((name (stx:func_declarator_null_st-name st)))
-    ;(env:extend-env (obj name env lv st) env)
-    (set! env (env:extend-env (obj name) env))
-    ))
-
-#;(define (analy-func_declarator_ast_st st)
-  (let* ((name (stx:func_declarator_ast_st-name st)))
-    ;(env:extend-env (obj name env lv st) env)
-    (set! env (env:extend-env (obj name) env))
-    ))
-
-#;(define (analy-func_declarator_ast_null_st st)
-  (let* ((name (stx:func_declarator_ast_null_st-name st)))
-    ;(env:extend-env (obj name env lv st))
-    (set! env (env:extend-env (obj name) env))
-    ))
 
 
 (define (analy-func_proto_st st)
@@ -226,38 +188,6 @@
     (set! env (env:extend-env (obj name lev kind type) env))))
 
 
-#;(define (analy-declarator_st st)
-    (let* ((name (stx:id_st-name (stx:declarator_st-var st))))
-      (set! env (env:extend-env (obj name) env))
-      ))
-
-#;(define (analy-declarator_ast_st st)
-    (let* ((name (stx:id_st-name (stx:declarator_st-var st))))
-      (set! env (env:extend-env (obj name) env))
-      ))
-
-#;(define (analy-id_st st)
-  (let* ((name (stx:id_st-name st)))
-    (set! env (env:extend-env (obj name) env))
-    ))
-
-#;(define (analy-id_ast_st st)
-  (let* ((name (stx:id_ast_st-name st)))
-    (set! env (env:extend-env (obj name) env))
-    ))
-
-#;(define (analy-array_st st)
-  (let* ((name (stx:array_st-name env st)))
-    (set! env (env:extend-env (obj name) env))
-    ))
-
-#;(define (analy-compound_dec_st st)
-  (cond ((cons? (stx:compound_dec_st-declaration-list st)) 
-         (analy-declaration-list (stx:compound_dec_st-declaration-list st)))
-        ((struct? (stx:compound_dec_st-declaration-list st)) 
-         (analy-declaration_st (stx:compound_dec_st-declaration-list st)))))
-
-
 (define (analy-declaration_st st)
   ;内部定義
   ;関数separate-nameはextract-name-from-declarator_stの返り値
@@ -276,9 +206,6 @@
     ;(set! env (env:extend-env (obj name lev kind type) env))
     ))
 
-
-        
-
 ;declarator_stもしくはdeclarator_ast_st
 ;およびそれらのlist*からvarを取り出す関数
 ;このとき返されるnameはvarの名前のlist*になっていることに注意
@@ -289,8 +216,6 @@
         ((cons? st)
          (cons (extract-name-from-declarator_st (car st))
                (extract-name-from-declarator_st (cdr st))))))
-
-
 
 ;function_def_stのcompound_stを意味解析する関数.
 ;このcompound_st内にはmysyntax.rktの4種類のcompound_stが入ることに注意.
@@ -334,10 +259,6 @@
     (env:extend-env (analy-comp-decl-list (stx:compound_st-declaration-list st)) comp-env)
     comp-env))
     
-
-
-
-
 
 
 ;構文木を引数に取りその意味解析を行う関数

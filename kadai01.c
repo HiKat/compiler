@@ -1,14 +1,12 @@
-int a;
-int *func(){
-    int a;
-    int a, b;
-    a = 1 + 2;
+int func(int a){
+    a = 3;
+    return a;
 }
-int func2(int f){
-    int a;
-    a = 1 + 2;
+int func2(int a){
+    a = 2;
+    return a;
 }
-int func3(){
-    int a;
+void func3();
+int main(){
+    return func(4)+func2(1);
 }
-int *func4();

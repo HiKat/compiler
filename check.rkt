@@ -74,7 +74,17 @@
      (stx:declarator_st (stx:id_st 'a 'test))
      (stx:declarator_st (stx:id_st 'b 'test))))))
 
+(define test2
+(stx:compound_st
+   (stx:declaration_st (stx:spec_st 'int 'test) (stx:declarator_st 
+                                                 (stx:id_st 'a 'test)))
+   (stx:compound_dec_st
+    (stx:declaration_st (stx:spec_st 'int 'test) (stx:declarator_st 
+                                                  (stx:id_st 'c 'test)))))
+  )
+
 (analy-comp-decl-list test 0)
+;(analy-compound_st test2)
 
 
 

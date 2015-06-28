@@ -12,17 +12,34 @@
 (define current-lev 0)
 ;意味解析を実行中の関数のレベルを入れる変数.
 
-;(struct obj (name lev kind type)#:transparent)
-(struct obj (name)#:transparent)
-;(struct obj (name lv)#:transparent) 現在作成中.
-
+(struct obj (name lev kind type)#:transparent)
 
 ;obj構造体のtypeの要素になりうる構造体.
 (struct type-pointer (pointer type))
 (struct array (type size))
 
-(define (chekenv obj env)
-  "作成したobjがenvにすでに含まれていないかをenvを更新する前にチェックする.")
+;myenv.rkt内でも定義
+(define (name-env? x e)
+  (cond
+   [(eq? e env:initial-env) #f]
+   [(equal? (obj-name (car e)) x) #t]
+   [else (name-env? x (cdr e))]))
+
+(define (extract-env name e)
+  (if (eq? e initial-env) 
+      #f
+      (if (equal? (obj-name (car e)) name)
+          (car e)
+          (extract-env name (cdr e)))))
+
+;変数宣言を読み取って作成したobjをenvに照らし合わせてチェックする.
+;適切なobjであれば#tを返す.
+(define (check-decl obj env)
+  (if (name-env? obj env) 
+      (cond ((obj-lev (extract-env (obj-name) env)
+  
+  
+  
 
 
 #;(define (analy-func_declarator_st st)
@@ -203,6 +220,7 @@
                     (stx:spec_st-type (stx:func_def_st-type-spec st)))))
          (func-inputtype (analy-funcdef_declaration-list 
                           (stx:func_def_st-func-declarator-st st)))
+         ;rが'voidになるという仕様無視の可能性.
          (type (cons func-type func-inputtype)))
     (set! current-lev 1)
     (set! env (env:extend-env (obj name lev kind type) env))))
@@ -276,7 +294,7 @@
 
 ;function_def_stのcompound_stを意味解析する関数.
 ;このcompound_st内にはmysyntax.rktの4種類のcompound_stが入ることに注意.
-(define (analy-all_compound_st st)
+#;(define (analy-all_compound_st st)
   (cond ((stx:compound_st? st) (analy-compound_st st))
         ((stx:compound_dec_st? st) (analy-compound_dec_st st))
         ((stx:compound_sta_st? st) (analy-compound_sta_st st))
@@ -299,7 +317,7 @@
            (lev comp-lev);大域変数もしくはcompound-statement内のどちらか
            (kind 'var)
            (type (stx:spec_st-type (stx:declaration_st-type-spec st))))
-      (separate-name name)
+      (separate-name name lev kind type)
       ;(set! env (env:extend-env (obj name lev kind type) env))
       ))
   ;;;;;;;;;;;;
@@ -307,17 +325,15 @@
                           (analy-comp-decl-list (cdr st) comp-lev)))
         ;analy-comp-declarationはcurrent-levを引数levに換え、
         ;戻り値がobjであるようなanaly-declaration_stを修正した関数
-        ((struct? st) (analy-comp-declaration st lev))))
+        ((struct? st) (analy-comp-declaration st comp-lev))))
 
-
-
-;analy-compound_st-declaration-listを分析する関数
+;compound_st-declaration-listを分析する関数
 (define (analy-compound_st st) 
   (let* ((comp-lev (+ 1 current-lev))
          (comp-env 'empty))
-    (cond ((cons? (stx:compound_st-declaration-list st)) 
-           (cons (analy_declaration (car (stx:compound_st-declaration-list st)))
-                 (analy_declaration (cdr (stx:compound_st-declaration-list st))))))))
+    (env:extend-env (analy-comp-decl-list (stx:compound_st-declaration-list st)) comp-env)
+    comp-env))
+    
 
 
 

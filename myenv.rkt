@@ -24,7 +24,7 @@
 (provide (all-defined-out))
 
 ;テスト
-
+#;(
 (define env initial-env)
 (define a (obj 'name1 'lev1 'kind1 'int))
 (define b (obj 'name2 'lev2 'kind2 'void))
@@ -38,5 +38,6 @@ env
 ;(in-env? 'x env)
 ;(lookup-env 'x env)
 ;(lookup-env 'name2 env)
+)
 
 

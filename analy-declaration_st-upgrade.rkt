@@ -6,7 +6,6 @@
 (require "check-env.rkt")
 (provide (all-defined-out))
 ;(struct obj (name lev kind type)#:transparent)
-
 (define current-lev 0)
 (define env '())
 

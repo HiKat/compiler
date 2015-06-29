@@ -14,6 +14,8 @@
 ;を出力する.
 (define (check-env obj env)
   #t)
+
+
 (define (check-test x)
   (if (eq? x 1) 
       (error 'failed)

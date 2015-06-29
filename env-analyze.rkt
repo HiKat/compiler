@@ -28,7 +28,8 @@
           (car e)
           (extract-env name (cdr e)))))
 
-
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (define (analy-func_proto_st st)
   ;内部定義
   ;(func_proto_st-func-declarator-st st)
@@ -105,11 +106,8 @@
          (type (cons func-type func-inputtype)))
          (set! current-lev 0)
          (set! env (env:extend-env (obj name lev kind type) env))))
-
-
-
-  
-  
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;  
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (define (analy-func_def_st st)
   ;内部定義
   ;(func_def_st-func-declarator-st st)
@@ -186,8 +184,8 @@
          (type (cons func-type func-inputtype)))
     (set! current-lev 1)
     (set! env (env:extend-env (obj name lev kind type) env))))
-
-
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (define (analy-declaration_st st)
   ;内部定義
   ;関数separate-nameはextract-name-from-declarator_stの返り値
@@ -205,7 +203,8 @@
     (separate-name name)
     ;(set! env (env:extend-env (obj name lev kind type) env))
     ))
-
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;declarator_stもしくはdeclarator_ast_st
 ;およびそれらのlist*からvarを取り出す関数
 ;このとき返されるnameはvarの名前のlist*になっていることに注意
@@ -216,6 +215,8 @@
         ((cons? st)
          (cons (extract-name-from-declarator_st (car st))
                (extract-name-from-declarator_st (cdr st))))))
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;function_def_stのcompound_stを意味解析する関数.
 ;このcompound_st内にはmysyntax.rktの4種類のcompound_stが入ることに注意.
@@ -258,9 +259,8 @@
          (comp-env 'empty))
     (env:extend-env (analy-comp-decl-list (stx:compound_st-declaration-list st)) comp-env)
     comp-env))
-    
-
-
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;構文木を引数に取りその意味解析を行う関数
 ;構文木は一番外側から見てlist*になっているものと 
 ;何らかの構造体になっているものに分けられる.

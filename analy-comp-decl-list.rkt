@@ -4,7 +4,6 @@
 (require (prefix-in k08: "kadai08.rkt"))
 
 ;構造体の型の参照は(stx:spec_st-type s)
-
 (define env 'empty)
 (define current-lev 0)
 ;意味解析を実行中の関数のレベルを入れる変数.

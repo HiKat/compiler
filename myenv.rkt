@@ -1,15 +1,10 @@
 #lang racket
 (struct obj (name lev kind type)#:transparent)
 
-(define initial-env 'empty)
+(define initial-env '())
 
-(define (in-env? x e)
-  (cond
-   [(eq? e initial-env) #f]
-   [(equal? (obj-name (car e)) x) #t]
-   [else (in-env? x (cdr e))]))
 
-(define (lookup-env name e)
+#;(define (lookup-env name e)
   (if (eq? e initial-env) 
       #f
       (if (equal? (obj-name (car e)) name)
@@ -19,10 +14,17 @@
 (define (extend-env x e)
   (cons x e))
 
+(define (add-list l e)
+  (if (eq? l '()) 
+      e
+      (let* ((newenv (extend-env (car l) e)))
+        (add-list (cdr l) newenv))))
+        
+
 (provide (all-defined-out))
 
 ;テスト
-#;(
+
 (define env initial-env)
 (define a (obj 'name1 'lev1 'kind1 'int))
 (define b (obj 'name2 'lev2 'kind2 'void))
@@ -30,9 +32,11 @@
 env
 (set! env (extend-env b env))
 env
-(in-env? 'name1 env)
-(in-env? 'x env)
-(lookup-env 'x env)
-(lookup-env 'name2 env)
-)
+(set! env (add-list (list a b) env))
+env
+;(in-env? 'name1 env)
+;(in-env? 'x env)
+;(lookup-env 'x env)
+;(lookup-env 'name2 env)
+
 

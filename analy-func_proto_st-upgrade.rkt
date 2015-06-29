@@ -48,7 +48,6 @@
                    ;idはstx:id_stかstx:id_ast_st
                    (id (stx:para_declaration_st-para para-decl))
                     ;flagはポインタ型なら'pointer、そうでなければ'normal
-                   ;flagとtypeは1つにまとめることも可能
                    (flag (cond ((stx:id_st? id) 'normal)
                                ((stx:id_ast_st? id) 'pointer)))
                    (name (cond ((eq? flag 'normal) (stx:id_st-name id))

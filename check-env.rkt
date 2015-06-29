@@ -10,8 +10,10 @@
 ; (format "ERROR! redifinition of '~a'."(obj-name obj))等
 ;を出力する.
 ;正しければ
-;#t
-;を出力する.
+;？？？？何を出力すればいいか？？？？？
+;たとえば(format "'~a' is OK!" obj)とか
+;正常に意味解析が行われていることがわかればよい？
+;理想は何も出力しないこと
 (define (check-env obj env)
   #t)
 

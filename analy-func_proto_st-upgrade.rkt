@@ -7,7 +7,11 @@
 (provide (all-defined-out))
 ;(struct obj (name lev kind type)#:transparent)
 (define current-lev 0)
+;env、para-env初期化
 (define env '())
+(define para-env '())
+;objtypeの要素になりうる構造体.
+(struct type-pointer (pointer type) #:transparent)
 
 ;プロトタイプ宣言を行った関数の
 ;返り値がnormalかpointerか、パラメータの有無がnoremalかnoneか
@@ -61,8 +65,9 @@
          ;specはstx:spec_st
          (spec (stx:func_proto_st-type-spec st))
          ;declはstx:func_declarator/_null/_ast/_stの4つの場合がある.
-         (decl (stx:func_proto_st-func-declarator st))
+         (decl (stx:func_proto_st-func-declarator-st st))
          ;返り値がnormalかpointerか、パラメータの有無がnoremalかnoneか
+         ;para_flagは(struct para_flag (out-type para))で定義される構造体.
          (flag (cond ((stx:func_declarator_st? decl)(para_flag 'normal 'normal))
                      ((stx:func_declarator_null_st? decl)(para_flag 'normal 'none))
                      ((stx:func_declarator_ast_st? decl) (para_flag 'pointer 'normal))
@@ -70,11 +75,20 @@
          (proto-name (cond ((stx:func_declarator_st? decl) 
                             (stx:func_declarator_st-name decl))
                            ((stx:func_declarator_null_st? decl)
-                            (stx:func_declarator_null-name decl))
+                            (stx:func_declarator_null_st-name decl))
                            ((stx:func_declarator_ast_st? decl) 
                             (stx:func_declarator_ast_st-name decl))
                            ((stx:func_declarator_ast_null_st? decl) 
                             (stx:func_declarator_ast_null_st-name decl))))
+         ;プロトタイプの位置情報
+         (proto-pos (cond ((stx:func_declarator_st? decl) 
+                            (stx:func_declarator_st-pos decl))
+                           ((stx:func_declarator_null_st? decl)
+                            (stx:func_declarator_null_st-pos decl))
+                           ((stx:func_declarator_ast_st? decl) 
+                            (stx:func_declarator_ast_st-pos decl))
+                           ((stx:func_declarator_ast_null_st? decl) 
+                            (stx:func_declarator_ast_null_st-pos decl))))
          ;para-listは(list* (stx:para_declaration_st...)...)
          ;もしくはパラメータが無いときは'noparaが入っている.
          (para-list (cond ((stx:func_declarator_st? decl) 
@@ -87,28 +101,44 @@
                             'nopara)))
          ;para-obj-listは(list obj...)もしくは'nopara
          (para-obj-list (cond ((eq? para-list 'nopara) 'nopara)
-                              (else (make-obj-from-paralist paralist))))
-         (proto-type "specの値とflagで決まる.")
+                              (else (make-obj-from-paralist para-list))))
+         (proto-type (cond ((eq? 'normal (para_flag-out-type flag))
+                            (stx:spec_st-type spec))
+                           ;(struct type-pointer (pointer type) #:transparent)
+                           ((eq? 'pointer (para_flag-out-type flag))
+                            (type-pointer 'pointer (stx:spec_st-type spec)))))
          (proto-obj (obj proto-name 0 'proto proto-type)))
     ;プロトタイプのオブジェクトのチェック
     (check-env proto-obj env)
-    ;パラメータのオブジェクトのチェック
-    (if (eq? 'nopara para-obj-list)
-        #t
-        (else (
-    (set! env (extend proto-obj env))
+    ;プロトタイプのオブジェクトを環境に追加.
+    (set! env (extend-env proto-obj env))
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    ;;;;;;;;;;;;;パラメータオブジェクトのチェックと追加;;;;;;;;;;;;;;;;;;
+    ;パラメータのオブジェクトのチェックと追加
+    ;パラメータのオブジェクトに関しては
+    ;1.パラメータ専用の環境をリセット
+    ;2.list構造であるかを判定.list構造でなければそれを追加して終了
+    ;3.(car list)を環境と照らしあわせてチェック（初期化後であれば当然#t）
+    ;4.(cdr list)が'()であれば終了.そうでなければ.....
+    ;のような感じで実装.
+    ;para-envはパラメータ専用のenv
+    ;para-envリセット
+    (set! para-env '())
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     ;返す構造体
     ;ここで返したいものはlet*で取り出しておく必要がある.
-    (stx:func_prot_st spec  
-                      (cond ;para-obj-listはパラメータのobjのlist
+    (stx:func_proto_st spec  
+                      (cond 
+                        ;para-obj-listはパラメータのobjのlist
                         ((eq? 'noramal (para_flag-out-type flag)) 
                          ;nameの部分をプロトタイプのオブジェクトで置き換える.
-                         (stx:func_declarator_st proto-obj para-obj-list))
+                         (stx:func_declarator_st proto-obj para-obj-list proto-pos))
                         ((eq? 'pointer (para_flag-out-type flag)) 
                          ;nameの部分をプロトタイプのオブジェクトで置き換える.
-                         (stx:func_declarator_ast_st proto-obj para-obj-list))))))
+                         (stx:func_declarator_ast_st proto-obj para-obj-list proto-pos) 
+                         )))))
                       
-
 
 (define test1
   (stx:func_proto_st
@@ -128,4 +158,7 @@
   (stx:func_proto_st 
    (stx:spec_st 'int 'test) 
    (stx:func_declarator_ast_null_st 'func 'test)))
+
+
+(analy-func_proto_st test1)
   

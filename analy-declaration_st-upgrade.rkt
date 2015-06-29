@@ -47,7 +47,7 @@
                     declarator-list)))
     ;意味解析上のエラーがないか確認する.
     ;under construction
-    (map (lambda (list) (check-env env list)) obj-list)
+    (map (lambda (x) (check-env x env)) obj-list)
     ;なければ環境に追加.
     (set! env (add-list obj-list env))
     ;構造体を返す.

@@ -12,16 +12,17 @@
 (struct func_declarator_ast_st (name para-list pos)#:transparent)
 (struct func_declarator_ast_null_st (name pos)#:transparent)
 ;例)nameは関数名、para-listは引数のリスト.
+;意味解析後はfunc_declaration_stとfunc_declaration_ast_stに
+;集約される. parameterなしはpara-listに代わりにシンボル'noparaが入る.
+;意味解析後はname部にプロトタイプのオブジェクトが、para-listにパラメータのオブジェクトのリストが入る.
 
 (struct func_proto_st (type-spec func-declarator-st)#:transparent)
 (struct func_def_st (type-spec func-declarator-st compound-state-list)#:transparent)
-;例) (int funcname1 (id1 id2 *id3) compound_list) compound_listの中身は
-;構造体declaration_listとstatement_listからなる.
+;例) (int funcname1 (id1 id2 *id3) compound_list) compound_listの中身は構造体declaration_listとstatement_listからなる.
 
 (struct declarator_st (var)#:transparent)
 (struct declarator_ast_st (var)#:transparent)
 ;declaratorの定義
-
 ;declaration_listは構造体declarationがリストになったもの.以下で定義.
 ;(struct declaration_st2 (type-spec para-list)#:transparent);;;;;;
 ;例) (int (id1 id2 *id3 id4[5]))
@@ -92,10 +93,10 @@
 ;return文を表す構造体.
 
 (struct compound_st (declaration-list statement-list)#:transparent)
-(struct compound_dec_st (declaration-list)#:transparent);declarationのみ
-(struct compound_sta_st (statement-list)#:transparent);statementのみ
-(struct compound_null_st (null)#:transparent);セミコロンのみ
-;compound_statementを表す構造体.compound-statement内部の文の種類で分類.
+(struct compound_dec_st (declaration-list)#:transparent)
+(struct compound_sta_st (statement-list)#:transparent)
+(struct compound_null_st (null)#:transparent)
+;compound_statementを表す構造体.
 
 
 (struct func_st (name para)#:transparent)

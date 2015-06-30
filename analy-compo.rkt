@@ -102,10 +102,7 @@
     ;意味解析上のエラーがないかは外側でチェックするのでここでは実装しなくて良い.
     (stx:declaration_st type obj-list)))
 
-(define (analy-compstate
 
-
-                     
          
          
 

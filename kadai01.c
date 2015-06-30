@@ -7,5 +7,7 @@ int *func(int a, int *b, int c){
         b = 2;
     }
     a = 1 + 2;
-    
+    &aaaaaaaaaa = 3;
+    *nnnnnnnnnnn = 5;
+    &(*(ccccccccccc + bbbbbbbbb)) = 1;
 }

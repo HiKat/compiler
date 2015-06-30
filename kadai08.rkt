@@ -275,11 +275,18 @@
                (stx:alge_exp_st 'div $1 $3 $2-start-pos)));構造体alge_exp_stを作成.
    (unary_expr ((postfix_expr) $1)
                ((- unary_expr)
-                (stx:alge_exp_st 'sub (stx:constant_st 0 'syntax-sugar) $2 $1-start-pos));シンタックスシュガー
+                ;シンタックスシュガー
+                (stx:alge_exp_st 'sub (stx:constant_st 0 'syntax-sugar) $2 $1-start-pos))
                ((& unary_expr)
-                (if (and (stx:unary_exp_st? $2) (eq? (stx:unary_exp_st-mark $2) 'ast))
-                    (stx:exp_st $2)
-                    (stx:unary_exp_st 'amp $2 $1-start-pos)));間接参照式のシンタックスシュガー
+                (if (stx:exp_in_paren_st? $2) 
+                    (if (stx:unary_exp_st? (stx:exp_in_paren_st-exp $2)) 
+                        (if (eq? 'ast 
+                                 (stx:unary_exp_st-mark (stx:exp_in_paren_st-exp $2)))
+                            ;間接参照式のシンタックスシュガー
+                            (stx:unary_exp_st-op (stx:exp_in_paren_st-exp $2))
+                            (stx:unary_exp_st 'amp $2 $1-start-pos))
+                        (stx:unary_exp_st 'amp $2 $1-start-pos))
+                    (stx:unary_exp_st 'amp $2 $1-start-pos)))
                ((* unary_expr)
                 (stx:unary_exp_st 'ast $2 $1-start-pos)))
    
@@ -296,7 +303,7 @@
    (primary_expr ((VAR)(stx:id_st $1 $1-start-pos))
                  ((NUM) (stx:constant_st $1 $1-start-pos))
                  ((l_small_paren expression r_small_paren) 
-                  (stx:exp_in_paren_st $2)));構造体exp_stを作成.
+                  (stx:exp_in_paren_st $2)))
    (argument_expression_list ((assign_expr) $1)
                              ((argument_expression_list comma assign_expr)(cons $1 $3))))))
 

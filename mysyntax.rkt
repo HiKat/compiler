@@ -31,8 +31,9 @@
 (struct para_declaration_st (type-spec para)#:transparent)
 ;例) (int id1)
 
-(struct exp_st (exp)#:transparent)
+;(struct exp_st (exp)#:transparent)
 ;式を格納する構造体.
+;課題08シンタックスシュガーの実装時点で廃止
 
 (struct assign_exp_st (dest src pos)#:transparent)
 ;例)代入を表す構造体. x = 3なら(x 3)

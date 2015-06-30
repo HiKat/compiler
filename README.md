@@ -1,4 +1,6 @@
 # compiler
+[markdawn記法](http://kojika17.com/2013/01/starting-markdown.html)  
+[Racket公式ドキュメント](http://docs.racket-lang.org/reference/exns.html?q=error#%28def._%28%28quote._~23~25kernel%29._error%29%29)]
 ##意味解析部
 ###analy-declaration_st(チェック部分開発途中)  
 (stx:declaration_st...)  

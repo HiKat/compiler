@@ -24,7 +24,7 @@
 ;                 (func_declarator_st '関数宣言のオブジェクト'
 ;                                     'パラメータのオブジェクトのlist')
 ;                 compound-statement)
-;(compound-statement部分については関数analy-compoundに任せる.)
+;(compound-statement部分については関数analy-compound_stに任せる.)
 ;を返す.
 ;同時にパラメータのオブジェクトをパラメータ専用の環境に追加、チェック
 ;同時に関数宣言のオブジェクトを環境に追加、チェック
@@ -60,6 +60,7 @@
          (spec (stx:func_def_st-type-spec st))
          ;declはstx:func_declarator/_null/_ast/_stの4つの場合がある.
          (decl (stx:func_def_st-func-declarator-st st))
+         (compo (stx:func_def_st-compound-state-list st))
          ;返り値がnormalかpointerか、パラメータの有無がnoremalかnoneか
          ;fundef_flagは(struct fundef_flag (out-type para))で定義される構造体.
          (flag (cond ((stx:func_declarator_st? decl)(fundef_flag 'normal 'normal))
@@ -132,7 +133,7 @@
                         ;nameの部分をプロトタイプのオブジェクトで置き換える.
                         (stx:func_declarator_ast_st fundef-obj para-obj-list fundef-pos) 
                         ))
-                     "compound-statement-list ここはanaly-compに任せる. analy-compound"
+                     "!!!!!!!!!!(analy-compound_st compo)!!!!!!!!!!!!!"
                      )))
 
 

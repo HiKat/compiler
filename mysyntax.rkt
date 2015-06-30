@@ -97,6 +97,9 @@
 (struct compound_sta_st (statement-list)#:transparent)
 (struct compound_null_st (null)#:transparent)
 ;compound_statementを表す構造体.
+;意味解析後にstx:compound_stのみに集約される.
+;declaration-listがなければ'nodecl
+;statement-listがなければ'nostatが入る.
 
 
 (struct func_st (name para)#:transparent)

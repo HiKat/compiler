@@ -1,5 +1,5 @@
-0	g393987	=	(g393988)
-1	g393988	=	(program EOF)
+0	g411204	=	(g411205)
+1	g411205	=	(program EOF)
 2	program	=	(program_with_print)
 3	program_with_print	=	(external_declaration)
 4	program_with_print	=	(program_with_print external_declaration)
@@ -86,25 +86,25 @@
 85	argument_expression_list	=	(assign_expr)
 86	argument_expression_list	=	(argument_expression_list comma assign_expr)
 State 0
-	g393987 -> . g393988 
+	g411204 -> . g411205 
 
 	external_declaration					goto	4
 	program					goto	2
-	g393988					goto	1
+	program_with_print					goto	3
 	int					shift	9
 	void					shift	10
 	function_definition					goto	7
 	declaration					goto	5
 	type_specifier					goto	8
 	function_prototype					goto	6
-	program_with_print					goto	3
+	g411205					goto	1
 
 State 1
-	g393987 -> g393988 . 
+	g411204 -> g411205 . 
 
 
 State 2
-	g393988 -> program . EOF 
+	g411205 -> program . EOF 
 
 	EOF					accept	
 
@@ -174,7 +174,7 @@ State 10
 	VAR					reduce	27
 
 State 11
-	g393988 -> program EOF . 
+	g411205 -> program EOF . 
 
 
 State 12

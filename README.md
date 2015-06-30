@@ -1,11 +1,13 @@
 # compiler
-[markdawn記法](http://kojika17.com/2013/01/starting-markdown.html)  　　
-[Racket公式ドキュメント](http://docs.racket-lang.org/reference/exns.html?q=error#%28def._%28%28quote._~23~25kernel%29._error%29%29)　　
-関数の外部仕様決定->テスト書く->書き始める　習慣付け！！  
+[markdawn記法](http://kojika17.com/2013/01/starting-markdown.html)  　
+[Racket公式ドキュメント](http://docs.racket-lang.org/reference/exns.html?q=error#%28def._%28%28quote._~23~25kernel%29._error%29%29)  
+関数の外部仕様決定->テスト書く->書き始める　習慣付け！!   
 確定してないところは#tとかで置き換えてとりあえず形だけでも書いていく.  
 ##意味解析部
 ###analy-declaration_st(チェック部分開発途中)  
-;(stx:declaration_st...)  
+;(stx:declaration_st...) と  
+;_分析に使う環境env_と   
+;_current-lev_  
 ;を受け取って  
 ;(stx;declaration_st type-spec (list (obj...) (obj...)...))  
 ;を返す.  
@@ -40,17 +42,41 @@
 ;stx:compound_stか  
 ;stx:compound_dec_stか  
 ;stx:compound_sta_stか  
-;stx:compound_null_st  
+;stx:compound_null_stと  
 ;を受け取って    
 ;(stx:compound_st declaration-list statement-list)  
-;を返す. 
-;ただし  　
+;を返す.    
+;ただし   
 ;declaration-listが無いときは'nodecl  
 ;statement-listが無いときは'nostat  
 ;を入れる  
 ;同時に  
 ;意味解析開始時にcurrent-levをひとつ上げる  
 ;終了時に1つ下げる  
+
+###analy-compdecl  
+;_analy-declaration_stの派生_  
+;(list* (stx:declaration_st...)...)と  
+;lev（解析中のcompound-statementのブロックレベル）  
+;を引数に取り  
+;(list* obj)　　
+;を返す関数  
+;_analy-declarationとは違って外部の大域の環境を更新しない._  
+;compound-statementの意味解析結果の環境としては(list* obj)を直接使用することとする.  
+
+###analy-compstatement  
+;levと  
+;envと  
+;compound_stなどに入るstatementのlist*を  
+;引数に取り  
+;それぞれのobjを  
+;返す関数
+;同時にenvをもとにstatement内の定義をチェックする.  
+
+
+
+
+
 
 
 

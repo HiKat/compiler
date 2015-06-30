@@ -1,5 +1,6 @@
 #lang racket
 (provide (all-defined-out))
+
 (define (map* func list*)
   (cond ((cons? list*) (append (map* func (car list*))
                                (map* func (cdr list*))))

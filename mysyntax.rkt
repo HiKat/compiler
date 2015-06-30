@@ -16,6 +16,7 @@
 ;集約される. parameterなしはpara-listに代わりにシンボル'noparaが入る.
 ;意味解析後はname部にプロトタイプのオブジェクトが、para-listにパラメータのオブジェクトのリストが入る.
 
+
 (struct func_proto_st (type-spec func-declarator-st)#:transparent)
 (struct func_def_st (type-spec func-declarator-st compound-state-list)#:transparent)
 ;例) (int funcname1 (id1 id2 *id3) compound_list) compound_listの中身は構造体declaration_listとstatement_listからなる.
@@ -100,6 +101,7 @@
 ;意味解析後にstx:compound_stのみに集約される.
 ;declaration-listがなければ'nodecl
 ;statement-listがなければ'nostatが入る.
+;例)(stx:compound_st 'nodecl 'nostat)など
 
 
 (struct func_st (name para)#:transparent)

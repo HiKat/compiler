@@ -10,21 +10,16 @@
 (define env '())
 
 
-;(stx:declaration_st...)
-;を受け取って
-;(stx;declaration_st type-spec (list (obj...) (obj...)...))
-;を返す.
-;同時にlistの形で環境に追加.
-;同時に環境のチェックも行う.
-(define (analy-declaration_st st)
+(define (analy-declaration_st st lev)
   ;;;;
   ;内部定義
   ;(stx:declarator_st...)と
+  ;levと  
   ;'intもしくは'void
   ;を引数にとり
   ;obj
   ;を返す関数.
-  (define (make-obj-from-decl decl type)
+  (define (make-obj-from-decl decl type lev)
     (let* ((id (cond ((stx:declarator_st? decl) 
                       (stx:declarator_st-var decl))
                      ((stx:declarator_ast_st? decl)
@@ -32,7 +27,6 @@
            (name (stx:id_st-name id))          
            (flag (cond ((stx:declarator_st? decl) 'nomal)
                        ((stx:declarator_ast_st? decl) 'pointer)))
-           (lev current-lev)
            (kind 'var)
            (type (cond ((eq? flag 'nomal) type)
                        ((eq? flag 'pointer) (list 'pointer type)))))
@@ -43,7 +37,7 @@
          (declarator-list (stx:declaration_st-declarator-list st))
          ;objのlistを作成する.
          (obj-list (map* 
-                    (lambda (x) (make-obj-from-decl x (stx:spec_st-type type)))
+                    (lambda (x) (make-obj-from-decl x (stx:spec_st-type type) lev))
                     declarator-list)))
     ;意味解析上のエラーがないか確認する.
     ;under construction
@@ -69,4 +63,4 @@
    ;以下がdeclarator-list
      (stx:declarator_ast_st (stx:id_st 'b 'test))))
 
-(analy-declaration_st test2)
+(analy-declaration_st test2 current-lev)

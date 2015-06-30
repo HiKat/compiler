@@ -132,7 +132,7 @@
                         ;nameの部分をプロトタイプのオブジェクトで置き換える.
                         (stx:func_declarator_ast_st fundef-obj para-obj-list fundef-pos) 
                         ))
-                     "compound-statement-list ここはanaly-compに任せる."
+                     "compound-statement-list ここはanaly-compに任せる. analy-compound"
                      )))
 
 

@@ -48,10 +48,13 @@
                            ((eq? 'nodecl (comp_flag-decl flag))
                             'nodecl)))
          ;decl-listから環境を生成する.
-         ;!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!この状態ではcomp-envはobjもしくは(list obj...)のlist構造.
-         (comp-env (env:separate-list 
-                    (env:make-list-list 
-                     (map (lambda (x) (stx:declaration_st-declarator-list x)) decl-list))))
+         (comp-env 
+          (env:separate-list 
+           ;listの各要素がlistであることを保証させるためのmake-list-list
+           (map env:make-list-list
+                (map (lambda (x) (stx:declaration_st-declarator-list x)) decl-list))
+           )
+          )
          ;チェックを行う.自身の環境とのチェック、
          ;大域環境とのチェックの2つの環境を参照してチェックを行う必要がある.
          )
@@ -61,10 +64,7 @@
     (stx:compound_st 
      decl-list
      (cond ((eq? 'normal (comp_flag-stat flag)) 
-            ;本当はこのstat-listもここで関数に引き渡してチェックをおこなう.
-            ;その際にチェックはこのcompoun-statementのオブジェクトのみが
-            ;登録された環境で行う.
-            (map* (lambda (x) (analy-compostate x this-lev comp-env)) stat-list))
+            (map* (lambda (x) (analy-compstate x this-lev comp-env)) stat-list))
            ((eq? 'nostat (comp_flag-stat flag)) 
             'nostat)))
     ))
@@ -103,50 +103,52 @@
     ;意味解析上のエラーがないかは外側でチェックするのでここでは実装しなくて良い.
     (stx:declaration_st type obj-list)))
 
-(define (analy-compostate st lev env)
+(define (analy-compstate st lev env)
   (cond ((stx:null_statement_st? st) 
          st)
         ((stx:assign_exp_st? st) 
-         (stx:assign_exp_st (analy-compostate (stx:assign_exp_st-dest st) lev env)
-                            (analy-compostate(stx:assign_exp_st-src st) lev env)
+         (stx:assign_exp_st (analy-compstate (stx:assign_exp_st-dest st) lev env)
+                            (analy-compstate(stx:assign_exp_st-src st) lev env)
                             (stx:assign_exp_st-pos st)))
         ((stx:logic_exp_st? st) 
          (stx:logic_exp_st (stx:logic_exp_st-log-ope st) 
-                           (analy-compostate (stx:logic_exp_st-op1 st) lev env)
-                           (analy-compostate (stx:logic_exp_st-op2 st) lev env)
+                           (analy-compstate (stx:logic_exp_st-op1 st) lev env)
+                           (analy-compstate (stx:logic_exp_st-op2 st) lev env)
                            (stx:logic_exp_st-pos st)))
         ((stx:rel_exp_st? st) 
          (stx:rel_exp_st (stx:rel_exp_st-rel-ope st) 
-                         (analy-compostate (stx:rel_exp_st-op1 st) lev env)
-                         (analy-compostate (stx:rel_exp_st-op2 st) lev env)
+                         (analy-compstate (stx:rel_exp_st-op1 st) lev env)
+                         (analy-compstate (stx:rel_exp_st-op2 st) lev env)
                          (stx:rel_exp_st-pos st)))
         ((stx:alge_exp_st? st) 
          (stx:alge_exp_st (stx:alge_exp_st-alge-ope st) 
-                          (analy-compostate (stx:alge_exp_st-op1 st) lev env)
-                          (analy-compostate (stx:alge_exp_st-op2 st) lev env)
+                          (analy-compstate (stx:alge_exp_st-op1 st) lev env)
+                          (analy-compstate (stx:alge_exp_st-op2 st) lev env)
                           (stx:alge_exp_st-pos st)))
         ((stx:unary_exp_st? st) 
          (stx:unary_exp_st (stx:unary_exp_st-mark st) 
-                           (analy-compostate (stx:unary_exp_st-op st) lev env)
-                           (analy-compostate (stx:unary_exp_st-pos st) lev env)))
+                           (analy-compstate (stx:unary_exp_st-op st) lev env)
+                           (analy-compstate (stx:unary_exp_st-pos st) lev env)))
         ((stx:constant_st? st) st)
+        ((stx:exp_with_semi_st? st) 
+         (stx:exp_with_semi_st (analy-compstate (stx:exp_with_semi_st-exp st) lev env)))
         ((stx:exp_in_paren_st? st) 
-         (stx:exp_in_paren_st (analy-compostate (stx:exp_in_paren_st-exp st) lev env)))
+         (stx:exp_in_paren_st (analy-compstate (stx:exp_in_paren_st-exp st) lev env)))
         ((stx:if_st? st) 
-         (stx:if_st (analy-compostate (stx:if_st-cond-exp st) lev env)
+         (stx:if_st (analy-compstate (stx:if_st-cond-exp st) lev env)
                     (analy-compound_st (stx:if_st-state st) lev)
                     (stx:if_st-pos st)))
         ((stx:if_else_st? st) 
-         (stx:if_else_st (analy-compostate (stx:if_else_st-cond-exp st) lev env)
+         (stx:if_else_st (analy-compstate (stx:if_else_st-cond-exp st) lev env)
                          (analy-compound_st (stx:if_else_st-state st) lev)
                          (analy-compound_st (stx:if_else_st-else-state st) lev)
                          (stx:if_else_st-if-pos st)
                          (stx:if_else_st-else-pos st)))
         ((stx:while_st? st) 
-         (stx:while_st (analy-compostate (stx:while_st-cond-exp st) lev env)
+         (stx:while_st (analy-compstate (stx:while_st-cond-exp st) lev env)
                        (analy-compound_st (stx:while_st-statement st) lev)))
         ((stx:return_st? st) 
-         (stx:return_st (analy-compostate (stx:return_st-exp st) lev)))
+         (stx:return_st (analy-compstate (stx:return_st-exp st) lev)))
         ((stx:compound_st? st) (analy-compound_st st lev))
         ((stx:compound_dec_st? st) (analy-compound_st st lev))
         ((stx:compound_sta_st? st) (analy-compound_st st lev))
@@ -154,20 +156,22 @@
         ((stx:func_st? st) 
          (let* ((out st)) 
            ;チェック実行
-           #t
+           ;#t
            out))
         ((stx:id_st? st) 
          (let* ((out st)
                 (name (stx:id_st-name st)))
            ;チェック実行
-           #t
+           ;#t
            out))
         ((stx:id_ast_st? st) 
          (let* ((out st)
                 (name (stx:id_ast_st-name st)))
            ;チェック実行
-           #t
-           out))))
+           ;#t
+           out))
+        (else (st))
+        ))
 
             
 
@@ -178,22 +182,23 @@
 
 (define test1
   (stx:compound_st
-   ;declaration-list
-   (cons
-    (stx:declaration_st (stx:spec_st 'int 'test) (stx:declarator_st (stx:id_st 'a 'test)))
+   ;;;;declaration-list
+   ;(cons
+    ;(stx:declaration_st (stx:spec_st 'int 'test) (stx:declarator_st (stx:id_st 'a 'test)))
     (stx:declaration_st
      (stx:spec_st 'int 'test)
      (cons
       (cons
        (stx:declarator_ast_st (stx:id_st 'b 'test))
        (stx:declarator_st (stx:id_st 'c 'test)))
-      (stx:declarator_st (stx:id_st 'd 'test)))))
-   ;statement-list
+      (stx:declarator_st (stx:id_st 'd 'test))))
+    ;)
+   ;;;;statement-list
    (stx:exp_with_semi_st (stx:func_st 'func2 (stx:id_st 'a 'test)))))
 
 (define test2
   (stx:compound_st
-   ;declaration-list
+   ;;;;declaration-list
    (stx:declaration_st
     (stx:spec_st 'int 'test)
     (cons
@@ -201,11 +206,12 @@
       (stx:declarator_ast_st (stx:id_st 'b 'test))
       (stx:declarator_st (stx:id_st 'c 'test)))
      (stx:declarator_st (stx:id_st 'd 'test))))
-   ;statement-list
+   ;;;;statement-list
    (cons
-    (cons
+    ;(cons
      (stx:func_st 'func2 (stx:id_st 'a 'test))
-     (stx:if_else_st
+     ;;
+     #;(stx:if_else_st
       (stx:constant_st 1 'test)
       ;;;;compound-statementのネスト
       (stx:compound_st
@@ -218,7 +224,9 @@
       ;;;;
       (stx:null_statement_st 'null)
       'test
-      'syntax-sygar))
+      'syntax-sygar)
+     ;)
+     ;;
     (stx:assign_exp_st
      (stx:id_st 'a 'test)
      (stx:alge_exp_st
@@ -237,9 +245,77 @@
       (stx:declarator_st (stx:id_st 'c 'test))))
    (stx:func_st 'func2 (stx:id_st 'a 'test))))
 
+(define test4
+  (stx:compound_st
+   (cons
+    (stx:declaration_st
+     (stx:spec_st 'int 'test)
+     (cons
+      (cons
+       (stx:declarator_ast_st (stx:id_st 'b 'test))
+       (stx:declarator_st (stx:id_st 'c 'test)))
+      (stx:declarator_st (stx:id_st 'd 'test))))
+    (stx:declaration_st (stx:spec_st 'int 'test) 
+                        (stx:declarator_st (stx:id_st 'a 'test))))
+   (stx:func_st 'func2 (stx:id_st 'a 'test))))
+
 ;(analy-compound_st test1 current-lev)
 ;(analy-compound_st test2 current-lev)
-(analy-compound_st test3 current-lev)
+;(analy-compound_st test3 current-lev)
+;(analy-compound_st test4 current-lev)
+
+
+;;;;;;;;デバッグメモ
+#;(
+;test1のmake-list-list部分の引数になるdecl-listの内容
+(define decl1
+  (list
+   (stx:declaration_st
+    (stx:spec_st 'int 'test)
+    (list (obj 'b 1 'var '(pointer int)) (obj 'c 1 'var 'int) (obj 'd 1 'var 'int)))))
+;簡素化
+(define decl11
+  (list
+   (stx:declaration_st
+    (stx:spec_st 'int 'test)
+    (list 'a 'b 'c))))
+;test4のmake-list-list部分の引数になるdecl-listの内容
+(define decl4
+  (list
+   (stx:declaration_st
+    (stx:spec_st 'int 'test)
+    (list (obj 'b 1 'var '(pointer int)) (obj 'c 1 'var 'int) (obj 'd 1 'var 'int)))
+   (stx:declaration_st (stx:spec_st 'int 'test) (list (obj 'a 1 'var 'int)))))
+;簡素化
+(define decl41
+  (list
+   (stx:declaration_st
+    (stx:spec_st 'int 'test)
+    (list 'a 'b 'c))
+   (stx:declaration_st (stx:spec_st 'int 'test) (list 'd))))
+;;;;;;;;これらに以下の関数を適用するとエラーが出る.
+(define (debag1 decl-list)
+  (env:separate-list 
+   ;listの各要素がlistであることを保証させるためのmake-list-list
+   (map env:make-list-list
+        (map (lambda (x) (stx:declaration_st-declarator-list x)) decl-list))
+   )
+)
+
+(define (debag2 decl-list)
+  (map env:make-list-list
+       (map (lambda (x) (stx:declaration_st-declarator-list x)) decl-list)))
+
+(debag2 decl41)
+(debag1 decl41)
+
+(debag2 decl11)
+(debag1 decl11)
+)
+
+
+
+
 
 
 

@@ -23,13 +23,16 @@
 
 ;例) '((a) (b c d) (e f) (g)) -> '(a b c d e f g)
 (define (separate-list l)
-  (cond ((eq? '() (cddr l)) (append (car l) (cadr l)))
-        (else (separate-list (list (append (car l) (cadr l)) (caddr l))))))
+  (cond 
+    ((eq? '() (cdr l)) (car l))
+    ((eq? '() (cddr l)) (append (car l) (cadr l)))
+    (else (separate-list (list (append (car l) (cadr l)) (caddr l))))))
 
    
    
 
 ;例)'(a (b c d) (e f) g) -> '((a) (b c d) (e f) (g))
+;map関数と合わせて使う
 (define (make-list-list l)
   (cond ((list? l) l)
         (else (list l))))

@@ -5,6 +5,7 @@
 確定してないところは#tとかで置き換えてとりあえず形だけでも書いていく.  
 ##意味解析部
 ###analy-declaration_st(チェック部分開発途中)  
+;
 ;(stx:declaration_st...) と  
 ;_分析に使う環境env_と   
 ;_current-lev_  

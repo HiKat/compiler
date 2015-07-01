@@ -18,9 +18,6 @@
 ;を保存するフラグ
 (struct para_flag (out-type para))
 
-
-
-
 ;analy-func_proto_stは
 ;(stx:func_proto_st...)
 ;を受け取って

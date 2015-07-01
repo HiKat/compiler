@@ -259,10 +259,10 @@
                         (stx:declarator_st (stx:id_st 'a 'test))))
    (stx:func_st 'func2 (stx:id_st 'a 'test))))
 
-;(analy-compound_st test1 current-lev)
-;(analy-compound_st test2 current-lev)
-;(analy-compound_st test3 current-lev)
-;(analy-compound_st test4 current-lev)
+(analy-compound_st test1 current-lev)
+(analy-compound_st test2 current-lev)
+(analy-compound_st test3 current-lev)
+(analy-compound_st test4 current-lev)
 
 
 ;;;;;;;;デバッグメモ

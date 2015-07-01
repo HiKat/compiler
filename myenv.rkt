@@ -2,6 +2,8 @@
 ;環境操作関数.
 (struct obj (name lev kind type)#:transparent)
 
+
+
 (define initial-env '())
 
 

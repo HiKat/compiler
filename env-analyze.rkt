@@ -10,7 +10,7 @@
 ;意味解析のオブジェクト
 (struct obj (name lev kind type)#:transparent)
 ;obj構造体のtypeの要素になりうる構造体.
-(struct type-pointer (pointer type))
+;(struct type-pointer (pointer type))
 (struct array (type size))
 
 ;環境操作関数

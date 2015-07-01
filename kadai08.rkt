@@ -146,7 +146,8 @@
    (type_specifier ((int) (stx:spec_st 'int $1-start-pos));構造体spec_stを作成.
                    ((void) (stx:spec_st 'void $1-start-pos)));構造体spec_stを作成.
    (statement ((semicolon) (stx:null_statement_st 'null))
-              ((expression semicolon)(stx:exp_with_semi_st $1));構造体exp-stを作成.
+              ;((expression semicolon)(stx:exp_with_semi_st $1))
+              ((expression semicolon)$1)
               ((compound_statement) $1)
               ((if l_small_paren expression r_small_paren statement)
                (stx:if_else_st $3 $5 (stx:null_statement_st 'null) $1-start-pos 'syntax-sygar));シンタックスシュガー
@@ -232,7 +233,7 @@
                          'syntax-sugar));シンタックスシュガー
               
               ((return expression semicolon)(stx:return_st $2 $1-start-pos));構造体return_stを作成.
-              ((return semicolon)(stx:return_null_st 'null $1-start-pos)));構造体return-null-stを作成.
+              ((return semicolon)(stx:return_st 'noreturn $1-start-pos)));構造体return-null-stを作成.
    (compound_statement ((l_big_paren declaration_list statement_list r_big_paren)(stx:compound_st $2 $3));構造体compound_stを作成.
                        ((l_big_paren declaration_list r_big_paren)(stx:compound_dec_st $2));構造体compound_dec_stを作成.
                        ((l_big_paren statement_list r_big_paren)(stx:compound_sta_st $2));構造体copound_sta_stを作成.
@@ -293,13 +294,14 @@
    (postfix_expr ((primary_expr) $1)
                  ((postfix_expr l_mid_paren expression r_mid_paren)
                   ;(stx:array_var_st $1 $3  $1-start-pos)
+                  ;配列参照式のシンタックスシュガー
                   (stx:unary_exp_st 'ast 
                                     (stx:alge_exp_st 'add $1 $3 'syntax-sugar) 
-                                    'syntax-sugar));シンタックスシュガー
+                                    'syntax-sugar))
                  ((VAR l_small_paren argument_expression_list r_small_paren)
                   (stx:func_st $1 $3))
                  ((VAR l_small_paren r_small_paren)
-                  (stx:func_nopara_st $1)))
+                  (stx:func_st $1 'nopara)))
    (primary_expr ((VAR)(stx:id_st $1 $1-start-pos))
                  ((NUM) (stx:constant_st $1 $1-start-pos))
                  ((l_small_paren expression r_small_paren) 

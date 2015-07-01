@@ -37,7 +37,7 @@
 (provide (all-defined-out))
 
 ;テスト
-;#;(
+#;(
 (define env initial-env)
 (define a (obj 'name1 'lev1 'kind1 'int))
 (define b (obj 'name2 'lev2 'kind2 'void))
@@ -54,6 +54,7 @@ env
 (define test (list 'a (list 'b 'c 'd) (list 'e 'f) 'g))
 (define test2 (map make-list-list test))
 (separate-list test2)
+)
 
 
 

@@ -42,7 +42,8 @@
 ;stx:compound_stか  
 ;stx:compound_dec_stか  
 ;stx:compound_sta_stか  
-;stx:compound_null_stと  
+;stx:compound_null_stと 
+;lev  
 ;を受け取って    
 ;(stx:compound_st declaration-list statement-list)  
 ;を返す.    
@@ -64,10 +65,10 @@
 ;_analy-declarationとは違って外部の大域の環境を更新しない._  
 ;compound-statementの意味解析結果の環境としては(list* obj)を直接使用することとする.  
 
-###analy-compstatement  
+###analy-compstate 
 ;levと  
 ;envと  
-;compound_stなどに入るstatementのlist*を  
+;compound_stなどに入るstatementを  
 ;引数に取り  
 ;それぞれのobjを  
 ;返す関数

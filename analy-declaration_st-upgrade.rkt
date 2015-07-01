@@ -57,10 +57,10 @@
      (stx:declarator_ast_st (stx:id_st 'b 'test)))
     (stx:declarator_st (stx:id_st 'c 'test)))))
 
-(define test2
+(define test21
     (stx:declaration_st
    (stx:spec_st 'void 'test)
    ;以下がdeclarator-list
      (stx:declarator_ast_st (stx:id_st 'b 'test))))
 
-(analy-declaration_st test2 current-lev)
+(analy-declaration_st test21 current-lev)

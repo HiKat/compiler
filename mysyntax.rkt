@@ -31,18 +31,18 @@
 (struct para_declaration_st (type-spec para)#:transparent)
 ;例) (int id1)
 
-;(struct exp_st (exp)#:transparent)
+(struct exp_st (exp)#:transparent)
 ;式を格納する構造体.
 ;課題08シンタックスシュガーの実装時点で廃止
 
 (struct assign_exp_st (dest src pos)#:transparent)
-;例)代入を表す構造体. x = 3なら(x 3)
+;例)代入を表す構造体. x = 3なら(x 3 pos)
 
 (struct logic_exp_st (log-ope op1 op2 pos)#:transparent)
-;例) (or a b)もしくは(and a b)
+;例) (or a b)もしくは(and a b pos)
 
 (struct rel_exp_st (rel-ope op1 op2 pos)#:transparent)
-;例) rel_opeは'equal 'not 'less 'and_less 'more 'and_moreで (less a b)など
+;例) rel_opeは'equal 'not 'less 'and_less 'more 'and_moreで ('less a b pos)など
 
 (struct alge_exp_st (alge-ope op1 op2 pos)#:transparent)
 ;例) alge_opeは'add 'sub 'mul 'divで('add a b)など
@@ -52,14 +52,16 @@
 ;終端記号 identifierを表す構造体.
 
 (struct array_st (name num pos)#:transparent);宣言時.posはnameの位置.
-(struct array_var_st (name num pos)#:transparent);式の中で用いる.posはnameの位置.
+(struct array_var_st (name num pos)#:transparent);配列参照式.posはnameの位置.
 ;終端記号となりうる配列を表す構造体.
+;課題08以降ではarray_var_stは廃止.
 
 (struct spec_st (type pos)#:transparent)
 ;データ型を表す構造体
 
 (struct unary_exp_st (mark op pos)#:transparent)
 ;postfix_expを表す構造体.markは'minus、'ast、'amp
+;課題08以降で'minusは廃止
 
 (struct constant_st (cons pos)#:transparent)
 ;定数を表す構造体.
@@ -67,8 +69,10 @@
 (struct null_statement_st (null)#:transparent)
 ;セミコロンのみからなるstatementを表す構造体
 
+
 (struct exp_with_semi_st (exp)#:transparent)
 ;expressionとセミコロンからなる式を表す構造体.
+;課題08シンタックスシュガー実装以降は廃止
 
 (struct exp_in_paren_st (exp)#:transparent)
 ;()で囲まれたexpression
@@ -80,6 +84,7 @@
 (struct while_st (cond-exp statement pos)#:transparent);posはwhileの位置.
 ;while文を表す構造体.
 
+
 (struct for_0_st (cond-exp1 cond-exp2 cond-exp3 statement pos)#:transparent)
 (struct for_1_st (cond-exp1 cond-exp2 statement pos)#:transparent)
 (struct for_2_st (cond-exp1 cond-exp2 statement pos)#:transparent)
@@ -89,17 +94,22 @@
 (struct for_6_st (cond-exp1 statement pos)#:transparent)
 (struct for_7_st (statement pos)#:transparent)
 ;for文を表す構造体.0〜7の数字によってnullの位置が構文木作成の時点でわかる.
+;課題08以降でwhile文に統合
+
 
 (struct return_st (exp pos)#:transparent);posはreturnの位置.
 (struct return_null_st (exp pos)#:transparent)
 ;return文を表す構造体.
+;課題08以降でreturn_stに統合
+;return_null_stは(stx:return_st 'noreturn pos)に
+
 
 (struct compound_st (declaration-list statement-list)#:transparent)
 (struct compound_dec_st (declaration-list)#:transparent)
 (struct compound_sta_st (statement-list)#:transparent)
 (struct compound_null_st (null)#:transparent)
 ;compound_statementを表す構造体.
-;意味解析後にstx:compound_stのみに集約される.
+;意味解析後にstx:compound_stのみに統合される.
 ;declaration-listがなければ'nodecl
 ;statement-listがなければ'nostatが入る.
 ;例)(stx:compound_st 'nodecl 'nostat)など
@@ -108,6 +118,8 @@
 (struct func_st (name para)#:transparent)
 (struct func_nopara_st (name)#:transparent)
 ;関数呼び出しを表す構造体
+;課題08以降でfunc_stに統合
+;func_nopara_stは(stx:func_st name 'nopara)に
 
 
 

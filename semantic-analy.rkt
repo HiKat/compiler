@@ -189,10 +189,14 @@
          (para-obj-list (cond ((eq? para-list 'nopara) 'nopara)
                               (else (make-obj-from-paralist para-list))))
          (fundef-type (cond ((eq? 'normal (fundef_flag-out-type flag))
-                            (stx:spec_st-type spec))
+                             (type_fun 'fun
+                                       (stx:spec_st-type spec)
+                                       (map (lambda (x) (obj-type x)) para-obj-list)))
                            ;(struct type-pointer (pointer type) #:transparent)
                            ((eq? 'pointer (fundef_flag-out-type flag))
-                            (type_pointer 'pointer (stx:spec_st-type spec)))))
+                            (type_fun 'fun
+                                      (type_pointer 'pointer (stx:spec_st-type spec))
+                                      (map (lambda (x) (obj-type x)) para-obj-list)))))
          (fundef-obj (obj fundef-name 0 'fun fundef-type)))
     ;関数定義のオブジェクトのチェック
     ;(check-env fundef-obj env)

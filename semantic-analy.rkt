@@ -272,7 +272,7 @@
                      (analy-compound_st compo 2 env)
                      )))
 
-(define (analy-compound_st st lev env)
+(define (analy-compound_st st lev outer-env)
   (let* ((flag (cond ((stx:compound_st? st) (comp_flag 'normal 'normal 1))
                      ((stx:compound_dec_st? st) (comp_flag 'normal 'nostat 2))
                      ((stx:compound_sta_st? st) (comp_flag 'nodecl 'normal 3))
@@ -306,11 +306,11 @@
                 (map (lambda (x) (stx:declaration_st-declarator-list x)) decl-list))
                 )))
           )
-         ;comp-envのチェック（自分自身のチェックと大域環境とのチェック.）
+         ;comp-envのチェック（自分自身のチェックと大域環境outer-envとのチェック.）
          
-         (original-env env)
+        
          (comp-env (cond ((eq? 'nodecl comp-env) env)
-                         (else (append comp-env env))))
+                         (else (append comp-env outer-env))))
          (stat-list (cond ((eq? 'normal (comp_flag-stat flag)) 
                            (map* (lambda (x) (analy-compstate x this-lev comp-env)) stat-list))
                           ((eq? 'nostat (comp_flag-stat flag)) 
@@ -318,8 +318,8 @@
          )
     ;意味解析終了時にlevを一つ繰り下げる
     ;(set! comp-lev (- lev 1))
-    (stx:compound_st decl-list stat-list)
-    (set! env original-env)))
+    ;(stx:compound_st decl-list stat-list)!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    comp-env))
 
 (define (analy-compdecl st lev)
   ;;;;
@@ -407,25 +407,11 @@
              (analy-compound_st st lev env))
         ;チェック時は環境に'nodeclが入ることがあることに注意.
         ((stx:func_st? st) 
-         (let* ((out st)) 
-           ;チェック実行
-           ;#t
-           out))
-        ((stx:id_st? st) 
-         (let* ((out st)
-                (name (stx:id_st-name st)))
-           ;チェック実行
-           ;#t
-           out))
-        ((stx:id_ast_st? st) 
-         (let* ((out st)
-                (name (stx:id_ast_st-name st)))
-           ;チェック実行
-           (cond ((#t) (#t))
-                 ((#t) (#t)))
-           ;#t
-           out))
-        (else st)
+         (check-func-ref st lev env))
+        ((or (stx:id_st? st)     
+             (stx:id_ast_st? st))
+         (check-var-ref st lev env))
+        (else (error "CONDIRION ERROR IN ANALY-COMPSTATE"))
         ))
 
 (define (sem-analyze-tree t)
@@ -442,162 +428,7 @@
 
 
 
-;;;;テスト;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(define test1
-  (stx:func_proto_st
-   (stx:spec_st 'int 'test)
-   (stx:func_declarator_ast_st
-    'func
-    (cons
-     (cons
-      (stx:para_declaration_st (stx:spec_st 'int 'test) 
-                               (stx:id_st 'a 'test))
-      (stx:para_declaration_st (stx:spec_st 'int 'test) 
-                               (stx:id_ast_st 'b 'test)))
-     (stx:para_declaration_st (stx:spec_st 'int 'test) 
-                              (stx:id_st 'c 'test)))
-    'test)))
-(define test2
-  (stx:func_proto_st 
-   (stx:spec_st 'int 'test) 
-   (stx:func_declarator_ast_null_st 'func 'test)))
-(define test3
-  (stx:func_def_st
-   (stx:spec_st 'int 'test)
-   (stx:func_declarator_ast_st
-    'functioooooon
-    (cons
-     (cons
-      (stx:para_declaration_st (stx:spec_st 'int 'test) (stx:id_st 'a 'test))
-      (stx:para_declaration_st (stx:spec_st 'int 'test) (stx:id_ast_st 'b 'test)))
-     (stx:para_declaration_st (stx:spec_st 'int 'test) (stx:id_st 'c 'test)))
-    'test)
-   (stx:compound_sta_st (stx:null_statement_st 'null))))
-(define test4
-  (stx:compound_st
-   ;;;;declaration-list
-   ;(cons
-    ;(stx:declaration_st (stx:spec_st 'int 'test) (stx:declarator_st (stx:id_st 'a 'test)))
-    (stx:declaration_st
-     (stx:spec_st 'int 'test)
-     (cons
-      (cons
-       (stx:declarator_ast_st (stx:id_st 'b 'test))
-       (stx:declarator_st (stx:id_st 'c 'test)))
-      (stx:declarator_st (stx:id_st 'd 'test))))
-    ;)
-   ;;;;statement-list
-   (stx:exp_with_semi_st (stx:func_st 'func2 (stx:id_st 'a 'test)))))
-(define test5
-  (stx:compound_st
-   ;;;;declaration-list
-   (stx:declaration_st
-    (stx:spec_st 'int 'test)
-    (cons
-     (cons
-      (stx:declarator_ast_st (stx:id_st 'b 'test))
-      (stx:declarator_st (stx:id_st 'c 'test)))
-     (stx:declarator_st (stx:id_st 'd 'test))))
-   ;;;;statement-list
-   (cons
-    ;(cons
-     (stx:func_st 'func2 (stx:id_st 'a 'test))
-     ;;
-     #;(stx:if_else_st
-      (stx:constant_st 1 'test)
-      ;;;;compound-statementのネスト
-      (stx:compound_st
-       (stx:declaration_st (stx:spec_st 'int 'test) 
-                           (stx:declarator_st (stx:id_st 'bddddddddd 'test)))
-       (stx:assign_exp_st
-        (stx:id_st 'b 'test)
-        (stx:constant_st 2 'test)
-        'test))
-      ;;;;
-      (stx:null_statement_st 'null)
-      'test
-      'syntax-sygar)
-     ;)
-     ;;
-    (stx:assign_exp_st
-     (stx:id_st 'a 'test)
-     (stx:alge_exp_st
-      'add
-      (stx:constant_st 1 'test)
-      (stx:constant_st 2 'test)
-      'test)
-     'test))))
-(define test6
-  (stx:compound_st
-   (stx:declaration_st
-    (stx:spec_st 'int 'test)
-     (cons
-      (stx:declarator_ast_st (stx:id_st 'b 'test))
-      (stx:declarator_st (stx:id_st 'c 'test))))
-   (stx:func_st 'func2 (stx:id_st 'a 'test))))
-(define test7
-  (stx:compound_st
-   (cons
-    (stx:declaration_st
-     (stx:spec_st 'int 'test)
-     (cons
-      (cons
-       (stx:declarator_ast_st (stx:id_st 'b 'test))
-       (stx:declarator_st (stx:id_st 'c 'test)))
-      (stx:declarator_st (stx:id_st 'd 'test))))
-    (stx:declaration_st (stx:spec_st 'int 'test) 
-                        (stx:declarator_st (stx:id_st 'a 'test))))
-   (stx:func_st 'func2 (stx:id_st 'a 'test))))
-(define test8
-  (stx:func_proto_st
-   (stx:spec_st 'int 'test)
-   (stx:func_declarator_ast_st
-    'func
-    (cons
-     (cons
-      (stx:para_declaration_st (stx:spec_st 'int 'test) 
-                               (stx:id_st 'a 'test))
-      (stx:para_declaration_st (stx:spec_st 'int 'test) 
-                               (stx:id_ast_st 'b 'test)))
-     (stx:para_declaration_st (stx:spec_st 'int 'test) 
-                              (stx:id_st 'c 'test)))
-    'test)))
-(define test9
-  (stx:declaration_st
-   (stx:spec_st 'int 'test)
-   ;以下がdeclarator-list
-   (cons
-    (cons
-     (stx:declarator_st (stx:id_st 'a 'test))
-     (stx:declarator_ast_st (stx:id_st 'b 'test)))
-    (stx:declarator_st (stx:id_st 'c 'test)))))
-(define test10
-    (stx:declaration_st
-   (stx:spec_st 'void 'test)
-   ;以下がdeclarator-list
-     (stx:declarator_ast_st (stx:id_st 'b 'test))))
 
-;(format "(analy-func_proto_st test1)!!!!!!!!!!")
-;(analy-func_proto_st test1)
-;(format "(analy-func_proto_st test2)!!!!!!!!!!")
-;(analy-func_proto_st test2)
-;(format "(analy-func_def_st test3)!!!!!!!!!!")
-;(analy-func_def_st test3)
-;(format "(analy-compound_st test4 current-lev)!!!!!!!!!!")
-;(analy-compound_st test4 current-lev)
-;(format "(analy-compound_st test5 current-lev)!!!!!!!!!!")
-;(analy-compound_st test5 current-lev)
-;(format "(analy-compound_st test6 current-lev)!!!!!!!!!!")
-;(analy-compound_st test6 current-lev)
-;(format "(analy-compound_st test7 current-lev)!!!!!!!!!!")
-;(analy-compound_st test7 current-lev)
-;プロトタイプのエラー
-;(format "(analy-func_proto_st test8)!!!!!!!!!!")
-;(analy-func_proto_st test8)
-;(format "(analy-declaration_st test9)!!!!!!!!!!")
-;(analy-declaration_st test9 current-lev)
-;(format "(analy-declaration_st test10)!!!!!!!!!!")
-;(analy-declaration_st test10 0)
 (define p (open-input-file "kadai01.c"))
 (port-count-lines! p)
 (sem-analyze-tree (k08:parse-port p))

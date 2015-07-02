@@ -1,4 +1,5 @@
 #lang racket
+(require (prefix-in stx: "mysyntax.rkt"))
 (provide (all-defined-out))
 ;環境操作関数.
 (struct obj (name lev kind type)#:transparent)
@@ -63,21 +64,21 @@
 ;para-envとenvの両方で探す  
 (define (check-decl obj env)
   (map (lambda (x) (cond ((and (eq? (obj-name x) (obj-name obj))
-                                (eq? 'fun (obj-kind x))
-                                (eq? 0 (obj-lev x)))
-                           (error "ERROR! REDEFINITION OF "(obj-name obj)))
-                          ((and (eq? (obj-name x) (obj-name obj))
-                                (eq? 'var (obj-kind x))
-                                (eq? (obj-lev x) (obj-lev obj)))
-                           (error "ERROR! REDEFINITION OF "(obj-name obj)))
-                          ((and (eq? (obj-name x) (obj-name obj))
-                                (eq? 'parm (obj-kind x)))
-                           (let* ((meaningless 1))
-                             (display (format "WARNING!! SAME NAME IN PARAMETERS AND VAR DECLARATIONS\n"))
-                             #t))))
+                               (eq? 'fun (obj-kind x))
+                               (eq? 0 (obj-lev x)))
+                          (error "ERROR! REDEFINITION OF "(obj-name obj)))
+                         ((and (eq? (obj-name x) (obj-name obj))
+                               (eq? 'var (obj-kind x))
+                               (eq? (obj-lev x) (obj-lev obj)))
+                          (error "ERROR! REDEFINITION OF "(obj-name obj)))
+                         ((and (eq? (obj-name x) (obj-name obj))
+                               (eq? 'parm (obj-kind x)))
+                          (let* ((meaningless 1))
+                            (display (format "WARNING!! SAME NAME IN PARAMETERS AND VAR DECLARATIONS\n"))
+                            #t))))
        env))
-                           
-  
+
+
 (define (check-proto-para obj-list)
   (cond 
     ((eq? '() obj-list) (display (format "OK! CRRECT PARAMETERS OF FUNCTION PROTOTYPE.\n")))
@@ -86,7 +87,7 @@
      (error "FAILED! SOME REDEFINITION IN PARAMETERS OF FUNCTION PROTOTYPE"))
     (else (check-proto-para (cdr obj-list)))))
 (define (check-def-para obj-list)
-   (cond 
+  (cond 
     ((eq? '() obj-list) (display (format "OK! CRRECT PARAMETERS OF FUNCTION PROTOTYPE.\n")))
     ((eq? 'nopara obj-list) (display(format "OK! CRRECT PARAMETERS OF FUNCTION PROTOTYPE.\n")))
     ((in-env? (obj-name (car obj-list)) (cdr obj-list))
@@ -109,35 +110,73 @@
                      (error "ERROR! REDEFINITION OF "(obj-name obj)))
                     (else (display (format "OK! CRRECT FUNCTION PROTOTYPE OF '~a'.\n" (obj-name obj))))))
    env))  
+;引数stはstx:id_stもしくはstx:id_ast_st
+(define (check-var-ref st lev env)
+  (let* ((name (cond ((stx:id_st? st) (stx:id_st-name st))
+                     ((stx:id_ast_st? st) (stx:id_ast_st-name st)))))
+    (lookup-env name 
+                (map (lambda (x) (if (in-env? name env)
+                                     (cond ((and (eq? name (obj-name x))
+                                                 (or (eq? 'var (obj-kind x))
+                                                     (eq? 'parm (obj-kind x))))
+                                            x)
+                                           ((and (eq? name (obj-name x))
+                                                 (eq? 'fun (obj-kind x))) 
+                                            (error "ERROR AN UNDEFINED IDENTIFIER " name))
+                                           (else (error "ERROR AN UNDEFINED IDENTIFIER " env)))
+                                     (error "ERROR AN UNDEFINED IDENTIFIER " name)))
+                     env))))
+(check-var-ref (stx:id_st 'i 'test) 
+               4 
+               (list (obj 'i 4 'var 'int) 
+                     (obj 'main 0 'fun 'nopara) 
+                     (obj 'print 0 'proto 'test)))
+               
+(define (check-func-ref st lev env)
+  (let* ((name (stx:func_st-name st)))
+    (lookup-env name 
+                (map (lambda (x) (if (in-env? name env)
+                                     (cond ((and (eq? name (obj-name x))
+                                                 (or (eq? 'fun (obj-kind x))
+                                                     (eq? 'proto (obj-kind x))))
+                                            x)
+                                           ((and (eq? name (obj-name x))
+                                                 (eq? 'var (obj-kind x))) 
+                                            (error "ERROR AN UNDEFINED IDENTIFIER " name))
+                                           (else (error "ERROR AN UNDEFINED IDENTIFIER " name)))
+                                     (error "ERROR AN UNDEFINED IDENTIFIER " name)))
+                     env))))
+
+
 
 
 ;;;;;;;;テスト;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 #;(
-(define test101
-  (list (obj 'a 1 'parm 'int) (obj 'b 1 'parm '(pointer int)) (obj 'c 1 'parm 'int)))
-(define test102
-  (list (obj 'a 1 'parm 'int) (obj 'a 1 'parm '(pointer int)) (obj 'c 1 'parm 'int)))
-(check-proto-para test101)
-;下はエラー発生
-;(check-proto-para test102)
-
-(define env2 initial-env)
-(define a (obj 'name1 'lev1 'kind1 'int))
-(define b (obj 'name2 'lev2 'kind2 'void))
-(define c (obj 'name2 'lev3 'kind3 'void))
-(set! env2 (extend-env a env2))
-(set! env2 (extend-env b env2))
-(set! env2 (extend-env c env2))
-;(set! env (add-list (list a b) env))
-env2
-(in-env? 'name1 env2)
-(in-env? 'x env2)
-(lookup-env 'x env2)
-(lookup-env 'name2 env2)
-(define test (list 'a (list 'b 'c 'd) (list 'e 'f) 'g))
-(define test103 (map make-list-list test))
-(separate-list test103)
-)
+   (define test101
+     (list (obj 'a 1 'parm 'int) (obj 'b 1 'parm '(pointer int)) (obj 'c 1 'parm 'int)))
+   (define test102
+     (list (obj 'a 1 'parm 'int) (obj 'a 1 'parm '(pointer int)) (obj 'c 1 'parm 'int)))
+   (check-proto-para test101)
+   ;下はエラー発生
+   ;(check-proto-para test102)
+   
+   (define env2 initial-env)
+   (define a (obj 'name1 'lev1 'kind1 'int))
+   (define b (obj 'name2 'lev2 'kind2 'void))
+   (define c (obj 'name2 'lev3 'kind3 'void))
+   (set! env2 (extend-env a env2))
+   (set! env2 (extend-env b env2))
+   (set! env2 (extend-env c env2))
+   ;(set! env (add-list (list a b) env))
+   env2
+   (in-env? 'name1 env2)
+   (in-env? 'x env2)
+   (lookup-env 'x env2)
+   (lookup-env 'name2 env2)
+   (define test (list 'a (list 'b 'c 'd) (list 'e 'f) 'g))
+   (define test103 (map make-list-list test))
+   (separate-list test103)
+   )
 
 
 

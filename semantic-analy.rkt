@@ -6,10 +6,12 @@
 (provide (all-defined-out))
 
 (define current-lev 0)
+;(define comp-lev 0)
 (define env '())
 (define para-env '())
 (struct type_pointer (pointer type) #:transparent)
 ;funはシンボル 'fun、outは戻り値の型、inは引数の型のリスト.
+;パラメータの無い時'noparaが入る.
 (struct type_fun (fun out in) #:transparent)
 ;ポインタ型のみリスト構造で(list 'pointe var)の形式.
 ;myenv.rkt内で定義
@@ -17,6 +19,50 @@
 (struct para_flag (out-type para))
 (struct fundef_flag (out-type para))
 (struct comp_flag (decl stat n))
+
+(define (analy-declaration_st st lev)
+  ;;;;
+  ;内部定義
+  ;(stx:declarator_st...)と
+  ;levと  
+  ;'intもしくは'void
+  ;を引数にとり
+  ;obj
+  ;を返す関数.
+  (define (make-obj-from-decl decl type lev)
+    (let* ((id (cond ((stx:declarator_st? decl) 
+                      (stx:declarator_st-var decl))
+                     ((stx:declarator_ast_st? decl)
+                      (stx:declarator_ast_st-var decl))))
+           (name (stx:id_st-name id))          
+           (flag (cond ((stx:declarator_st? decl) 'nomal)
+                       ((stx:declarator_ast_st? decl) 'pointer)))
+           (kind 'var)
+           (type (cond ((eq? flag 'nomal) type)
+                       ((eq? flag 'pointer) (list 'pointer type)))))
+      (obj name lev kind type)))
+  ;;;;
+  (let* (;typeに入っているのは (stx:spec_st 'intか'void ポジション)
+         (type (stx:declaration_st-type-spec st))
+         (declarator-list (stx:declaration_st-declarator-list st))
+         ;objのlistを作成する.
+         (obj-list (map* 
+                    (lambda (x) (make-obj-from-decl x (stx:spec_st-type type) lev))
+                    declarator-list)))
+     ;(list? obj-list)
+    ;意味解析上のエラーがないか確認する.
+    (map (lambda (x) (check-decl x env)) obj-list)
+    ;(map (lambda (x) (check-decl x para-env)) obj-list)
+    ;なければ環境に追加.
+    (set! env (add-list obj-list env))
+    ;構造体を返す.
+    (stx:declaration_st type obj-list)))
+
+;(map (lambda (x) (check-decl x env)) (list (obj 'b 0 'var (type_pointer 'pointer 'void))))
+;(map (lambda (x) (check-decl x env)) 
+     ;(list (obj 'a 0 'var 'int) (obj 'b 0 'var (type_pointer 'pointer 'int)) (obj 'c 0 'var 'int)))
+
+;(list (obj 'b 0 'var '(pointer void)))
 
 
 (define (analy-func_proto_st st)
@@ -90,21 +136,23 @@
          (proto-type (cond ((eq? 'normal (para_flag-out-type flag))
                             (type_fun 'fun 
                                       (stx:spec_st-type spec) 
-                                      (map (lambda (x) (obj-type x)) para-obj-list)))
+                                      (cond ((eq? 'nopara para-obj-list)
+                                             'nopara)
+                                            (else (map (lambda (x) (obj-type x)) para-obj-list)))))
                            ;(struct type-pointer (pointer type) #:transparent)
                            ((eq? 'pointer (para_flag-out-type flag))
                             (type_fun 'fun
                                       (type_pointer 'pointer (stx:spec_st-type spec))
-                                      (map (lambda (x) (obj-type x)) para-obj-list)))))
+                                      (cond ((eq? 'nopara para-obj-list)
+                                             'nopara)
+                                            (else (map (lambda (x) (obj-type x)) para-obj-list)))))))
          (proto-obj (obj proto-name 0 'proto proto-type)))
     ;プロトタイプのオブジェクトのチェック
-    ;(check-env proto-obj env)
+    (check-proto proto-obj env)
     ;プロトタイプのオブジェクトを環境に追加.
     (set! env (extend-env proto-obj env))
     ;パラメータ内の二重宣言をチェック.
     (check-proto-para para-obj-list)
-    ;パラメータを環境に登録.
-    (set! para-env para-obj-list)
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     ;返す構造体
     ;ここで返したいものはlet*で取り出しておく必要がある.
@@ -199,7 +247,7 @@
                                       (map (lambda (x) (obj-type x)) para-obj-list)))))
          (fundef-obj (obj fundef-name 0 'fun fundef-type)))
     ;関数定義のオブジェクトのチェック
-    ;(check-env fundef-obj env)
+    (check-func fundef-obj env)
     ;関数定義のオブジェクトを環境に追加.
     (set! env (extend-env fundef-obj env))
     ;パラメータ内の二重宣言をチェック
@@ -219,12 +267,11 @@
                         ;nameの部分をプロトタイプのオブジェクトで置き換える.
                         (stx:func_declarator_ast_st fundef-obj para-obj-list fundef-pos) 
                         ))
-                     "!!!!!!!!!!(analy-compound_st compo)!!!!!!!!!!!!!"
+                     (analy-compound_st compo current-lev)
                      )))
 
 (define (analy-compound_st st lev)
-  (let* (
-         (flag (cond ((stx:compound_st? st) (comp_flag 'normal 'normal 1))
+  (let* ((flag (cond ((stx:compound_st? st) (comp_flag 'normal 'normal 1))
                      ((stx:compound_dec_st? st) (comp_flag 'normal 'nostat 2))
                      ((stx:compound_sta_st? st) (comp_flag 'nodecl 'normal 3))
                      ((stx:compound_null_st? st) (comp_flag 'nodecl 'nostat 4))))
@@ -235,11 +282,11 @@
          ;statement-listにはstatementのlist*が入る.
          ;処理する際はmap*で
          (stat-list (cond ((eq? 1 (comp_flag-n flag)) (stx:compound_st-statement-list st))
-                          ((eq? 3 (comp_flag-n flag)) (stx:compound_dec_st-declaration-list st))
+                          ((eq? 3 (comp_flag-n flag)) (stx:compound_sta_st-statement-list st))
                           ((or (eq? 2 (comp_flag-n flag))(eq? 4 (comp_flag-n flag))) 'nostat)))
          ;意味解析開始時にlevを一つ繰り上げる 
          (this-lev (+ lev 1))
-         ;decl-listに入るのは(list stx:declaration_st...)
+         ;decl-listに入るのは(list stx:declaration_st...)か'nodecl
          (decl-list (cond ((eq? 'normal (comp_flag-decl flag)) 
                             ;このときオブジェクトはcomp-envに追加する必要がある.
                             ;(map* analy-compdecl decl-list
@@ -248,25 +295,27 @@
                             'nodecl)))
          ;decl-listから環境を生成する.
          (comp-env 
-          (separate-list 
-           ;listの各要素がlistであることを保証させるためのmake-list-list
-           (map make-list-list
+          (cond 
+            ((eq? 'nodecl decl-list) 'nodecl)
+            (else (separate-list 
+                ;listの各要素がlistであることを保証させるためのmake-list-list
+                (map make-list-list
                 (map (lambda (x) (stx:declaration_st-declarator-list x)) decl-list))
-           )
+                )))
           )
+         (stat-list (cond ((eq? 'normal (comp_flag-stat flag)) 
+                           (map* (lambda (x) (analy-compstate x this-lev comp-env)) stat-list))
+                          ((eq? 'nostat (comp_flag-stat flag)) 
+                           'nostat)))
          ;チェックを行う.自身の環境とのチェック、
          ;大域環境とのチェックの2つの環境を参照してチェックを行う必要がある.
          )
-    
     ;意味解析終了時にlevを一つ繰り下げる
-    ;(set! this-lev (- lev 1))
+    ;(set! comp-lev (- lev 1))
     (stx:compound_st 
      decl-list
-     (cond ((eq? 'normal (comp_flag-stat flag)) 
-            (map* (lambda (x) (analy-compstate x this-lev comp-env)) stat-list))
-           ((eq? 'nostat (comp_flag-stat flag)) 
-            'nostat)))
-    ))
+     stat-list
+    )))
 
 (define (analy-compdecl st lev)
   ;;;;
@@ -300,6 +349,7 @@
     ;意味解析上のエラーがないかは外側でチェックするのでここでは実装しなくて良い.
     (stx:declaration_st type obj-list)))
 
+;envはnodeclの場合あり.
 (define (analy-compstate st lev env)
   (cond ((stx:null_statement_st? st) 
          st)
@@ -350,6 +400,7 @@
         ((stx:compound_dec_st? st) (analy-compound_st st lev))
         ((stx:compound_sta_st? st) (analy-compound_st st lev))
         ((stx:compound_null_st? st) (analy-compound_st st lev))
+        ;チェック時は環境に'nodeclが入ることがあることに注意.
         ((stx:func_st? st) 
          (let* ((out st)) 
            ;チェック実行
@@ -367,7 +418,7 @@
            ;チェック実行
            ;#t
            out))
-        (else (st))
+        (else st)
         ))
 
 
@@ -479,13 +530,41 @@
     (stx:declaration_st (stx:spec_st 'int 'test) 
                         (stx:declarator_st (stx:id_st 'a 'test))))
    (stx:func_st 'func2 (stx:id_st 'a 'test))))
+(define test8
+  (stx:func_proto_st
+   (stx:spec_st 'int 'test)
+   (stx:func_declarator_ast_st
+    'func
+    (cons
+     (cons
+      (stx:para_declaration_st (stx:spec_st 'int 'test) 
+                               (stx:id_st 'a 'test))
+      (stx:para_declaration_st (stx:spec_st 'int 'test) 
+                               (stx:id_ast_st 'b 'test)))
+     (stx:para_declaration_st (stx:spec_st 'int 'test) 
+                              (stx:id_st 'c 'test)))
+    'test)))
+(define test9
+  (stx:declaration_st
+   (stx:spec_st 'int 'test)
+   ;以下がdeclarator-list
+   (cons
+    (cons
+     (stx:declarator_st (stx:id_st 'a 'test))
+     (stx:declarator_ast_st (stx:id_st 'b 'test)))
+    (stx:declarator_st (stx:id_st 'c 'test)))))
+(define test10
+    (stx:declaration_st
+   (stx:spec_st 'void 'test)
+   ;以下がdeclarator-list
+     (stx:declarator_ast_st (stx:id_st 'b 'test))))
 
-(format "(analy-func_proto_st test1)!!!!!!!!!!")
-(analy-func_proto_st test1)
+;(format "(analy-func_proto_st test1)!!!!!!!!!!")
+;(analy-func_proto_st test1)
 ;(format "(analy-func_proto_st test2)!!!!!!!!!!")
 ;(analy-func_proto_st test2)
-(format "(analy-func_def_st test3)!!!!!!!!!!")
-(analy-func_def_st test3)
+;(format "(analy-func_def_st test3)!!!!!!!!!!")
+;(analy-func_def_st test3)
 ;(format "(analy-compound_st test4 current-lev)!!!!!!!!!!")
 ;(analy-compound_st test4 current-lev)
 ;(format "(analy-compound_st test5 current-lev)!!!!!!!!!!")
@@ -494,3 +573,10 @@
 ;(analy-compound_st test6 current-lev)
 ;(format "(analy-compound_st test7 current-lev)!!!!!!!!!!")
 ;(analy-compound_st test7 current-lev)
+;プロトタイプのエラー
+;(format "(analy-func_proto_st test8)!!!!!!!!!!")
+;(analy-func_proto_st test8)
+;(format "(analy-declaration_st test9)!!!!!!!!!!")
+(analy-declaration_st test9 current-lev)
+;(format "(analy-declaration_st test10)!!!!!!!!!!")
+(analy-declaration_st test10 current-lev)

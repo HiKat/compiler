@@ -1,5 +1,5 @@
-0	g1126	=	(g1127)
-1	g1127	=	(program EOF)
+0	g106102	=	(g106103)
+1	g106103	=	(program EOF)
 2	program	=	(program_with_print)
 3	program_with_print	=	(external_declaration)
 4	program_with_print	=	(program_with_print external_declaration)
@@ -86,25 +86,25 @@
 85	argument_expression_list	=	(assign_expr)
 86	argument_expression_list	=	(argument_expression_list comma assign_expr)
 State 0
-	g1126 -> . g1127 
+	g106102 -> . g106103 
 
-	g1127					goto	1
-	type_specifier					goto	8
 	function_prototype					goto	6
-	declaration					goto	5
-	program_with_print					goto	3
-	int					shift	9
-	void					shift	10
 	function_definition					goto	7
-	program					goto	2
 	external_declaration					goto	4
+	type_specifier					goto	8
+	program					goto	2
+	g106103					goto	1
+	void					shift	10
+	program_with_print					goto	3
+	declaration					goto	5
+	int					shift	9
 
 State 1
-	g1126 -> g1127 . 
+	g106102 -> g106103 . 
 
 
 State 2
-	g1127 -> program . EOF 
+	g106103 -> program . EOF 
 
 	EOF					accept	
 
@@ -112,54 +112,54 @@ State 3
 	program -> program_with_print . 
 	program_with_print -> program_with_print . external_declaration 
 
-	void					shift	10
-	function_prototype					goto	6
-	declaration					goto	5
-	int					shift	9
-	EOF					reduce	2
 	function_definition					goto	7
 	type_specifier					goto	8
+	function_prototype					goto	6
+	void					shift	10
 	external_declaration					goto	12
+	EOF					reduce	2
+	declaration					goto	5
+	int					shift	9
 
 State 4
 	program_with_print -> external_declaration . 
 
 	EOF					reduce	3
-	void					reduce	3
 	int					reduce	3
+	void					reduce	3
 
 State 5
 	external_declaration -> declaration . 
 
 	EOF					reduce	5
-	void					reduce	5
 	int					reduce	5
+	void					reduce	5
 
 State 6
 	external_declaration -> function_prototype . 
 
 	EOF					reduce	6
-	void					reduce	6
 	int					reduce	6
+	void					reduce	6
 
 State 7
 	external_declaration -> function_definition . 
 
 	EOF					reduce	7
-	void					reduce	7
 	int					reduce	7
+	void					reduce	7
 
 State 8
 	declaration -> type_specifier . declarator_list semicolon 
 	function_prototype -> type_specifier . function_declarator semicolon 
 	function_definition -> type_specifier . function_declarator compound_statement 
 
-	function_declarator					goto	16
-	*					shift	18
 	declarator					goto	14
-	direct_declarator					goto	15
+	function_declarator					goto	16
 	VAR					shift	17
 	declarator_list					goto	13
+	direct_declarator					goto	15
+	*					shift	18
 
 State 9
 	type_specifier -> int . 
@@ -174,42 +174,42 @@ State 10
 	VAR					reduce	27
 
 State 11
-	g1127 -> program EOF . 
+	g106103 -> program EOF . 
 
 
 State 12
 	program_with_print -> program_with_print external_declaration . 
 
 	EOF					reduce	4
-	void					reduce	4
 	int					reduce	4
+	void					reduce	4
 
 State 13
 	declaration -> type_specifier declarator_list . semicolon 
 	declarator_list -> declarator_list . comma declarator 
 
-	comma					shift	20
 	semicolon					shift	19
+	comma					shift	20
 
 State 14
 	declarator_list -> declarator . 
 
-	comma					reduce	9
 	semicolon					reduce	9
+	comma					reduce	9
 
 State 15
 	declarator -> direct_declarator . 
 
-	comma					reduce	11
 	semicolon					reduce	11
+	comma					reduce	11
 
 State 16
 	function_prototype -> type_specifier function_declarator . semicolon 
 	function_definition -> type_specifier function_declarator . compound_statement 
 
-	compound_statement					goto	21
-	semicolon					shift	23
 	l_big_paren					shift	22
+	semicolon					shift	23
+	compound_statement					goto	21
 
 State 17
 	direct_declarator -> VAR . 
@@ -218,52 +218,52 @@ State 17
 	function_declarator -> VAR . l_small_paren r_small_paren 
 
 	l_small_paren					shift	24
+	semicolon					reduce	13
 	comma					reduce	13
 	l_mid_paren					shift	25
-	semicolon					reduce	13
 
 State 18
 	declarator -> * . direct_declarator 
 	function_declarator -> * . VAR l_small_paren parameter_type_list r_small_paren 
 	function_declarator -> * . VAR l_small_paren r_small_paren 
 
-	direct_declarator					goto	26
 	VAR					shift	27
+	direct_declarator					goto	26
 
 State 19
 	declaration -> type_specifier declarator_list semicolon . 
 
-	&					reduce	8
 	l_big_paren					reduce	8
-	void					reduce	8
-	*					reduce	8
-	for					reduce	8
-	semicolon					reduce	8
-	-					reduce	8
-	l_small_paren					reduce	8
-	VAR					reduce	8
-	r_big_paren					reduce	8
-	int					reduce	8
-	if					reduce	8
 	EOF					reduce	8
 	while					reduce	8
-	NUM					reduce	8
 	return					reduce	8
+	*					reduce	8
+	semicolon					reduce	8
+	r_big_paren					reduce	8
+	for					reduce	8
+	-					reduce	8
+	VAR					reduce	8
+	&					reduce	8
+	void					reduce	8
+	if					reduce	8
+	NUM					reduce	8
+	l_small_paren					reduce	8
+	int					reduce	8
 
 State 20
 	declarator_list -> declarator_list comma . declarator 
 
-	*					shift	30
 	declarator					goto	28
-	direct_declarator					goto	15
 	VAR					shift	29
+	direct_declarator					goto	15
+	*					shift	30
 
 State 21
 	function_definition -> type_specifier function_declarator compound_statement . 
 
 	EOF					reduce	20
-	void					reduce	20
 	int					reduce	20
+	void					reduce	20
 
 State 22
 	compound_statement -> l_big_paren . declaration_list statement_list r_big_paren 
@@ -271,56 +271,56 @@ State 22
 	compound_statement -> l_big_paren . statement_list r_big_paren 
 	compound_statement -> l_big_paren . r_big_paren 
 
-	-					shift	52
-	assign_expr					goto	38
-	&					shift	51
-	statement_list					goto	36
+	statement					goto	33
+	NUM					shift	48
+	while					shift	56
+	return					shift	58
+	declaration_list					goto	35
+	equality_expr					goto	41
+	relational_expr					goto	42
 	declaration					goto	31
 	for					shift	57
-	declaration_list					goto	35
-	unary_expr					goto	45
-	return					shift	58
-	logical_AND_expr					goto	40
-	equality_expr					goto	41
 	semicolon					shift	59
 	if					shift	55
-	NUM					shift	48
-	relational_expr					goto	42
 	l_big_paren					shift	22
-	primary_expr					goto	47
-	expression					goto	37
-	void					shift	10
-	add_expr					goto	43
-	statement					goto	33
-	r_big_paren					shift	54
-	type_specifier					goto	32
-	postfix_expr					goto	46
+	assign_expr					goto	38
 	logical_OR_expr					goto	39
+	int					shift	9
+	statement_list					goto	36
+	expression					goto	37
+	unary_expr					goto	45
+	add_expr					goto	43
+	r_big_paren					shift	54
+	primary_expr					goto	47
+	*					shift	50
+	mult_expr					goto	44
+	-					shift	52
+	VAR					shift	49
+	logical_AND_expr					goto	40
+	type_specifier					goto	32
+	&					shift	51
+	void					shift	10
+	postfix_expr					goto	46
 	l_small_paren					shift	53
 	compound_statement					goto	34
-	int					shift	9
-	*					shift	50
-	while					shift	56
-	mult_expr					goto	44
-	VAR					shift	49
 
 State 23
 	function_prototype -> type_specifier function_declarator semicolon . 
 
 	EOF					reduce	15
-	void					reduce	15
 	int					reduce	15
+	void					reduce	15
 
 State 24
 	function_declarator -> VAR l_small_paren . parameter_type_list r_small_paren 
 	function_declarator -> VAR l_small_paren . r_small_paren 
 
-	int					shift	9
-	void					shift	10
+	parameter_type_list					goto	60
 	r_small_paren					shift	63
 	type_specifier					goto	62
+	int					shift	9
+	void					shift	10
 	parameter_declaration					goto	61
-	parameter_type_list					goto	60
 
 State 25
 	direct_declarator -> VAR l_mid_paren . NUM r_mid_paren 
@@ -330,8 +330,8 @@ State 25
 State 26
 	declarator -> * direct_declarator . 
 
-	comma					reduce	12
 	semicolon					reduce	12
+	comma					reduce	12
 
 State 27
 	direct_declarator -> VAR . 
@@ -340,214 +340,214 @@ State 27
 	function_declarator -> * VAR . l_small_paren r_small_paren 
 
 	l_small_paren					shift	65
+	semicolon					reduce	13
 	comma					reduce	13
 	l_mid_paren					shift	25
-	semicolon					reduce	13
 
 State 28
 	declarator_list -> declarator_list comma declarator . 
 
-	comma					reduce	10
 	semicolon					reduce	10
+	comma					reduce	10
 
 State 29
 	direct_declarator -> VAR . 
 	direct_declarator -> VAR . l_mid_paren NUM r_mid_paren 
 
-	comma					reduce	13
 	l_mid_paren					shift	25
 	semicolon					reduce	13
+	comma					reduce	13
 
 State 30
 	declarator -> * . direct_declarator 
 
-	direct_declarator					goto	26
 	VAR					shift	29
+	direct_declarator					goto	26
 
 State 31
 	declaration_list -> declaration . 
 
-	&					reduce	48
 	l_big_paren					reduce	48
-	int					reduce	48
+	NUM					reduce	48
+	while					reduce	48
+	return					reduce	48
 	*					reduce	48
-	for					reduce	48
 	semicolon					reduce	48
-	-					reduce	48
-	l_small_paren					reduce	48
-	VAR					reduce	48
 	r_big_paren					reduce	48
+	for					reduce	48
+	-					reduce	48
+	VAR					reduce	48
+	&					reduce	48
 	void					reduce	48
 	if					reduce	48
-	while					reduce	48
-	NUM					reduce	48
-	return					reduce	48
+	l_small_paren					reduce	48
+	int					reduce	48
 
 State 32
 	declaration -> type_specifier . declarator_list semicolon 
 
-	*					shift	30
 	declarator					goto	14
-	direct_declarator					goto	15
 	VAR					shift	29
 	declarator_list					goto	13
+	direct_declarator					goto	15
+	*					shift	30
 
 State 33
 	statement_list -> statement . 
 
-	&					reduce	50
 	l_big_paren					reduce	50
-	*					reduce	50
-	for					reduce	50
+	NUM					reduce	50
+	while					reduce	50
 	semicolon					reduce	50
-	-					reduce	50
-	l_small_paren					reduce	50
+	*					reduce	50
 	r_big_paren					reduce	50
+	for					reduce	50
+	-					reduce	50
+	VAR					reduce	50
+	&					reduce	50
 	return					reduce	50
 	if					reduce	50
-	while					reduce	50
-	NUM					reduce	50
-	VAR					reduce	50
+	l_small_paren					reduce	50
 
 State 34
 	statement -> compound_statement . 
 
-	else					reduce	30
-	&					reduce	30
 	l_big_paren					reduce	30
-	*					reduce	30
-	for					reduce	30
+	NUM					reduce	30
+	while					reduce	30
 	semicolon					reduce	30
-	-					reduce	30
-	l_small_paren					reduce	30
+	else					reduce	30
+	*					reduce	30
 	r_big_paren					reduce	30
+	for					reduce	30
+	-					reduce	30
+	VAR					reduce	30
+	&					reduce	30
 	return					reduce	30
 	if					reduce	30
-	while					reduce	30
-	NUM					reduce	30
-	VAR					reduce	30
+	l_small_paren					reduce	30
 
 State 35
 	compound_statement -> l_big_paren declaration_list . statement_list r_big_paren 
 	compound_statement -> l_big_paren declaration_list . r_big_paren 
 	declaration_list -> declaration_list . declaration 
 
-	-					shift	52
-	r_big_paren					shift	68
-	assign_expr					goto	38
-	&					shift	51
 	l_big_paren					shift	22
+	NUM					shift	48
+	statement					goto	33
+	return					shift	58
+	equality_expr					goto	41
+	relational_expr					goto	42
 	declaration					goto	66
 	for					shift	57
-	unary_expr					goto	45
-	logical_AND_expr					goto	40
-	equality_expr					goto	41
 	semicolon					shift	59
+	while					shift	56
 	if					shift	55
-	NUM					shift	48
-	relational_expr					goto	42
-	return					shift	58
-	primary_expr					goto	47
-	expression					goto	37
-	void					shift	10
-	add_expr					goto	43
-	statement					goto	33
-	statement_list					goto	67
-	type_specifier					goto	32
-	postfix_expr					goto	46
+	assign_expr					goto	38
 	logical_OR_expr					goto	39
+	int					shift	9
+	statement_list					goto	67
+	expression					goto	37
+	unary_expr					goto	45
+	add_expr					goto	43
+	r_big_paren					shift	68
+	primary_expr					goto	47
+	*					shift	50
+	mult_expr					goto	44
+	-					shift	52
+	VAR					shift	49
+	logical_AND_expr					goto	40
+	type_specifier					goto	32
+	&					shift	51
+	void					shift	10
+	postfix_expr					goto	46
 	l_small_paren					shift	53
 	compound_statement					goto	34
-	int					shift	9
-	*					shift	50
-	while					shift	56
-	mult_expr					goto	44
-	VAR					shift	49
 
 State 36
 	compound_statement -> l_big_paren statement_list . r_big_paren 
 	statement_list -> statement_list . statement 
 
-	-					shift	52
-	assign_expr					goto	38
-	&					shift	51
 	l_big_paren					shift	22
-	for					shift	57
-	unary_expr					goto	45
-	logical_AND_expr					goto	40
-	r_big_paren					shift	70
-	semicolon					shift	59
-	if					shift	55
 	NUM					shift	48
-	relational_expr					goto	42
-	primary_expr					goto	47
-	expression					goto	37
+	while					shift	56
+	semicolon					shift	59
 	equality_expr					goto	41
+	relational_expr					goto	42
+	r_big_paren					shift	70
+	for					shift	57
+	if					shift	55
+	assign_expr					goto	38
+	logical_OR_expr					goto	39
+	expression					goto	37
 	add_expr					goto	43
 	statement					goto	69
+	primary_expr					goto	47
+	*					shift	50
+	mult_expr					goto	44
+	-					shift	52
+	VAR					shift	49
+	logical_AND_expr					goto	40
+	unary_expr					goto	45
+	&					shift	51
+	return					shift	58
 	postfix_expr					goto	46
-	logical_OR_expr					goto	39
 	l_small_paren					shift	53
 	compound_statement					goto	34
-	return					shift	58
-	*					shift	50
-	while					shift	56
-	mult_expr					goto	44
-	VAR					shift	49
 
 State 37
 	statement -> expression . semicolon 
 	expression -> expression . comma assign_expr 
 
-	comma					shift	72
 	semicolon					shift	71
+	comma					shift	72
 
 State 38
 	expression -> assign_expr . 
 
-	r_mid_paren					reduce	52
 	r_small_paren					reduce	52
-	comma					reduce	52
 	semicolon					reduce	52
+	comma					reduce	52
+	r_mid_paren					reduce	52
 
 State 39
 	assign_expr -> logical_OR_expr . 
 	assign_expr -> logical_OR_expr . = assign_expr 
 	logical_OR_expr -> logical_OR_expr . or logical_AND_expr 
 
-	r_mid_paren					reduce	54
-	=					shift	73
-	r_small_paren					reduce	54
-	comma					reduce	54
 	or					shift	74
+	r_small_paren					reduce	54
+	=					shift	73
 	semicolon					reduce	54
+	comma					reduce	54
+	r_mid_paren					reduce	54
 
 State 40
 	logical_OR_expr -> logical_AND_expr . 
 	logical_AND_expr -> logical_AND_expr . and equality_expr 
 
 	=					reduce	56
-	comma					reduce	56
 	and					shift	75
-	r_mid_paren					reduce	56
-	r_small_paren					reduce	56
-	or					reduce	56
 	semicolon					reduce	56
+	r_small_paren					reduce	56
+	r_mid_paren					reduce	56
+	or					reduce	56
+	comma					reduce	56
 
 State 41
 	logical_AND_expr -> equality_expr . 
 	equality_expr -> equality_expr . equal relational_expr 
 	equality_expr -> equality_expr . not relational_expr 
 
-	equal					shift	76
 	not					shift	77
-	=					reduce	58
-	comma					reduce	58
-	and					reduce	58
-	r_mid_paren					reduce	58
 	r_small_paren					reduce	58
-	or					reduce	58
+	and					reduce	58
 	semicolon					reduce	58
+	=					reduce	58
+	r_mid_paren					reduce	58
+	or					reduce	58
+	comma					reduce	58
+	equal					shift	76
 
 State 42
 	equality_expr -> relational_expr . 
@@ -557,18 +557,18 @@ State 42
 	relational_expr -> relational_expr . and_more add_expr 
 
 	not					reduce	60
-	=					reduce	60
-	r_mid_paren					reduce	60
-	and					reduce	60
 	more					shift	80
-	comma					reduce	60
+	and					reduce	60
 	semicolon					reduce	60
-	equal					reduce	60
+	r_small_paren					reduce	60
 	less					shift	78
 	and_more					shift	81
+	equal					reduce	60
+	=					reduce	60
 	and_less					shift	79
-	r_small_paren					reduce	60
+	r_mid_paren					reduce	60
 	or					reduce	60
+	comma					reduce	60
 
 State 43
 	relational_expr -> add_expr . 
@@ -576,20 +576,20 @@ State 43
 	add_expr -> add_expr . - mult_expr 
 
 	not					reduce	63
-	=					reduce	63
-	comma					reduce	63
-	and					reduce	63
 	more					reduce	63
-	r_mid_paren					reduce	63
+	and					reduce	63
 	semicolon					reduce	63
-	equal					reduce	63
-	-					shift	83
+	+					shift	82
 	less					reduce	63
 	and_more					reduce	63
-	and_less					reduce	63
+	equal					reduce	63
+	-					shift	83
 	r_small_paren					reduce	63
+	=					reduce	63
+	and_less					reduce	63
+	r_mid_paren					reduce	63
 	or					reduce	63
-	+					shift	82
+	comma					reduce	63
 
 State 44
 	add_expr -> mult_expr . 
@@ -597,110 +597,110 @@ State 44
 	mult_expr -> mult_expr . / unary_expr 
 
 	not					reduce	68
-	=					reduce	68
-	comma					reduce	68
-	and					reduce	68
 	more					reduce	68
+	and					reduce	68
+	semicolon					reduce	68
+	+					reduce	68
 	/					shift	85
 	*					shift	84
-	r_mid_paren					reduce	68
-	semicolon					reduce	68
-	equal					reduce	68
-	-					reduce	68
 	less					reduce	68
 	and_more					reduce	68
-	and_less					reduce	68
+	equal					reduce	68
+	-					reduce	68
 	r_small_paren					reduce	68
+	=					reduce	68
+	and_less					reduce	68
+	r_mid_paren					reduce	68
 	or					reduce	68
-	+					reduce	68
+	comma					reduce	68
 
 State 45
 	mult_expr -> unary_expr . 
 
 	not					reduce	71
-	=					reduce	71
-	comma					reduce	71
-	and					reduce	71
 	more					reduce	71
+	and					reduce	71
+	semicolon					reduce	71
+	+					reduce	71
 	/					reduce	71
 	*					reduce	71
-	r_mid_paren					reduce	71
-	semicolon					reduce	71
-	equal					reduce	71
-	-					reduce	71
 	less					reduce	71
 	and_more					reduce	71
-	and_less					reduce	71
+	equal					reduce	71
+	-					reduce	71
 	r_small_paren					reduce	71
+	=					reduce	71
+	and_less					reduce	71
+	r_mid_paren					reduce	71
 	or					reduce	71
-	+					reduce	71
+	comma					reduce	71
 
 State 46
 	unary_expr -> postfix_expr . 
 	postfix_expr -> postfix_expr . l_mid_paren expression r_mid_paren 
 
 	not					reduce	74
-	=					reduce	74
-	comma					reduce	74
-	and					reduce	74
+	l_mid_paren					shift	86
 	more					reduce	74
+	and					reduce	74
+	semicolon					reduce	74
+	+					reduce	74
 	/					reduce	74
 	*					reduce	74
-	r_mid_paren					reduce	74
-	semicolon					reduce	74
+	less					reduce	74
+	and_more					reduce	74
 	equal					reduce	74
 	-					reduce	74
-	less					reduce	74
-	l_mid_paren					shift	86
-	and_more					reduce	74
-	and_less					reduce	74
 	r_small_paren					reduce	74
+	=					reduce	74
+	and_less					reduce	74
+	r_mid_paren					reduce	74
 	or					reduce	74
-	+					reduce	74
+	comma					reduce	74
 
 State 47
 	postfix_expr -> primary_expr . 
 
 	not					reduce	78
-	=					reduce	78
-	comma					reduce	78
-	and					reduce	78
+	l_mid_paren					reduce	78
 	more					reduce	78
+	and					reduce	78
+	semicolon					reduce	78
+	+					reduce	78
 	/					reduce	78
 	*					reduce	78
-	r_mid_paren					reduce	78
-	semicolon					reduce	78
+	less					reduce	78
+	and_more					reduce	78
 	equal					reduce	78
 	-					reduce	78
-	less					reduce	78
-	l_mid_paren					reduce	78
-	and_more					reduce	78
-	and_less					reduce	78
 	r_small_paren					reduce	78
+	=					reduce	78
+	and_less					reduce	78
+	r_mid_paren					reduce	78
 	or					reduce	78
-	+					reduce	78
+	comma					reduce	78
 
 State 48
 	primary_expr -> NUM . 
 
 	not					reduce	83
-	=					reduce	83
-	comma					reduce	83
-	and					reduce	83
+	l_mid_paren					reduce	83
 	more					reduce	83
+	and					reduce	83
+	semicolon					reduce	83
+	+					reduce	83
 	/					reduce	83
 	*					reduce	83
-	r_mid_paren					reduce	83
-	semicolon					reduce	83
+	less					reduce	83
+	and_more					reduce	83
 	equal					reduce	83
 	-					reduce	83
-	less					reduce	83
-	l_mid_paren					reduce	83
-	and_more					reduce	83
-	and_less					reduce	83
 	r_small_paren					reduce	83
+	=					reduce	83
+	and_less					reduce	83
+	r_mid_paren					reduce	83
 	or					reduce	83
-	+					reduce	83
+	comma					reduce	83
 
 State 49
 	postfix_expr -> VAR . l_small_paren argument_expression_list r_small_paren 
@@ -708,105 +708,105 @@ State 49
 	primary_expr -> VAR . 
 
 	not					reduce	82
-	=					reduce	82
-	comma					reduce	82
-	and					reduce	82
+	l_mid_paren					reduce	82
 	more					reduce	82
+	and					reduce	82
+	semicolon					reduce	82
+	+					reduce	82
 	/					reduce	82
 	*					reduce	82
-	r_mid_paren					reduce	82
-	semicolon					reduce	82
+	less					reduce	82
+	and_more					reduce	82
 	equal					reduce	82
 	-					reduce	82
-	less					reduce	82
-	l_mid_paren					reduce	82
-	and_more					reduce	82
-	l_small_paren					shift	87
-	and_less					reduce	82
 	r_small_paren					reduce	82
+	=					reduce	82
+	and_less					reduce	82
+	r_mid_paren					reduce	82
 	or					reduce	82
-	+					reduce	82
+	l_small_paren					shift	87
+	comma					reduce	82
 
 State 50
 	unary_expr -> * . unary_expr 
 
 	-					shift	52
-	l_small_paren					shift	53
-	&					shift	51
 	VAR					shift	49
-	*					shift	50
-	NUM					shift	48
+	unary_expr					goto	88
+	&					shift	51
 	primary_expr					goto	47
 	postfix_expr					goto	46
-	unary_expr					goto	88
+	l_small_paren					shift	53
+	*					shift	50
+	NUM					shift	48
 
 State 51
 	unary_expr -> & . unary_expr 
 
 	-					shift	52
-	l_small_paren					shift	53
-	&					shift	51
 	VAR					shift	49
-	*					shift	50
-	NUM					shift	48
+	unary_expr					goto	89
+	&					shift	51
 	primary_expr					goto	47
 	postfix_expr					goto	46
-	unary_expr					goto	89
+	l_small_paren					shift	53
+	*					shift	50
+	NUM					shift	48
 
 State 52
 	unary_expr -> - . unary_expr 
 
 	-					shift	52
-	l_small_paren					shift	53
-	&					shift	51
 	VAR					shift	49
-	*					shift	50
-	NUM					shift	48
+	unary_expr					goto	90
+	&					shift	51
 	primary_expr					goto	47
 	postfix_expr					goto	46
-	unary_expr					goto	90
+	l_small_paren					shift	53
+	*					shift	50
+	NUM					shift	48
 
 State 53
 	primary_expr -> l_small_paren . expression r_small_paren 
 
 	expression					goto	91
-	assign_expr					goto	38
-	&					shift	51
+	NUM					shift	48
+	logical_OR_expr					goto	39
+	primary_expr					goto	47
+	equality_expr					goto	41
+	*					shift	50
+	mult_expr					goto	44
 	relational_expr					goto	42
 	add_expr					goto	43
-	*					shift	50
 	-					shift	52
-	primary_expr					goto	47
+	VAR					shift	49
+	assign_expr					goto	38
 	unary_expr					goto	45
-	logical_OR_expr					goto	39
+	&					shift	51
+	postfix_expr					goto	46
 	l_small_paren					shift	53
 	logical_AND_expr					goto	40
-	equality_expr					goto	41
-	NUM					shift	48
-	mult_expr					goto	44
-	VAR					shift	49
-	postfix_expr					goto	46
 
 State 54
 	compound_statement -> l_big_paren r_big_paren . 
 
-	else					reduce	47
-	&					reduce	47
 	l_big_paren					reduce	47
-	void					reduce	47
-	*					reduce	47
-	for					reduce	47
-	semicolon					reduce	47
-	-					reduce	47
-	l_small_paren					reduce	47
-	VAR					reduce	47
-	r_big_paren					reduce	47
-	int					reduce	47
-	if					reduce	47
 	EOF					reduce	47
 	while					reduce	47
-	NUM					reduce	47
 	return					reduce	47
+	else					reduce	47
+	*					reduce	47
+	semicolon					reduce	47
+	r_big_paren					reduce	47
+	for					reduce	47
+	-					reduce	47
+	VAR					reduce	47
+	&					reduce	47
+	void					reduce	47
+	if					reduce	47
+	NUM					reduce	47
+	l_small_paren					reduce	47
+	int					reduce	47
 
 State 55
 	statement -> if . l_small_paren expression r_small_paren statement 
@@ -836,41 +836,41 @@ State 58
 	statement -> return . semicolon 
 
 	expression					goto	95
-	assign_expr					goto	38
-	&					shift	51
+	NUM					shift	48
+	logical_OR_expr					goto	39
+	semicolon					shift	96
+	primary_expr					goto	47
+	equality_expr					goto	41
+	*					shift	50
+	mult_expr					goto	44
 	relational_expr					goto	42
 	add_expr					goto	43
-	*					shift	50
 	-					shift	52
-	primary_expr					goto	47
+	VAR					shift	49
+	assign_expr					goto	38
 	unary_expr					goto	45
-	logical_OR_expr					goto	39
+	&					shift	51
+	postfix_expr					goto	46
 	l_small_paren					shift	53
 	logical_AND_expr					goto	40
-	equality_expr					goto	41
-	semicolon					shift	96
-	NUM					shift	48
-	mult_expr					goto	44
-	VAR					shift	49
-	postfix_expr					goto	46
 
 State 59
 	statement -> semicolon . 
 
-	else					reduce	28
-	&					reduce	28
 	l_big_paren					reduce	28
-	*					reduce	28
-	for					reduce	28
+	NUM					reduce	28
+	while					reduce	28
 	semicolon					reduce	28
-	-					reduce	28
-	l_small_paren					reduce	28
+	else					reduce	28
+	*					reduce	28
 	r_big_paren					reduce	28
+	for					reduce	28
+	-					reduce	28
+	VAR					reduce	28
+	&					reduce	28
 	return					reduce	28
 	if					reduce	28
-	while					reduce	28
-	NUM					reduce	28
-	VAR					reduce	28
+	l_small_paren					reduce	28
 
 State 60
 	function_declarator -> VAR l_small_paren parameter_type_list . r_small_paren 
@@ -888,8 +888,8 @@ State 61
 State 62
 	parameter_declaration -> type_specifier . parameter_declarator 
 
-	*					shift	101
 	VAR					shift	100
+	*					shift	101
 	parameter_declarator					goto	99
 
 State 63
@@ -907,467 +907,467 @@ State 65
 	function_declarator -> * VAR l_small_paren . parameter_type_list r_small_paren 
 	function_declarator -> * VAR l_small_paren . r_small_paren 
 
-	int					shift	9
-	void					shift	10
+	parameter_type_list					goto	103
 	r_small_paren					shift	104
 	type_specifier					goto	62
+	int					shift	9
+	void					shift	10
 	parameter_declaration					goto	61
-	parameter_type_list					goto	103
 
 State 66
 	declaration_list -> declaration_list declaration . 
 
-	&					reduce	49
 	l_big_paren					reduce	49
-	int					reduce	49
+	NUM					reduce	49
+	while					reduce	49
+	return					reduce	49
 	*					reduce	49
-	for					reduce	49
 	semicolon					reduce	49
-	-					reduce	49
-	l_small_paren					reduce	49
-	VAR					reduce	49
 	r_big_paren					reduce	49
+	for					reduce	49
+	-					reduce	49
+	VAR					reduce	49
+	&					reduce	49
 	void					reduce	49
 	if					reduce	49
-	while					reduce	49
-	NUM					reduce	49
-	return					reduce	49
+	l_small_paren					reduce	49
+	int					reduce	49
 
 State 67
 	compound_statement -> l_big_paren declaration_list statement_list . r_big_paren 
 	statement_list -> statement_list . statement 
 
-	-					shift	52
-	assign_expr					goto	38
-	&					shift	51
 	l_big_paren					shift	22
-	for					shift	57
-	unary_expr					goto	45
-	logical_AND_expr					goto	40
-	r_big_paren					shift	105
-	semicolon					shift	59
-	if					shift	55
 	NUM					shift	48
-	relational_expr					goto	42
-	primary_expr					goto	47
-	expression					goto	37
+	while					shift	56
+	semicolon					shift	59
 	equality_expr					goto	41
+	relational_expr					goto	42
+	r_big_paren					shift	105
+	for					shift	57
+	if					shift	55
+	assign_expr					goto	38
+	logical_OR_expr					goto	39
+	expression					goto	37
 	add_expr					goto	43
 	statement					goto	69
+	primary_expr					goto	47
+	*					shift	50
+	mult_expr					goto	44
+	-					shift	52
+	VAR					shift	49
+	logical_AND_expr					goto	40
+	unary_expr					goto	45
+	&					shift	51
+	return					shift	58
 	postfix_expr					goto	46
-	logical_OR_expr					goto	39
 	l_small_paren					shift	53
 	compound_statement					goto	34
-	return					shift	58
-	*					shift	50
-	while					shift	56
-	mult_expr					goto	44
-	VAR					shift	49
 
 State 68
 	compound_statement -> l_big_paren declaration_list r_big_paren . 
 
-	else					reduce	45
-	&					reduce	45
 	l_big_paren					reduce	45
-	void					reduce	45
-	*					reduce	45
-	for					reduce	45
-	semicolon					reduce	45
-	-					reduce	45
-	l_small_paren					reduce	45
-	VAR					reduce	45
-	r_big_paren					reduce	45
-	int					reduce	45
-	if					reduce	45
 	EOF					reduce	45
 	while					reduce	45
-	NUM					reduce	45
 	return					reduce	45
+	else					reduce	45
+	*					reduce	45
+	semicolon					reduce	45
+	r_big_paren					reduce	45
+	for					reduce	45
+	-					reduce	45
+	VAR					reduce	45
+	&					reduce	45
+	void					reduce	45
+	if					reduce	45
+	NUM					reduce	45
+	l_small_paren					reduce	45
+	int					reduce	45
 
 State 69
 	statement_list -> statement_list statement . 
 
-	&					reduce	51
 	l_big_paren					reduce	51
-	*					reduce	51
-	for					reduce	51
+	NUM					reduce	51
+	while					reduce	51
 	semicolon					reduce	51
-	-					reduce	51
-	l_small_paren					reduce	51
+	*					reduce	51
 	r_big_paren					reduce	51
+	for					reduce	51
+	-					reduce	51
+	VAR					reduce	51
+	&					reduce	51
 	return					reduce	51
 	if					reduce	51
-	while					reduce	51
-	NUM					reduce	51
-	VAR					reduce	51
+	l_small_paren					reduce	51
 
 State 70
 	compound_statement -> l_big_paren statement_list r_big_paren . 
 
-	else					reduce	46
-	&					reduce	46
 	l_big_paren					reduce	46
-	void					reduce	46
-	*					reduce	46
-	for					reduce	46
-	semicolon					reduce	46
-	-					reduce	46
-	l_small_paren					reduce	46
-	VAR					reduce	46
-	r_big_paren					reduce	46
-	int					reduce	46
-	if					reduce	46
 	EOF					reduce	46
 	while					reduce	46
-	NUM					reduce	46
 	return					reduce	46
+	else					reduce	46
+	*					reduce	46
+	semicolon					reduce	46
+	r_big_paren					reduce	46
+	for					reduce	46
+	-					reduce	46
+	VAR					reduce	46
+	&					reduce	46
+	void					reduce	46
+	if					reduce	46
+	NUM					reduce	46
+	l_small_paren					reduce	46
+	int					reduce	46
 
 State 71
 	statement -> expression semicolon . 
 
-	else					reduce	29
-	&					reduce	29
 	l_big_paren					reduce	29
-	*					reduce	29
-	for					reduce	29
+	NUM					reduce	29
+	while					reduce	29
 	semicolon					reduce	29
-	-					reduce	29
-	l_small_paren					reduce	29
+	else					reduce	29
+	*					reduce	29
 	r_big_paren					reduce	29
+	for					reduce	29
+	-					reduce	29
+	VAR					reduce	29
+	&					reduce	29
 	return					reduce	29
 	if					reduce	29
-	while					reduce	29
-	NUM					reduce	29
-	VAR					reduce	29
+	l_small_paren					reduce	29
 
 State 72
 	expression -> expression comma . assign_expr 
 
-	-					shift	52
-	assign_expr					goto	106
-	&					shift	51
+	NUM					shift	48
+	logical_OR_expr					goto	39
+	primary_expr					goto	47
+	equality_expr					goto	41
+	*					shift	50
+	mult_expr					goto	44
 	relational_expr					goto	42
 	add_expr					goto	43
-	*					shift	50
-	primary_expr					goto	47
+	-					shift	52
+	VAR					shift	49
+	assign_expr					goto	106
 	unary_expr					goto	45
-	logical_OR_expr					goto	39
+	&					shift	51
+	postfix_expr					goto	46
 	l_small_paren					shift	53
 	logical_AND_expr					goto	40
-	equality_expr					goto	41
-	NUM					shift	48
-	mult_expr					goto	44
-	VAR					shift	49
-	postfix_expr					goto	46
 
 State 73
 	assign_expr -> logical_OR_expr = . assign_expr 
 
-	-					shift	52
-	assign_expr					goto	107
-	&					shift	51
+	NUM					shift	48
+	logical_OR_expr					goto	39
+	primary_expr					goto	47
+	equality_expr					goto	41
+	*					shift	50
+	mult_expr					goto	44
 	relational_expr					goto	42
 	add_expr					goto	43
-	*					shift	50
-	primary_expr					goto	47
+	-					shift	52
+	VAR					shift	49
+	assign_expr					goto	107
 	unary_expr					goto	45
-	logical_OR_expr					goto	39
+	&					shift	51
+	postfix_expr					goto	46
 	l_small_paren					shift	53
 	logical_AND_expr					goto	40
-	equality_expr					goto	41
-	NUM					shift	48
-	mult_expr					goto	44
-	VAR					shift	49
-	postfix_expr					goto	46
 
 State 74
 	logical_OR_expr -> logical_OR_expr or . logical_AND_expr 
 
-	-					shift	52
-	&					shift	51
-	add_expr					goto	43
-	*					shift	50
-	primary_expr					goto	47
-	unary_expr					goto	45
-	relational_expr					goto	42
-	l_small_paren					shift	53
-	logical_AND_expr					goto	108
-	equality_expr					goto	41
 	NUM					shift	48
+	primary_expr					goto	47
+	equality_expr					goto	41
+	*					shift	50
 	mult_expr					goto	44
+	relational_expr					goto	42
+	add_expr					goto	43
+	-					shift	52
 	VAR					shift	49
+	logical_AND_expr					goto	108
+	unary_expr					goto	45
+	&					shift	51
 	postfix_expr					goto	46
+	l_small_paren					shift	53
 
 State 75
 	logical_AND_expr -> logical_AND_expr and . equality_expr 
 
-	-					shift	52
-	&					shift	51
-	add_expr					goto	43
-	*					shift	50
-	postfix_expr					goto	46
-	relational_expr					goto	42
-	l_small_paren					shift	53
-	equality_expr					goto	109
-	unary_expr					goto	45
 	NUM					shift	48
-	mult_expr					goto	44
-	VAR					shift	49
 	primary_expr					goto	47
+	equality_expr					goto	109
+	*					shift	50
+	mult_expr					goto	44
+	relational_expr					goto	42
+	add_expr					goto	43
+	-					shift	52
+	VAR					shift	49
+	unary_expr					goto	45
+	&					shift	51
+	postfix_expr					goto	46
+	l_small_paren					shift	53
 
 State 76
 	equality_expr -> equality_expr equal . relational_expr 
 
 	-					shift	52
-	relational_expr					goto	110
-	l_small_paren					shift	53
-	&					shift	51
-	VAR					shift	49
 	add_expr					goto	43
-	*					shift	50
-	NUM					shift	48
-	mult_expr					goto	44
+	unary_expr					goto	45
+	&					shift	51
 	primary_expr					goto	47
 	postfix_expr					goto	46
-	unary_expr					goto	45
+	VAR					shift	49
+	l_small_paren					shift	53
+	*					shift	50
+	mult_expr					goto	44
+	relational_expr					goto	110
+	NUM					shift	48
 
 State 77
 	equality_expr -> equality_expr not . relational_expr 
 
 	-					shift	52
-	relational_expr					goto	111
-	l_small_paren					shift	53
-	&					shift	51
-	VAR					shift	49
 	add_expr					goto	43
-	*					shift	50
-	NUM					shift	48
-	mult_expr					goto	44
+	unary_expr					goto	45
+	&					shift	51
 	primary_expr					goto	47
 	postfix_expr					goto	46
-	unary_expr					goto	45
+	VAR					shift	49
+	l_small_paren					shift	53
+	*					shift	50
+	mult_expr					goto	44
+	relational_expr					goto	111
+	NUM					shift	48
 
 State 78
 	relational_expr -> relational_expr less . add_expr 
 
 	-					shift	52
-	l_small_paren					shift	53
-	&					shift	51
-	VAR					shift	49
-	add_expr					goto	112
-	*					shift	50
 	NUM					shift	48
-	mult_expr					goto	44
+	unary_expr					goto	45
+	&					shift	51
 	primary_expr					goto	47
 	postfix_expr					goto	46
-	unary_expr					goto	45
+	VAR					shift	49
+	l_small_paren					shift	53
+	*					shift	50
+	mult_expr					goto	44
+	add_expr					goto	112
 
 State 79
 	relational_expr -> relational_expr and_less . add_expr 
 
 	-					shift	52
-	l_small_paren					shift	53
-	&					shift	51
-	VAR					shift	49
-	add_expr					goto	113
-	*					shift	50
 	NUM					shift	48
-	mult_expr					goto	44
+	unary_expr					goto	45
+	&					shift	51
 	primary_expr					goto	47
 	postfix_expr					goto	46
-	unary_expr					goto	45
+	VAR					shift	49
+	l_small_paren					shift	53
+	*					shift	50
+	mult_expr					goto	44
+	add_expr					goto	113
 
 State 80
 	relational_expr -> relational_expr more . add_expr 
 
 	-					shift	52
-	l_small_paren					shift	53
-	&					shift	51
-	VAR					shift	49
-	add_expr					goto	114
-	*					shift	50
 	NUM					shift	48
-	mult_expr					goto	44
+	unary_expr					goto	45
+	&					shift	51
 	primary_expr					goto	47
 	postfix_expr					goto	46
-	unary_expr					goto	45
+	VAR					shift	49
+	l_small_paren					shift	53
+	*					shift	50
+	mult_expr					goto	44
+	add_expr					goto	114
 
 State 81
 	relational_expr -> relational_expr and_more . add_expr 
 
 	-					shift	52
-	l_small_paren					shift	53
-	&					shift	51
-	VAR					shift	49
-	add_expr					goto	115
-	*					shift	50
 	NUM					shift	48
-	mult_expr					goto	44
+	unary_expr					goto	45
+	&					shift	51
 	primary_expr					goto	47
 	postfix_expr					goto	46
-	unary_expr					goto	45
+	VAR					shift	49
+	l_small_paren					shift	53
+	*					shift	50
+	mult_expr					goto	44
+	add_expr					goto	115
 
 State 82
 	add_expr -> add_expr + . mult_expr 
 
 	-					shift	52
-	l_small_paren					shift	53
-	&					shift	51
 	VAR					shift	49
-	*					shift	50
-	NUM					shift	48
-	mult_expr					goto	116
+	unary_expr					goto	45
+	&					shift	51
 	primary_expr					goto	47
 	postfix_expr					goto	46
-	unary_expr					goto	45
+	l_small_paren					shift	53
+	*					shift	50
+	mult_expr					goto	116
+	NUM					shift	48
 
 State 83
 	add_expr -> add_expr - . mult_expr 
 
 	-					shift	52
-	l_small_paren					shift	53
-	&					shift	51
 	VAR					shift	49
-	*					shift	50
-	NUM					shift	48
-	mult_expr					goto	117
+	unary_expr					goto	45
+	&					shift	51
 	primary_expr					goto	47
 	postfix_expr					goto	46
-	unary_expr					goto	45
+	l_small_paren					shift	53
+	*					shift	50
+	mult_expr					goto	117
+	NUM					shift	48
 
 State 84
 	mult_expr -> mult_expr * . unary_expr 
 
 	-					shift	52
-	l_small_paren					shift	53
-	&					shift	51
 	VAR					shift	49
-	*					shift	50
-	NUM					shift	48
+	unary_expr					goto	118
+	&					shift	51
 	primary_expr					goto	47
 	postfix_expr					goto	46
-	unary_expr					goto	118
+	l_small_paren					shift	53
+	*					shift	50
+	NUM					shift	48
 
 State 85
 	mult_expr -> mult_expr / . unary_expr 
 
 	-					shift	52
-	l_small_paren					shift	53
-	&					shift	51
 	VAR					shift	49
-	*					shift	50
-	NUM					shift	48
+	unary_expr					goto	119
+	&					shift	51
 	primary_expr					goto	47
 	postfix_expr					goto	46
-	unary_expr					goto	119
+	l_small_paren					shift	53
+	*					shift	50
+	NUM					shift	48
 
 State 86
 	postfix_expr -> postfix_expr l_mid_paren . expression r_mid_paren 
 
 	expression					goto	120
-	assign_expr					goto	38
-	&					shift	51
+	NUM					shift	48
+	logical_OR_expr					goto	39
+	primary_expr					goto	47
+	equality_expr					goto	41
+	*					shift	50
+	mult_expr					goto	44
 	relational_expr					goto	42
 	add_expr					goto	43
-	*					shift	50
 	-					shift	52
-	primary_expr					goto	47
+	VAR					shift	49
+	assign_expr					goto	38
 	unary_expr					goto	45
-	logical_OR_expr					goto	39
+	&					shift	51
+	postfix_expr					goto	46
 	l_small_paren					shift	53
 	logical_AND_expr					goto	40
-	equality_expr					goto	41
-	NUM					shift	48
-	mult_expr					goto	44
-	VAR					shift	49
-	postfix_expr					goto	46
 
 State 87
 	postfix_expr -> VAR l_small_paren . argument_expression_list r_small_paren 
 	postfix_expr -> VAR l_small_paren . r_small_paren 
 
-	-					shift	52
-	assign_expr					goto	121
-	&					shift	51
-	l_small_paren					shift	53
-	argument_expression_list					goto	122
-	add_expr					goto	43
-	*					shift	50
-	primary_expr					goto	47
-	r_small_paren					shift	123
-	unary_expr					goto	45
-	logical_OR_expr					goto	39
-	relational_expr					goto	42
-	logical_AND_expr					goto	40
-	equality_expr					goto	41
 	NUM					shift	48
+	logical_OR_expr					goto	39
+	r_small_paren					shift	123
+	primary_expr					goto	47
+	equality_expr					goto	41
+	*					shift	50
 	mult_expr					goto	44
+	relational_expr					goto	42
+	add_expr					goto	43
+	-					shift	52
 	VAR					shift	49
+	assign_expr					goto	121
+	unary_expr					goto	45
+	&					shift	51
 	postfix_expr					goto	46
+	l_small_paren					shift	53
+	logical_AND_expr					goto	40
+	argument_expression_list					goto	122
 
 State 88
 	unary_expr -> * unary_expr . 
 
 	not					reduce	77
-	=					reduce	77
-	comma					reduce	77
-	and					reduce	77
 	more					reduce	77
+	and					reduce	77
+	semicolon					reduce	77
+	+					reduce	77
 	/					reduce	77
 	*					reduce	77
-	r_mid_paren					reduce	77
-	semicolon					reduce	77
-	equal					reduce	77
-	-					reduce	77
 	less					reduce	77
 	and_more					reduce	77
-	and_less					reduce	77
+	equal					reduce	77
+	-					reduce	77
 	r_small_paren					reduce	77
+	=					reduce	77
+	and_less					reduce	77
+	r_mid_paren					reduce	77
 	or					reduce	77
-	+					reduce	77
+	comma					reduce	77
 
 State 89
 	unary_expr -> & unary_expr . 
 
 	not					reduce	76
-	=					reduce	76
-	comma					reduce	76
-	and					reduce	76
 	more					reduce	76
+	and					reduce	76
+	semicolon					reduce	76
+	+					reduce	76
 	/					reduce	76
 	*					reduce	76
-	r_mid_paren					reduce	76
-	semicolon					reduce	76
-	equal					reduce	76
-	-					reduce	76
 	less					reduce	76
 	and_more					reduce	76
-	and_less					reduce	76
+	equal					reduce	76
+	-					reduce	76
 	r_small_paren					reduce	76
+	=					reduce	76
+	and_less					reduce	76
+	r_mid_paren					reduce	76
 	or					reduce	76
-	+					reduce	76
+	comma					reduce	76
 
 State 90
 	unary_expr -> - unary_expr . 
 
 	not					reduce	75
-	=					reduce	75
-	comma					reduce	75
-	and					reduce	75
 	more					reduce	75
+	and					reduce	75
+	semicolon					reduce	75
+	+					reduce	75
 	/					reduce	75
 	*					reduce	75
-	r_mid_paren					reduce	75
-	semicolon					reduce	75
-	equal					reduce	75
-	-					reduce	75
 	less					reduce	75
 	and_more					reduce	75
-	and_less					reduce	75
+	equal					reduce	75
+	-					reduce	75
 	r_small_paren					reduce	75
+	=					reduce	75
+	and_less					reduce	75
+	r_mid_paren					reduce	75
 	or					reduce	75
-	+					reduce	75
+	comma					reduce	75
 
 State 91
 	expression -> expression . comma assign_expr 
@@ -1381,43 +1381,43 @@ State 92
 	statement -> if l_small_paren . expression r_small_paren statement else statement 
 
 	expression					goto	125
-	assign_expr					goto	38
-	&					shift	51
+	NUM					shift	48
+	logical_OR_expr					goto	39
+	primary_expr					goto	47
+	equality_expr					goto	41
+	*					shift	50
+	mult_expr					goto	44
 	relational_expr					goto	42
 	add_expr					goto	43
-	*					shift	50
 	-					shift	52
-	primary_expr					goto	47
+	VAR					shift	49
+	assign_expr					goto	38
 	unary_expr					goto	45
-	logical_OR_expr					goto	39
+	&					shift	51
+	postfix_expr					goto	46
 	l_small_paren					shift	53
 	logical_AND_expr					goto	40
-	equality_expr					goto	41
-	NUM					shift	48
-	mult_expr					goto	44
-	VAR					shift	49
-	postfix_expr					goto	46
 
 State 93
 	statement -> while l_small_paren . expression r_small_paren statement 
 
 	expression					goto	126
-	assign_expr					goto	38
-	&					shift	51
+	NUM					shift	48
+	logical_OR_expr					goto	39
+	primary_expr					goto	47
+	equality_expr					goto	41
+	*					shift	50
+	mult_expr					goto	44
 	relational_expr					goto	42
 	add_expr					goto	43
-	*					shift	50
 	-					shift	52
-	primary_expr					goto	47
+	VAR					shift	49
+	assign_expr					goto	38
 	unary_expr					goto	45
-	logical_OR_expr					goto	39
+	&					shift	51
+	postfix_expr					goto	46
 	l_small_paren					shift	53
 	logical_AND_expr					goto	40
-	equality_expr					goto	41
-	NUM					shift	48
-	mult_expr					goto	44
-	VAR					shift	49
-	postfix_expr					goto	46
 
 State 94
 	statement -> for l_small_paren . expression semicolon expression semicolon expression r_small_paren statement 
@@ -1430,48 +1430,48 @@ State 94
 	statement -> for l_small_paren . semicolon semicolon r_small_paren statement 
 
 	expression					goto	127
-	assign_expr					goto	38
-	&					shift	51
+	NUM					shift	48
+	logical_OR_expr					goto	39
+	semicolon					shift	128
+	primary_expr					goto	47
+	equality_expr					goto	41
+	*					shift	50
+	mult_expr					goto	44
 	relational_expr					goto	42
 	add_expr					goto	43
-	*					shift	50
 	-					shift	52
-	primary_expr					goto	47
+	VAR					shift	49
+	assign_expr					goto	38
 	unary_expr					goto	45
-	logical_OR_expr					goto	39
+	&					shift	51
+	postfix_expr					goto	46
 	l_small_paren					shift	53
 	logical_AND_expr					goto	40
-	equality_expr					goto	41
-	semicolon					shift	128
-	NUM					shift	48
-	mult_expr					goto	44
-	VAR					shift	49
-	postfix_expr					goto	46
 
 State 95
 	statement -> return expression . semicolon 
 	expression -> expression . comma assign_expr 
 
-	comma					shift	72
 	semicolon					shift	129
+	comma					shift	72
 
 State 96
 	statement -> return semicolon . 
 
-	else					reduce	43
-	&					reduce	43
 	l_big_paren					reduce	43
-	*					reduce	43
-	for					reduce	43
+	NUM					reduce	43
+	while					reduce	43
 	semicolon					reduce	43
-	-					reduce	43
-	l_small_paren					reduce	43
+	else					reduce	43
+	*					reduce	43
 	r_big_paren					reduce	43
+	for					reduce	43
+	-					reduce	43
+	VAR					reduce	43
+	&					reduce	43
 	return					reduce	43
 	if					reduce	43
-	while					reduce	43
-	NUM					reduce	43
-	VAR					reduce	43
+	l_small_paren					reduce	43
 
 State 97
 	function_declarator -> VAR l_small_paren parameter_type_list r_small_paren . 
@@ -1482,10 +1482,10 @@ State 97
 State 98
 	parameter_type_list -> parameter_type_list comma . parameter_declaration 
 
-	void					shift	10
 	type_specifier					goto	62
-	parameter_declaration					goto	130
 	int					shift	9
+	void					shift	10
+	parameter_declaration					goto	130
 
 State 99
 	parameter_declaration -> type_specifier parameter_declarator . 
@@ -1507,8 +1507,8 @@ State 101
 State 102
 	direct_declarator -> VAR l_mid_paren NUM r_mid_paren . 
 
-	comma					reduce	14
 	semicolon					reduce	14
+	comma					reduce	14
 
 State 103
 	function_declarator -> * VAR l_small_paren parameter_type_list . r_small_paren 
@@ -1526,66 +1526,66 @@ State 104
 State 105
 	compound_statement -> l_big_paren declaration_list statement_list r_big_paren . 
 
-	else					reduce	44
-	&					reduce	44
 	l_big_paren					reduce	44
-	void					reduce	44
-	*					reduce	44
-	for					reduce	44
-	semicolon					reduce	44
-	-					reduce	44
-	l_small_paren					reduce	44
-	VAR					reduce	44
-	r_big_paren					reduce	44
-	int					reduce	44
-	if					reduce	44
 	EOF					reduce	44
 	while					reduce	44
-	NUM					reduce	44
 	return					reduce	44
+	else					reduce	44
+	*					reduce	44
+	semicolon					reduce	44
+	r_big_paren					reduce	44
+	for					reduce	44
+	-					reduce	44
+	VAR					reduce	44
+	&					reduce	44
+	void					reduce	44
+	if					reduce	44
+	NUM					reduce	44
+	l_small_paren					reduce	44
+	int					reduce	44
 
 State 106
 	expression -> expression comma assign_expr . 
 
-	r_mid_paren					reduce	53
 	r_small_paren					reduce	53
-	comma					reduce	53
 	semicolon					reduce	53
+	comma					reduce	53
+	r_mid_paren					reduce	53
 
 State 107
 	assign_expr -> logical_OR_expr = assign_expr . 
 
-	r_mid_paren					reduce	55
 	r_small_paren					reduce	55
-	comma					reduce	55
 	semicolon					reduce	55
+	comma					reduce	55
+	r_mid_paren					reduce	55
 
 State 108
 	logical_OR_expr -> logical_OR_expr or logical_AND_expr . 
 	logical_AND_expr -> logical_AND_expr . and equality_expr 
 
 	=					reduce	57
-	comma					reduce	57
 	and					shift	75
-	r_mid_paren					reduce	57
-	r_small_paren					reduce	57
-	or					reduce	57
 	semicolon					reduce	57
+	r_small_paren					reduce	57
+	r_mid_paren					reduce	57
+	or					reduce	57
+	comma					reduce	57
 
 State 109
 	logical_AND_expr -> logical_AND_expr and equality_expr . 
 	equality_expr -> equality_expr . equal relational_expr 
 	equality_expr -> equality_expr . not relational_expr 
 
-	equal					shift	76
 	not					shift	77
-	=					reduce	59
-	comma					reduce	59
-	and					reduce	59
-	r_mid_paren					reduce	59
 	r_small_paren					reduce	59
-	or					reduce	59
+	and					reduce	59
 	semicolon					reduce	59
+	=					reduce	59
+	r_mid_paren					reduce	59
+	or					reduce	59
+	comma					reduce	59
+	equal					shift	76
 
 State 110
 	equality_expr -> equality_expr equal relational_expr . 
@@ -1595,18 +1595,18 @@ State 110
 	relational_expr -> relational_expr . and_more add_expr 
 
 	not					reduce	61
-	=					reduce	61
-	r_mid_paren					reduce	61
-	and					reduce	61
 	more					shift	80
-	comma					reduce	61
+	and					reduce	61
 	semicolon					reduce	61
-	equal					reduce	61
+	r_small_paren					reduce	61
 	less					shift	78
 	and_more					shift	81
+	equal					reduce	61
+	=					reduce	61
 	and_less					shift	79
-	r_small_paren					reduce	61
+	r_mid_paren					reduce	61
 	or					reduce	61
+	comma					reduce	61
 
 State 111
 	equality_expr -> equality_expr not relational_expr . 
@@ -1616,18 +1616,18 @@ State 111
 	relational_expr -> relational_expr . and_more add_expr 
 
 	not					reduce	62
-	=					reduce	62
-	r_mid_paren					reduce	62
-	and					reduce	62
 	more					shift	80
-	comma					reduce	62
+	and					reduce	62
 	semicolon					reduce	62
-	equal					reduce	62
+	r_small_paren					reduce	62
 	less					shift	78
 	and_more					shift	81
+	equal					reduce	62
+	=					reduce	62
 	and_less					shift	79
-	r_small_paren					reduce	62
+	r_mid_paren					reduce	62
 	or					reduce	62
+	comma					reduce	62
 
 State 112
 	relational_expr -> relational_expr less add_expr . 
@@ -1635,20 +1635,20 @@ State 112
 	add_expr -> add_expr . - mult_expr 
 
 	not					reduce	64
-	=					reduce	64
-	comma					reduce	64
-	and					reduce	64
 	more					reduce	64
-	r_mid_paren					reduce	64
+	and					reduce	64
 	semicolon					reduce	64
-	equal					reduce	64
-	-					shift	83
+	+					shift	82
 	less					reduce	64
 	and_more					reduce	64
-	and_less					reduce	64
+	equal					reduce	64
+	-					shift	83
 	r_small_paren					reduce	64
+	=					reduce	64
+	and_less					reduce	64
+	r_mid_paren					reduce	64
 	or					reduce	64
-	+					shift	82
+	comma					reduce	64
 
 State 113
 	relational_expr -> relational_expr and_less add_expr . 
@@ -1656,20 +1656,20 @@ State 113
 	add_expr -> add_expr . - mult_expr 
 
 	not					reduce	66
-	=					reduce	66
-	comma					reduce	66
-	and					reduce	66
 	more					reduce	66
-	r_mid_paren					reduce	66
+	and					reduce	66
 	semicolon					reduce	66
-	equal					reduce	66
-	-					shift	83
+	+					shift	82
 	less					reduce	66
 	and_more					reduce	66
-	and_less					reduce	66
+	equal					reduce	66
+	-					shift	83
 	r_small_paren					reduce	66
+	=					reduce	66
+	and_less					reduce	66
+	r_mid_paren					reduce	66
 	or					reduce	66
-	+					shift	82
+	comma					reduce	66
 
 State 114
 	relational_expr -> relational_expr more add_expr . 
@@ -1677,20 +1677,20 @@ State 114
 	add_expr -> add_expr . - mult_expr 
 
 	not					reduce	65
-	=					reduce	65
-	comma					reduce	65
-	and					reduce	65
 	more					reduce	65
-	r_mid_paren					reduce	65
+	and					reduce	65
 	semicolon					reduce	65
-	equal					reduce	65
-	-					shift	83
+	+					shift	82
 	less					reduce	65
 	and_more					reduce	65
-	and_less					reduce	65
+	equal					reduce	65
+	-					shift	83
 	r_small_paren					reduce	65
+	=					reduce	65
+	and_less					reduce	65
+	r_mid_paren					reduce	65
 	or					reduce	65
-	+					shift	82
+	comma					reduce	65
 
 State 115
 	relational_expr -> relational_expr and_more add_expr . 
@@ -1698,20 +1698,20 @@ State 115
 	add_expr -> add_expr . - mult_expr 
 
 	not					reduce	67
-	=					reduce	67
-	comma					reduce	67
-	and					reduce	67
 	more					reduce	67
-	r_mid_paren					reduce	67
+	and					reduce	67
 	semicolon					reduce	67
-	equal					reduce	67
-	-					shift	83
+	+					shift	82
 	less					reduce	67
 	and_more					reduce	67
-	and_less					reduce	67
+	equal					reduce	67
+	-					shift	83
 	r_small_paren					reduce	67
+	=					reduce	67
+	and_less					reduce	67
+	r_mid_paren					reduce	67
 	or					reduce	67
-	+					shift	82
+	comma					reduce	67
 
 State 116
 	add_expr -> add_expr + mult_expr . 
@@ -1719,22 +1719,22 @@ State 116
 	mult_expr -> mult_expr . / unary_expr 
 
 	not					reduce	69
-	=					reduce	69
-	comma					reduce	69
-	and					reduce	69
 	more					reduce	69
+	and					reduce	69
+	semicolon					reduce	69
+	+					reduce	69
 	/					shift	85
 	*					shift	84
-	r_mid_paren					reduce	69
-	semicolon					reduce	69
-	equal					reduce	69
-	-					reduce	69
 	less					reduce	69
 	and_more					reduce	69
-	and_less					reduce	69
+	equal					reduce	69
+	-					reduce	69
 	r_small_paren					reduce	69
+	=					reduce	69
+	and_less					reduce	69
+	r_mid_paren					reduce	69
 	or					reduce	69
-	+					reduce	69
+	comma					reduce	69
 
 State 117
 	add_expr -> add_expr - mult_expr . 
@@ -1742,64 +1742,64 @@ State 117
 	mult_expr -> mult_expr . / unary_expr 
 
 	not					reduce	70
-	=					reduce	70
-	comma					reduce	70
-	and					reduce	70
 	more					reduce	70
+	and					reduce	70
+	semicolon					reduce	70
+	+					reduce	70
 	/					shift	85
 	*					shift	84
-	r_mid_paren					reduce	70
-	semicolon					reduce	70
-	equal					reduce	70
-	-					reduce	70
 	less					reduce	70
 	and_more					reduce	70
-	and_less					reduce	70
+	equal					reduce	70
+	-					reduce	70
 	r_small_paren					reduce	70
+	=					reduce	70
+	and_less					reduce	70
+	r_mid_paren					reduce	70
 	or					reduce	70
-	+					reduce	70
+	comma					reduce	70
 
 State 118
 	mult_expr -> mult_expr * unary_expr . 
 
 	not					reduce	72
-	=					reduce	72
-	comma					reduce	72
-	and					reduce	72
 	more					reduce	72
+	and					reduce	72
+	semicolon					reduce	72
+	+					reduce	72
 	/					reduce	72
 	*					reduce	72
-	r_mid_paren					reduce	72
-	semicolon					reduce	72
-	equal					reduce	72
-	-					reduce	72
 	less					reduce	72
 	and_more					reduce	72
-	and_less					reduce	72
+	equal					reduce	72
+	-					reduce	72
 	r_small_paren					reduce	72
+	=					reduce	72
+	and_less					reduce	72
+	r_mid_paren					reduce	72
 	or					reduce	72
-	+					reduce	72
+	comma					reduce	72
 
 State 119
 	mult_expr -> mult_expr / unary_expr . 
 
 	not					reduce	73
-	=					reduce	73
-	comma					reduce	73
-	and					reduce	73
 	more					reduce	73
+	and					reduce	73
+	semicolon					reduce	73
+	+					reduce	73
 	/					reduce	73
 	*					reduce	73
-	r_mid_paren					reduce	73
-	semicolon					reduce	73
-	equal					reduce	73
-	-					reduce	73
 	less					reduce	73
 	and_more					reduce	73
-	and_less					reduce	73
+	equal					reduce	73
+	-					reduce	73
 	r_small_paren					reduce	73
+	=					reduce	73
+	and_less					reduce	73
+	r_mid_paren					reduce	73
 	or					reduce	73
-	+					reduce	73
+	comma					reduce	73
 
 State 120
 	expression -> expression . comma assign_expr 
@@ -1825,45 +1825,45 @@ State 123
 	postfix_expr -> VAR l_small_paren r_small_paren . 
 
 	not					reduce	81
-	=					reduce	81
-	comma					reduce	81
-	and					reduce	81
+	l_mid_paren					reduce	81
 	more					reduce	81
+	and					reduce	81
+	semicolon					reduce	81
+	+					reduce	81
 	/					reduce	81
 	*					reduce	81
-	r_mid_paren					reduce	81
-	semicolon					reduce	81
+	less					reduce	81
+	and_more					reduce	81
 	equal					reduce	81
 	-					reduce	81
-	less					reduce	81
-	l_mid_paren					reduce	81
-	and_more					reduce	81
-	and_less					reduce	81
 	r_small_paren					reduce	81
+	=					reduce	81
+	and_less					reduce	81
+	r_mid_paren					reduce	81
 	or					reduce	81
-	+					reduce	81
+	comma					reduce	81
 
 State 124
 	primary_expr -> l_small_paren expression r_small_paren . 
 
 	not					reduce	84
-	=					reduce	84
-	comma					reduce	84
-	and					reduce	84
+	l_mid_paren					reduce	84
 	more					reduce	84
+	and					reduce	84
+	semicolon					reduce	84
+	+					reduce	84
 	/					reduce	84
 	*					reduce	84
-	r_mid_paren					reduce	84
-	semicolon					reduce	84
+	less					reduce	84
+	and_more					reduce	84
 	equal					reduce	84
 	-					reduce	84
-	less					reduce	84
-	l_mid_paren					reduce	84
-	and_more					reduce	84
-	and_less					reduce	84
 	r_small_paren					reduce	84
+	=					reduce	84
+	and_less					reduce	84
+	r_mid_paren					reduce	84
 	or					reduce	84
-	+					reduce	84
+	comma					reduce	84
 
 State 125
 	statement -> if l_small_paren expression . r_small_paren statement 
@@ -1887,8 +1887,8 @@ State 127
 	statement -> for l_small_paren expression . semicolon semicolon r_small_paren statement 
 	expression -> expression . comma assign_expr 
 
-	comma					shift	72
 	semicolon					shift	138
+	comma					shift	72
 
 State 128
 	statement -> for l_small_paren semicolon . expression semicolon expression r_small_paren statement 
@@ -1897,41 +1897,41 @@ State 128
 	statement -> for l_small_paren semicolon . semicolon r_small_paren statement 
 
 	expression					goto	139
-	assign_expr					goto	38
-	&					shift	51
+	NUM					shift	48
+	logical_OR_expr					goto	39
+	semicolon					shift	140
+	primary_expr					goto	47
+	equality_expr					goto	41
+	*					shift	50
+	mult_expr					goto	44
 	relational_expr					goto	42
 	add_expr					goto	43
-	*					shift	50
 	-					shift	52
-	primary_expr					goto	47
+	VAR					shift	49
+	assign_expr					goto	38
 	unary_expr					goto	45
-	logical_OR_expr					goto	39
+	&					shift	51
+	postfix_expr					goto	46
 	l_small_paren					shift	53
 	logical_AND_expr					goto	40
-	equality_expr					goto	41
-	semicolon					shift	140
-	NUM					shift	48
-	mult_expr					goto	44
-	VAR					shift	49
-	postfix_expr					goto	46
 
 State 129
 	statement -> return expression semicolon . 
 
-	else					reduce	42
-	&					reduce	42
 	l_big_paren					reduce	42
-	*					reduce	42
-	for					reduce	42
+	NUM					reduce	42
+	while					reduce	42
 	semicolon					reduce	42
-	-					reduce	42
-	l_small_paren					reduce	42
+	else					reduce	42
+	*					reduce	42
 	r_big_paren					reduce	42
+	for					reduce	42
+	-					reduce	42
+	VAR					reduce	42
+	&					reduce	42
 	return					reduce	42
 	if					reduce	42
-	while					reduce	42
-	NUM					reduce	42
-	VAR					reduce	42
+	l_small_paren					reduce	42
 
 State 130
 	parameter_type_list -> parameter_type_list comma parameter_declaration . 
@@ -1955,124 +1955,124 @@ State 133
 	postfix_expr -> postfix_expr l_mid_paren expression r_mid_paren . 
 
 	not					reduce	79
-	=					reduce	79
-	comma					reduce	79
-	and					reduce	79
+	l_mid_paren					reduce	79
 	more					reduce	79
+	and					reduce	79
+	semicolon					reduce	79
+	+					reduce	79
 	/					reduce	79
 	*					reduce	79
-	r_mid_paren					reduce	79
-	semicolon					reduce	79
+	less					reduce	79
+	and_more					reduce	79
 	equal					reduce	79
 	-					reduce	79
-	less					reduce	79
-	l_mid_paren					reduce	79
-	and_more					reduce	79
-	and_less					reduce	79
 	r_small_paren					reduce	79
+	=					reduce	79
+	and_less					reduce	79
+	r_mid_paren					reduce	79
 	or					reduce	79
-	+					reduce	79
+	comma					reduce	79
 
 State 134
 	postfix_expr -> VAR l_small_paren argument_expression_list r_small_paren . 
 
 	not					reduce	80
-	=					reduce	80
-	comma					reduce	80
-	and					reduce	80
+	l_mid_paren					reduce	80
 	more					reduce	80
+	and					reduce	80
+	semicolon					reduce	80
+	+					reduce	80
 	/					reduce	80
 	*					reduce	80
-	r_mid_paren					reduce	80
-	semicolon					reduce	80
+	less					reduce	80
+	and_more					reduce	80
 	equal					reduce	80
 	-					reduce	80
-	less					reduce	80
-	l_mid_paren					reduce	80
-	and_more					reduce	80
-	and_less					reduce	80
 	r_small_paren					reduce	80
+	=					reduce	80
+	and_less					reduce	80
+	r_mid_paren					reduce	80
 	or					reduce	80
-	+					reduce	80
+	comma					reduce	80
 
 State 135
 	argument_expression_list -> argument_expression_list comma . assign_expr 
 
-	-					shift	52
-	assign_expr					goto	141
-	&					shift	51
+	NUM					shift	48
+	logical_OR_expr					goto	39
+	primary_expr					goto	47
+	equality_expr					goto	41
+	*					shift	50
+	mult_expr					goto	44
 	relational_expr					goto	42
 	add_expr					goto	43
-	*					shift	50
-	primary_expr					goto	47
+	-					shift	52
+	VAR					shift	49
+	assign_expr					goto	141
 	unary_expr					goto	45
-	logical_OR_expr					goto	39
+	&					shift	51
+	postfix_expr					goto	46
 	l_small_paren					shift	53
 	logical_AND_expr					goto	40
-	equality_expr					goto	41
-	NUM					shift	48
-	mult_expr					goto	44
-	VAR					shift	49
-	postfix_expr					goto	46
 
 State 136
 	statement -> if l_small_paren expression r_small_paren . statement 
 	statement -> if l_small_paren expression r_small_paren . statement else statement 
 
-	-					shift	52
-	assign_expr					goto	38
-	&					shift	51
 	l_big_paren					shift	22
-	for					shift	57
-	unary_expr					goto	45
-	logical_AND_expr					goto	40
-	equality_expr					goto	41
-	semicolon					shift	59
-	if					shift	55
 	NUM					shift	48
+	while					shift	56
+	semicolon					shift	59
+	equality_expr					goto	41
 	relational_expr					goto	42
-	primary_expr					goto	47
+	for					shift	57
+	if					shift	55
+	assign_expr					goto	38
+	logical_OR_expr					goto	39
 	expression					goto	37
 	add_expr					goto	43
 	statement					goto	142
+	primary_expr					goto	47
+	*					shift	50
+	mult_expr					goto	44
+	-					shift	52
+	VAR					shift	49
+	logical_AND_expr					goto	40
+	unary_expr					goto	45
+	&					shift	51
+	return					shift	58
 	postfix_expr					goto	46
-	logical_OR_expr					goto	39
 	l_small_paren					shift	53
 	compound_statement					goto	34
-	return					shift	58
-	*					shift	50
-	while					shift	56
-	mult_expr					goto	44
-	VAR					shift	49
 
 State 137
 	statement -> while l_small_paren expression r_small_paren . statement 
 
-	-					shift	52
-	assign_expr					goto	38
-	&					shift	51
 	l_big_paren					shift	22
-	for					shift	57
-	unary_expr					goto	45
-	logical_AND_expr					goto	40
-	equality_expr					goto	41
-	semicolon					shift	59
-	if					shift	55
 	NUM					shift	48
+	while					shift	56
+	semicolon					shift	59
+	equality_expr					goto	41
 	relational_expr					goto	42
-	primary_expr					goto	47
+	for					shift	57
+	if					shift	55
+	assign_expr					goto	38
+	logical_OR_expr					goto	39
 	expression					goto	37
 	add_expr					goto	43
 	statement					goto	143
+	primary_expr					goto	47
+	*					shift	50
+	mult_expr					goto	44
+	-					shift	52
+	VAR					shift	49
+	logical_AND_expr					goto	40
+	unary_expr					goto	45
+	&					shift	51
+	return					shift	58
 	postfix_expr					goto	46
-	logical_OR_expr					goto	39
 	l_small_paren					shift	53
 	compound_statement					goto	34
-	return					shift	58
-	*					shift	50
-	while					shift	56
-	mult_expr					goto	44
-	VAR					shift	49
 
 State 138
 	statement -> for l_small_paren expression semicolon . expression semicolon expression r_small_paren statement 
@@ -2081,54 +2081,54 @@ State 138
 	statement -> for l_small_paren expression semicolon . semicolon r_small_paren statement 
 
 	expression					goto	144
-	assign_expr					goto	38
-	&					shift	51
+	NUM					shift	48
+	logical_OR_expr					goto	39
+	semicolon					shift	145
+	primary_expr					goto	47
+	equality_expr					goto	41
+	*					shift	50
+	mult_expr					goto	44
 	relational_expr					goto	42
 	add_expr					goto	43
-	*					shift	50
 	-					shift	52
-	primary_expr					goto	47
+	VAR					shift	49
+	assign_expr					goto	38
 	unary_expr					goto	45
-	logical_OR_expr					goto	39
+	&					shift	51
+	postfix_expr					goto	46
 	l_small_paren					shift	53
 	logical_AND_expr					goto	40
-	equality_expr					goto	41
-	semicolon					shift	145
-	NUM					shift	48
-	mult_expr					goto	44
-	VAR					shift	49
-	postfix_expr					goto	46
 
 State 139
 	statement -> for l_small_paren semicolon expression . semicolon expression r_small_paren statement 
 	statement -> for l_small_paren semicolon expression . semicolon r_small_paren statement 
 	expression -> expression . comma assign_expr 
 
-	comma					shift	72
 	semicolon					shift	146
+	comma					shift	72
 
 State 140
 	statement -> for l_small_paren semicolon semicolon . expression r_small_paren statement 
 	statement -> for l_small_paren semicolon semicolon . r_small_paren statement 
 
 	expression					goto	147
-	assign_expr					goto	38
-	&					shift	51
+	NUM					shift	48
+	logical_OR_expr					goto	39
+	r_small_paren					shift	148
+	primary_expr					goto	47
+	equality_expr					goto	41
+	*					shift	50
+	mult_expr					goto	44
 	relational_expr					goto	42
 	add_expr					goto	43
-	*					shift	50
 	-					shift	52
-	primary_expr					goto	47
-	r_small_paren					shift	148
+	VAR					shift	49
+	assign_expr					goto	38
 	unary_expr					goto	45
-	logical_OR_expr					goto	39
+	&					shift	51
+	postfix_expr					goto	46
 	l_small_paren					shift	53
 	logical_AND_expr					goto	40
-	equality_expr					goto	41
-	NUM					shift	48
-	mult_expr					goto	44
-	VAR					shift	49
-	postfix_expr					goto	46
 
 State 141
 	argument_expression_list -> argument_expression_list comma assign_expr . 
@@ -2140,95 +2140,95 @@ State 142
 	statement -> if l_small_paren expression r_small_paren statement . 
 	statement -> if l_small_paren expression r_small_paren statement . else statement 
 
+	l_big_paren					reduce	31
+	NUM					reduce	31
+	while					reduce	31
+	semicolon					reduce	31
 begin conflict:
 	else					shift	149
 	else					reduce	31
 end conflict
-	&					reduce	31
-	l_big_paren					reduce	31
 	*					reduce	31
-	for					reduce	31
-	semicolon					reduce	31
-	-					reduce	31
-	l_small_paren					reduce	31
 	r_big_paren					reduce	31
+	for					reduce	31
+	-					reduce	31
+	VAR					reduce	31
+	&					reduce	31
 	return					reduce	31
 	if					reduce	31
-	while					reduce	31
-	NUM					reduce	31
-	VAR					reduce	31
+	l_small_paren					reduce	31
 
 State 143
 	statement -> while l_small_paren expression r_small_paren statement . 
 
-	else					reduce	33
-	&					reduce	33
 	l_big_paren					reduce	33
-	*					reduce	33
-	for					reduce	33
+	NUM					reduce	33
+	while					reduce	33
 	semicolon					reduce	33
-	-					reduce	33
-	l_small_paren					reduce	33
+	else					reduce	33
+	*					reduce	33
 	r_big_paren					reduce	33
+	for					reduce	33
+	-					reduce	33
+	VAR					reduce	33
+	&					reduce	33
 	return					reduce	33
 	if					reduce	33
-	while					reduce	33
-	NUM					reduce	33
-	VAR					reduce	33
+	l_small_paren					reduce	33
 
 State 144
 	statement -> for l_small_paren expression semicolon expression . semicolon expression r_small_paren statement 
 	statement -> for l_small_paren expression semicolon expression . semicolon r_small_paren statement 
 	expression -> expression . comma assign_expr 
 
-	comma					shift	72
 	semicolon					shift	150
+	comma					shift	72
 
 State 145
 	statement -> for l_small_paren expression semicolon semicolon . expression r_small_paren statement 
 	statement -> for l_small_paren expression semicolon semicolon . r_small_paren statement 
 
 	expression					goto	151
-	assign_expr					goto	38
-	&					shift	51
+	NUM					shift	48
+	logical_OR_expr					goto	39
+	r_small_paren					shift	152
+	primary_expr					goto	47
+	equality_expr					goto	41
+	*					shift	50
+	mult_expr					goto	44
 	relational_expr					goto	42
 	add_expr					goto	43
-	*					shift	50
 	-					shift	52
-	primary_expr					goto	47
-	r_small_paren					shift	152
+	VAR					shift	49
+	assign_expr					goto	38
 	unary_expr					goto	45
-	logical_OR_expr					goto	39
+	&					shift	51
+	postfix_expr					goto	46
 	l_small_paren					shift	53
 	logical_AND_expr					goto	40
-	equality_expr					goto	41
-	NUM					shift	48
-	mult_expr					goto	44
-	VAR					shift	49
-	postfix_expr					goto	46
 
 State 146
 	statement -> for l_small_paren semicolon expression semicolon . expression r_small_paren statement 
 	statement -> for l_small_paren semicolon expression semicolon . r_small_paren statement 
 
 	expression					goto	153
-	assign_expr					goto	38
-	&					shift	51
+	NUM					shift	48
+	logical_OR_expr					goto	39
+	r_small_paren					shift	154
+	primary_expr					goto	47
+	equality_expr					goto	41
+	*					shift	50
+	mult_expr					goto	44
 	relational_expr					goto	42
 	add_expr					goto	43
-	*					shift	50
 	-					shift	52
-	primary_expr					goto	47
-	r_small_paren					shift	154
+	VAR					shift	49
+	assign_expr					goto	38
 	unary_expr					goto	45
-	logical_OR_expr					goto	39
+	&					shift	51
+	postfix_expr					goto	46
 	l_small_paren					shift	53
 	logical_AND_expr					goto	40
-	equality_expr					goto	41
-	NUM					shift	48
-	mult_expr					goto	44
-	VAR					shift	49
-	postfix_expr					goto	46
 
 State 147
 	statement -> for l_small_paren semicolon semicolon expression . r_small_paren statement 
@@ -2240,83 +2240,83 @@ State 147
 State 148
 	statement -> for l_small_paren semicolon semicolon r_small_paren . statement 
 
-	-					shift	52
-	assign_expr					goto	38
-	&					shift	51
 	l_big_paren					shift	22
-	for					shift	57
-	unary_expr					goto	45
-	logical_AND_expr					goto	40
-	equality_expr					goto	41
-	semicolon					shift	59
-	if					shift	55
 	NUM					shift	48
+	while					shift	56
+	semicolon					shift	59
+	equality_expr					goto	41
 	relational_expr					goto	42
-	primary_expr					goto	47
+	for					shift	57
+	if					shift	55
+	assign_expr					goto	38
+	logical_OR_expr					goto	39
 	expression					goto	37
 	add_expr					goto	43
 	statement					goto	156
+	primary_expr					goto	47
+	*					shift	50
+	mult_expr					goto	44
+	-					shift	52
+	VAR					shift	49
+	logical_AND_expr					goto	40
+	unary_expr					goto	45
+	&					shift	51
+	return					shift	58
 	postfix_expr					goto	46
-	logical_OR_expr					goto	39
 	l_small_paren					shift	53
 	compound_statement					goto	34
-	return					shift	58
-	*					shift	50
-	while					shift	56
-	mult_expr					goto	44
-	VAR					shift	49
 
 State 149
 	statement -> if l_small_paren expression r_small_paren statement else . statement 
 
-	-					shift	52
-	assign_expr					goto	38
-	&					shift	51
 	l_big_paren					shift	22
-	for					shift	57
-	unary_expr					goto	45
-	logical_AND_expr					goto	40
-	equality_expr					goto	41
-	semicolon					shift	59
-	if					shift	55
 	NUM					shift	48
+	while					shift	56
+	semicolon					shift	59
+	equality_expr					goto	41
 	relational_expr					goto	42
-	primary_expr					goto	47
+	for					shift	57
+	if					shift	55
+	assign_expr					goto	38
+	logical_OR_expr					goto	39
 	expression					goto	37
 	add_expr					goto	43
 	statement					goto	157
+	primary_expr					goto	47
+	*					shift	50
+	mult_expr					goto	44
+	-					shift	52
+	VAR					shift	49
+	logical_AND_expr					goto	40
+	unary_expr					goto	45
+	&					shift	51
+	return					shift	58
 	postfix_expr					goto	46
-	logical_OR_expr					goto	39
 	l_small_paren					shift	53
 	compound_statement					goto	34
-	return					shift	58
-	*					shift	50
-	while					shift	56
-	mult_expr					goto	44
-	VAR					shift	49
 
 State 150
 	statement -> for l_small_paren expression semicolon expression semicolon . expression r_small_paren statement 
 	statement -> for l_small_paren expression semicolon expression semicolon . r_small_paren statement 
 
 	expression					goto	158
-	assign_expr					goto	38
-	&					shift	51
+	NUM					shift	48
+	logical_OR_expr					goto	39
+	r_small_paren					shift	159
+	primary_expr					goto	47
+	equality_expr					goto	41
+	*					shift	50
+	mult_expr					goto	44
 	relational_expr					goto	42
 	add_expr					goto	43
-	*					shift	50
 	-					shift	52
-	primary_expr					goto	47
-	r_small_paren					shift	159
+	VAR					shift	49
+	assign_expr					goto	38
 	unary_expr					goto	45
-	logical_OR_expr					goto	39
+	&					shift	51
+	postfix_expr					goto	46
 	l_small_paren					shift	53
 	logical_AND_expr					goto	40
-	equality_expr					goto	41
-	NUM					shift	48
-	mult_expr					goto	44
-	VAR					shift	49
-	postfix_expr					goto	46
 
 State 151
 	statement -> for l_small_paren expression semicolon semicolon expression . r_small_paren statement 
@@ -2328,31 +2328,31 @@ State 151
 State 152
 	statement -> for l_small_paren expression semicolon semicolon r_small_paren . statement 
 
-	-					shift	52
-	assign_expr					goto	38
-	&					shift	51
 	l_big_paren					shift	22
-	for					shift	57
-	unary_expr					goto	45
-	logical_AND_expr					goto	40
-	equality_expr					goto	41
-	semicolon					shift	59
-	if					shift	55
 	NUM					shift	48
+	while					shift	56
+	semicolon					shift	59
+	equality_expr					goto	41
 	relational_expr					goto	42
-	primary_expr					goto	47
+	for					shift	57
+	if					shift	55
+	assign_expr					goto	38
+	logical_OR_expr					goto	39
 	expression					goto	37
 	add_expr					goto	43
 	statement					goto	161
+	primary_expr					goto	47
+	*					shift	50
+	mult_expr					goto	44
+	-					shift	52
+	VAR					shift	49
+	logical_AND_expr					goto	40
+	unary_expr					goto	45
+	&					shift	51
+	return					shift	58
 	postfix_expr					goto	46
-	logical_OR_expr					goto	39
 	l_small_paren					shift	53
 	compound_statement					goto	34
-	return					shift	58
-	*					shift	50
-	while					shift	56
-	mult_expr					goto	44
-	VAR					shift	49
 
 State 153
 	statement -> for l_small_paren semicolon expression semicolon expression . r_small_paren statement 
@@ -2364,96 +2364,96 @@ State 153
 State 154
 	statement -> for l_small_paren semicolon expression semicolon r_small_paren . statement 
 
-	-					shift	52
-	assign_expr					goto	38
-	&					shift	51
 	l_big_paren					shift	22
-	for					shift	57
-	unary_expr					goto	45
-	logical_AND_expr					goto	40
-	equality_expr					goto	41
-	semicolon					shift	59
-	if					shift	55
 	NUM					shift	48
+	while					shift	56
+	semicolon					shift	59
+	equality_expr					goto	41
 	relational_expr					goto	42
-	primary_expr					goto	47
+	for					shift	57
+	if					shift	55
+	assign_expr					goto	38
+	logical_OR_expr					goto	39
 	expression					goto	37
 	add_expr					goto	43
 	statement					goto	163
+	primary_expr					goto	47
+	*					shift	50
+	mult_expr					goto	44
+	-					shift	52
+	VAR					shift	49
+	logical_AND_expr					goto	40
+	unary_expr					goto	45
+	&					shift	51
+	return					shift	58
 	postfix_expr					goto	46
-	logical_OR_expr					goto	39
 	l_small_paren					shift	53
 	compound_statement					goto	34
-	return					shift	58
-	*					shift	50
-	while					shift	56
-	mult_expr					goto	44
-	VAR					shift	49
 
 State 155
 	statement -> for l_small_paren semicolon semicolon expression r_small_paren . statement 
 
-	-					shift	52
-	assign_expr					goto	38
-	&					shift	51
 	l_big_paren					shift	22
-	for					shift	57
-	unary_expr					goto	45
-	logical_AND_expr					goto	40
-	equality_expr					goto	41
-	semicolon					shift	59
-	if					shift	55
 	NUM					shift	48
+	while					shift	56
+	semicolon					shift	59
+	equality_expr					goto	41
 	relational_expr					goto	42
-	primary_expr					goto	47
+	for					shift	57
+	if					shift	55
+	assign_expr					goto	38
+	logical_OR_expr					goto	39
 	expression					goto	37
 	add_expr					goto	43
 	statement					goto	164
+	primary_expr					goto	47
+	*					shift	50
+	mult_expr					goto	44
+	-					shift	52
+	VAR					shift	49
+	logical_AND_expr					goto	40
+	unary_expr					goto	45
+	&					shift	51
+	return					shift	58
 	postfix_expr					goto	46
-	logical_OR_expr					goto	39
 	l_small_paren					shift	53
 	compound_statement					goto	34
-	return					shift	58
-	*					shift	50
-	while					shift	56
-	mult_expr					goto	44
-	VAR					shift	49
 
 State 156
 	statement -> for l_small_paren semicolon semicolon r_small_paren statement . 
 
-	else					reduce	41
-	&					reduce	41
 	l_big_paren					reduce	41
-	*					reduce	41
-	for					reduce	41
+	NUM					reduce	41
+	while					reduce	41
 	semicolon					reduce	41
-	-					reduce	41
-	l_small_paren					reduce	41
+	else					reduce	41
+	*					reduce	41
 	r_big_paren					reduce	41
+	for					reduce	41
+	-					reduce	41
+	VAR					reduce	41
+	&					reduce	41
 	return					reduce	41
 	if					reduce	41
-	while					reduce	41
-	NUM					reduce	41
-	VAR					reduce	41
+	l_small_paren					reduce	41
 
 State 157
 	statement -> if l_small_paren expression r_small_paren statement else statement . 
 
-	else					reduce	32
-	&					reduce	32
 	l_big_paren					reduce	32
-	*					reduce	32
-	for					reduce	32
+	NUM					reduce	32
+	while					reduce	32
 	semicolon					reduce	32
-	-					reduce	32
-	l_small_paren					reduce	32
+	else					reduce	32
+	*					reduce	32
 	r_big_paren					reduce	32
+	for					reduce	32
+	-					reduce	32
+	VAR					reduce	32
+	&					reduce	32
 	return					reduce	32
 	if					reduce	32
-	while					reduce	32
-	NUM					reduce	32
-	VAR					reduce	32
+	l_small_paren					reduce	32
 
 State 158
 	statement -> for l_small_paren expression semicolon expression semicolon expression . r_small_paren statement 
@@ -2465,243 +2465,243 @@ State 158
 State 159
 	statement -> for l_small_paren expression semicolon expression semicolon r_small_paren . statement 
 
-	-					shift	52
-	assign_expr					goto	38
-	&					shift	51
 	l_big_paren					shift	22
-	for					shift	57
-	unary_expr					goto	45
-	logical_AND_expr					goto	40
-	equality_expr					goto	41
-	semicolon					shift	59
-	if					shift	55
 	NUM					shift	48
+	while					shift	56
+	semicolon					shift	59
+	equality_expr					goto	41
 	relational_expr					goto	42
-	primary_expr					goto	47
+	for					shift	57
+	if					shift	55
+	assign_expr					goto	38
+	logical_OR_expr					goto	39
 	expression					goto	37
 	add_expr					goto	43
 	statement					goto	166
+	primary_expr					goto	47
+	*					shift	50
+	mult_expr					goto	44
+	-					shift	52
+	VAR					shift	49
+	logical_AND_expr					goto	40
+	unary_expr					goto	45
+	&					shift	51
+	return					shift	58
 	postfix_expr					goto	46
-	logical_OR_expr					goto	39
 	l_small_paren					shift	53
 	compound_statement					goto	34
-	return					shift	58
-	*					shift	50
-	while					shift	56
-	mult_expr					goto	44
-	VAR					shift	49
 
 State 160
 	statement -> for l_small_paren expression semicolon semicolon expression r_small_paren . statement 
 
-	-					shift	52
-	assign_expr					goto	38
-	&					shift	51
 	l_big_paren					shift	22
-	for					shift	57
-	unary_expr					goto	45
-	logical_AND_expr					goto	40
-	equality_expr					goto	41
-	semicolon					shift	59
-	if					shift	55
 	NUM					shift	48
+	while					shift	56
+	semicolon					shift	59
+	equality_expr					goto	41
 	relational_expr					goto	42
-	primary_expr					goto	47
+	for					shift	57
+	if					shift	55
+	assign_expr					goto	38
+	logical_OR_expr					goto	39
 	expression					goto	37
 	add_expr					goto	43
 	statement					goto	167
+	primary_expr					goto	47
+	*					shift	50
+	mult_expr					goto	44
+	-					shift	52
+	VAR					shift	49
+	logical_AND_expr					goto	40
+	unary_expr					goto	45
+	&					shift	51
+	return					shift	58
 	postfix_expr					goto	46
-	logical_OR_expr					goto	39
 	l_small_paren					shift	53
 	compound_statement					goto	34
-	return					shift	58
-	*					shift	50
-	while					shift	56
-	mult_expr					goto	44
-	VAR					shift	49
 
 State 161
 	statement -> for l_small_paren expression semicolon semicolon r_small_paren statement . 
 
-	else					reduce	38
-	&					reduce	38
 	l_big_paren					reduce	38
-	*					reduce	38
-	for					reduce	38
+	NUM					reduce	38
+	while					reduce	38
 	semicolon					reduce	38
-	-					reduce	38
-	l_small_paren					reduce	38
+	else					reduce	38
+	*					reduce	38
 	r_big_paren					reduce	38
+	for					reduce	38
+	-					reduce	38
+	VAR					reduce	38
+	&					reduce	38
 	return					reduce	38
 	if					reduce	38
-	while					reduce	38
-	NUM					reduce	38
-	VAR					reduce	38
+	l_small_paren					reduce	38
 
 State 162
 	statement -> for l_small_paren semicolon expression semicolon expression r_small_paren . statement 
 
-	-					shift	52
-	assign_expr					goto	38
-	&					shift	51
 	l_big_paren					shift	22
-	for					shift	57
-	unary_expr					goto	45
-	logical_AND_expr					goto	40
-	equality_expr					goto	41
-	semicolon					shift	59
-	if					shift	55
 	NUM					shift	48
+	while					shift	56
+	semicolon					shift	59
+	equality_expr					goto	41
 	relational_expr					goto	42
-	primary_expr					goto	47
+	for					shift	57
+	if					shift	55
+	assign_expr					goto	38
+	logical_OR_expr					goto	39
 	expression					goto	37
 	add_expr					goto	43
 	statement					goto	168
+	primary_expr					goto	47
+	*					shift	50
+	mult_expr					goto	44
+	-					shift	52
+	VAR					shift	49
+	logical_AND_expr					goto	40
+	unary_expr					goto	45
+	&					shift	51
+	return					shift	58
 	postfix_expr					goto	46
-	logical_OR_expr					goto	39
 	l_small_paren					shift	53
 	compound_statement					goto	34
-	return					shift	58
-	*					shift	50
-	while					shift	56
-	mult_expr					goto	44
-	VAR					shift	49
 
 State 163
 	statement -> for l_small_paren semicolon expression semicolon r_small_paren statement . 
 
-	else					reduce	39
-	&					reduce	39
 	l_big_paren					reduce	39
-	*					reduce	39
-	for					reduce	39
+	NUM					reduce	39
+	while					reduce	39
 	semicolon					reduce	39
-	-					reduce	39
-	l_small_paren					reduce	39
+	else					reduce	39
+	*					reduce	39
 	r_big_paren					reduce	39
+	for					reduce	39
+	-					reduce	39
+	VAR					reduce	39
+	&					reduce	39
 	return					reduce	39
 	if					reduce	39
-	while					reduce	39
-	NUM					reduce	39
-	VAR					reduce	39
+	l_small_paren					reduce	39
 
 State 164
 	statement -> for l_small_paren semicolon semicolon expression r_small_paren statement . 
 
-	else					reduce	40
-	&					reduce	40
 	l_big_paren					reduce	40
-	*					reduce	40
-	for					reduce	40
+	NUM					reduce	40
+	while					reduce	40
 	semicolon					reduce	40
-	-					reduce	40
-	l_small_paren					reduce	40
+	else					reduce	40
+	*					reduce	40
 	r_big_paren					reduce	40
+	for					reduce	40
+	-					reduce	40
+	VAR					reduce	40
+	&					reduce	40
 	return					reduce	40
 	if					reduce	40
-	while					reduce	40
-	NUM					reduce	40
-	VAR					reduce	40
+	l_small_paren					reduce	40
 
 State 165
 	statement -> for l_small_paren expression semicolon expression semicolon expression r_small_paren . statement 
 
-	-					shift	52
-	assign_expr					goto	38
-	&					shift	51
 	l_big_paren					shift	22
-	for					shift	57
-	unary_expr					goto	45
-	logical_AND_expr					goto	40
-	equality_expr					goto	41
-	semicolon					shift	59
-	if					shift	55
 	NUM					shift	48
+	while					shift	56
+	semicolon					shift	59
+	equality_expr					goto	41
 	relational_expr					goto	42
-	primary_expr					goto	47
+	for					shift	57
+	if					shift	55
+	assign_expr					goto	38
+	logical_OR_expr					goto	39
 	expression					goto	37
 	add_expr					goto	43
 	statement					goto	169
+	primary_expr					goto	47
+	*					shift	50
+	mult_expr					goto	44
+	-					shift	52
+	VAR					shift	49
+	logical_AND_expr					goto	40
+	unary_expr					goto	45
+	&					shift	51
+	return					shift	58
 	postfix_expr					goto	46
-	logical_OR_expr					goto	39
 	l_small_paren					shift	53
 	compound_statement					goto	34
-	return					shift	58
-	*					shift	50
-	while					shift	56
-	mult_expr					goto	44
-	VAR					shift	49
 
 State 166
 	statement -> for l_small_paren expression semicolon expression semicolon r_small_paren statement . 
 
-	else					reduce	37
-	&					reduce	37
 	l_big_paren					reduce	37
-	*					reduce	37
-	for					reduce	37
+	NUM					reduce	37
+	while					reduce	37
 	semicolon					reduce	37
-	-					reduce	37
-	l_small_paren					reduce	37
+	else					reduce	37
+	*					reduce	37
 	r_big_paren					reduce	37
+	for					reduce	37
+	-					reduce	37
+	VAR					reduce	37
+	&					reduce	37
 	return					reduce	37
 	if					reduce	37
-	while					reduce	37
-	NUM					reduce	37
-	VAR					reduce	37
+	l_small_paren					reduce	37
 
 State 167
 	statement -> for l_small_paren expression semicolon semicolon expression r_small_paren statement . 
 
-	else					reduce	36
-	&					reduce	36
 	l_big_paren					reduce	36
-	*					reduce	36
-	for					reduce	36
+	NUM					reduce	36
+	while					reduce	36
 	semicolon					reduce	36
-	-					reduce	36
-	l_small_paren					reduce	36
+	else					reduce	36
+	*					reduce	36
 	r_big_paren					reduce	36
+	for					reduce	36
+	-					reduce	36
+	VAR					reduce	36
+	&					reduce	36
 	return					reduce	36
 	if					reduce	36
-	while					reduce	36
-	NUM					reduce	36
-	VAR					reduce	36
+	l_small_paren					reduce	36
 
 State 168
 	statement -> for l_small_paren semicolon expression semicolon expression r_small_paren statement . 
 
-	else					reduce	35
-	&					reduce	35
 	l_big_paren					reduce	35
-	*					reduce	35
-	for					reduce	35
+	NUM					reduce	35
+	while					reduce	35
 	semicolon					reduce	35
-	-					reduce	35
-	l_small_paren					reduce	35
+	else					reduce	35
+	*					reduce	35
 	r_big_paren					reduce	35
+	for					reduce	35
+	-					reduce	35
+	VAR					reduce	35
+	&					reduce	35
 	return					reduce	35
 	if					reduce	35
-	while					reduce	35
-	NUM					reduce	35
-	VAR					reduce	35
+	l_small_paren					reduce	35
 
 State 169
 	statement -> for l_small_paren expression semicolon expression semicolon expression r_small_paren statement . 
 
-	else					reduce	34
-	&					reduce	34
 	l_big_paren					reduce	34
-	*					reduce	34
-	for					reduce	34
+	NUM					reduce	34
+	while					reduce	34
 	semicolon					reduce	34
-	-					reduce	34
-	l_small_paren					reduce	34
+	else					reduce	34
+	*					reduce	34
 	r_big_paren					reduce	34
+	for					reduce	34
+	-					reduce	34
+	VAR					reduce	34
+	&					reduce	34
 	return					reduce	34
 	if					reduce	34
-	while					reduce	34
-	NUM					reduce	34
-	VAR					reduce	34
+	l_small_paren					reduce	34
 
 1 shift/reduce conflict

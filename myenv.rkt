@@ -11,6 +11,7 @@
           (car e)
           (lookup-env name (cdr e)))))
 
+
 (define (in-env? name e)
   (if (eq? e initial-env) 
       #f
@@ -59,23 +60,59 @@
 ;'noparaを  
 ;受け取って  
 ;エラーもしくはメッセージを返す  
+;para-envとenvの両方で探す  
+(define (check-decl obj env)
+  (map (lambda (x) (cond ((and (eq? (obj-name x) (obj-name obj))
+                                (eq? 'fun (obj-kind x))
+                                (eq? 0 (obj-lev x)))
+                           (error "ERROR! REDEFINITION OF "(obj-name obj)))
+                          ((and (eq? (obj-name x) (obj-name obj))
+                                (eq? 'var (obj-kind x))
+                                (eq? (obj-lev x) (obj-lev obj)))
+                           (error "ERROR! REDEFINITION OF "(obj-name obj)))
+                          ((and (eq? (obj-name x) (obj-name obj))
+                                (eq? 'parm (obj-kind x)))
+                           (let* ((meaningless 1))
+                             (display (format "WARNING!! SAME NAME IN PARAMETERS AND VAR DECLARATIONS\n"))
+                             #t))))
+       env))
+                           
+  
 (define (check-proto-para obj-list)
   (cond 
-    ((eq? '() obj-list) (format "OK! CRRECT PARAMETER OF FUNCTION PROTOTYPE"))
-    ((eq? 'nopara obj-list) (format "OK! CRRECT PARAMETER OF FUNCTION PROTOTYPE"))
+    ((eq? '() obj-list) (display (format "OK! CRRECT PARAMETERS OF FUNCTION PROTOTYPE.\n")))
+    ((eq? 'nopara obj-list) (display(format "OK! CRRECT PARAMETERS OF FUNCTION PROTOTYPE.\n")))
     ((in-env? (obj-name (car obj-list)) (cdr obj-list))
-     (error "FAILED! SOME REDEFINITION IN PARAMETER OF FUNCTION PROTOTYPE"))
+     (error "FAILED! SOME REDEFINITION IN PARAMETERS OF FUNCTION PROTOTYPE"))
     (else (check-proto-para (cdr obj-list)))))
 (define (check-def-para obj-list)
    (cond 
-    ((eq? '() obj-list) (format "OK! CRRECT PARAMETER OF FUNCTION PROTOTYPE"))
-    ((eq? 'nopara obj-list) (format "OK! CRRECT PARAMETER OF FUNCTION PROTOTYPE"))
+    ((eq? '() obj-list) (display (format "OK! CRRECT PARAMETERS OF FUNCTION PROTOTYPE.\n")))
+    ((eq? 'nopara obj-list) (display(format "OK! CRRECT PARAMETERS OF FUNCTION PROTOTYPE.\n")))
     ((in-env? (obj-name (car obj-list)) (cdr obj-list))
-     (error "FAILED! SOME REDEFINITION IN PARAMETER OF FUNCTION PROTOTYPE"))
+     (error "FAILED! SOME REDEFINITION IN PARAMETERS OF FUNCTION PROTOTYPE"))
     (else (check-proto-para (cdr obj-list)))))
+(define (check-proto obj env)
+  (map 
+   ;プロトタイプとnameが同じ、levelがで0、typeが同じでないかどうかをmapで一つづつ判定する.
+   (lambda (x)(cond ((and (eq? (obj-name x) (obj-name obj))
+                          (eq? 0 (obj-lev x))
+                          (not (eq? (obj-type x) (obj-type obj))))
+                     (error "ERROR! REDEFINITION OF "(obj-name obj)))
+                    (else (display (format "OK! CRRECT FUNCTION PROTOTYPE OF '~a'.\n" (obj-name obj))))))
+   env))
+(define (check-func obj env)
+  (map 
+   ;関数定義とnameが同じ、kindが'funかどうかをmapで一つづつ判定する.
+   (lambda (x)(cond ((and (eq? (obj-name x) (obj-name obj))
+                          (eq? 'fun (obj-kind x)))
+                     (error "ERROR! REDEFINITION OF "(obj-name obj)))
+                    (else (display (format "OK! CRRECT FUNCTION PROTOTYPE OF '~a'.\n" (obj-name obj))))))
+   env))  
 
 
-;テスト
+;;;;;;;;テスト;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+#;(
 (define test101
   (list (obj 'a 1 'parm 'int) (obj 'b 1 'parm '(pointer int)) (obj 'c 1 'parm 'int)))
 (define test102
@@ -84,24 +121,24 @@
 ;下はエラー発生
 ;(check-proto-para test102)
 
-#;(
-(define env initial-env)
+(define env2 initial-env)
 (define a (obj 'name1 'lev1 'kind1 'int))
 (define b (obj 'name2 'lev2 'kind2 'void))
-(set! env (extend-env a env))
-env
-(set! env (extend-env b env))
-env
-(set! env (add-list (list a b) env))
-env
-(in-env? 'name1 env)
-(in-env? 'x env)
-(lookup-env 'x env)
-(lookup-env 'name2 env)
+(define c (obj 'name2 'lev3 'kind3 'void))
+(set! env2 (extend-env a env2))
+(set! env2 (extend-env b env2))
+(set! env2 (extend-env c env2))
+;(set! env (add-list (list a b) env))
+env2
+(in-env? 'name1 env2)
+(in-env? 'x env2)
+(lookup-env 'x env2)
+(lookup-env 'name2 env2)
 (define test (list 'a (list 'b 'c 'd) (list 'e 'f) 'g))
-(define test2 (map make-list-list test))
-(separate-list test2)
+(define test103 (map make-list-list test))
+(separate-list test103)
 )
+
 
 
 

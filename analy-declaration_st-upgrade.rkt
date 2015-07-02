@@ -3,7 +3,6 @@
 (require (prefix-in stx: "mysyntax.rkt"))
 (require (prefix-in k08: "kadai08.rkt"))
 (require "mymap.rkt")
-(require "check-env.rkt")
 (provide (all-defined-out))
 ;(struct obj (name lev kind type)#:transparent)
 (define current-lev 0)
@@ -41,13 +40,13 @@
                     declarator-list)))
     ;意味解析上のエラーがないか確認する.
     ;under construction
-    (map (lambda (x) (check-env x env)) obj-list)
+    ;(map (lambda (x) (check-env x env)) obj-list)
     ;なければ環境に追加.
     (set! env (add-list obj-list env))
     ;構造体を返す.
     (stx:declaration_st type obj-list)))
 
-(define test1
+(define test9
   (stx:declaration_st
    (stx:spec_st 'int 'test)
    ;以下がdeclarator-list
@@ -56,11 +55,11 @@
      (stx:declarator_st (stx:id_st 'a 'test))
      (stx:declarator_ast_st (stx:id_st 'b 'test)))
     (stx:declarator_st (stx:id_st 'c 'test)))))
-
-(define test21
+(define test10
     (stx:declaration_st
    (stx:spec_st 'void 'test)
    ;以下がdeclarator-list
      (stx:declarator_ast_st (stx:id_st 'b 'test))))
 
-(analy-declaration_st test21 current-lev)
+(analy-declaration_st test9 current-lev)
+(analy-declaration_st test10 current-lev)

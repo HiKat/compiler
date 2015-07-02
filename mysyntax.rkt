@@ -80,6 +80,7 @@
 (struct if_st (cond-exp state pos)#:transparent);else無し.posはifの位置.
 (struct if_else_st (cond-exp state else-state if-pos else-pos)#:transparent);elseあり
 ;if文を表す構造体.
+;課題08以降はif_else_stに統合
 
 (struct while_st (cond-exp statement pos)#:transparent);posはwhileの位置.
 ;while文を表す構造体.

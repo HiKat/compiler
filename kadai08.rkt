@@ -150,7 +150,8 @@
               ((expression semicolon)$1)
               ((compound_statement) $1)
               ((if l_small_paren expression r_small_paren statement)
-               (stx:if_else_st $3 $5 (stx:null_statement_st 'null) $1-start-pos 'syntax-sygar));シンタックスシュガー
+               ;シンタックスシュガー
+               (stx:if_else_st $3 $5 (stx:null_statement_st 'null) $1-start-pos 'syntax-sygar))
               ((if l_small_paren expression r_small_paren statement else statement)
                (stx:if_else_st $3 $5 $7 $1-start-pos $6-start-pos));構造体if_else_stを作成.
               ((while l_small_paren expression r_small_paren statement)
@@ -321,9 +322,9 @@
 
 
 ;テスト
-(define p (open-input-file "kadai01.c"))
-(port-count-lines! p)
-(parse-port p)
+;(define p (open-input-file "kadai01.c"))
+;(port-count-lines! p)
+;(parse-port p)
 
 ;(define p2 (open-input-file "kadai01.c"))
 ;(port-count-lines! p2)

@@ -1,19 +1,20 @@
 #lang racket
-(require (prefix-in env: "myenv.rkt"))
+(require "myenv.rkt")
 (require (prefix-in stx: "mysyntax.rkt"))
 ;(require (prefix-in k08: "kadai08.rkt"))
 (require "mymap.rkt")
-(require (prefix-in ch: "check-env.rkt"))
 (provide (all-defined-out))
 
 (define current-lev 0)
 (define env '())
 (define para-env '())
 (struct type-pointer (pointer type) #:transparent)
-(struct obj (name lev kind type)#:transparent)
+;myenv.rkt内で定義
+;(struct obj (name lev kind type)#:transparent)
 (struct para_flag (out-type para))
 (struct fundef_flag (out-type para))
 (struct comp_flag (decl stat n))
+
 
 (define (analy-func_proto_st st)
   ;;;;;内部定義
@@ -90,23 +91,13 @@
                             (type-pointer 'pointer (stx:spec_st-type spec)))))
          (proto-obj (obj proto-name 0 'proto proto-type)))
     ;プロトタイプのオブジェクトのチェック
-    (ch:check-env proto-obj env)
+    ;(check-env proto-obj env)
     ;プロトタイプのオブジェクトを環境に追加.
-    (set! env (env:extend-env proto-obj env))
-    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-    ;;;;;;;;;;;;;パラメータオブジェクトのチェックと追加;;;;;;;;;;;;;;;;;;
-    ;パラメータのオブジェクトのチェックと追加
-    ;パラメータのオブジェクトに関しては
-    ;1.パラメータ専用の環境をリセット
-    ;2.list構造であるかを判定.list構造でなければそれを追加して終了
-    ;3.(car list)を環境と照らしあわせてチェック(初期化後であれば当然#t)
-    ;4.(cdr list)が'()であれば終了.そうでなければ.....
-    ;のような感じで実装.
-    ;para-envはパラメータ専用のenv
-    ;para-envリセット
+    (set! env (extend-env proto-obj env))
+    ;パラメータ内の二重宣言をチェック.
+    (check-proto-para para-obj-list)
+    ;パラメータを環境に登録.
     (set! para-env para-obj-list)
-    ;二重宣言のみをチェック
-    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     ;返す構造体
     ;ここで返したいものはlet*で取り出しておく必要がある.
@@ -196,23 +187,14 @@
                            ((eq? 'pointer (fundef_flag-out-type flag))
                             (type-pointer 'pointer (stx:spec_st-type spec)))))
          (fundef-obj (obj fundef-name 0 'fun fundef-type)))
-    ;プロトタイプのオブジェクトのチェック
-    (ch:check-env fundef-obj env)
-    ;プロトタイプのオブジェクトを環境に追加.
-    (set! env (env:extend-env fundef-obj env))
-    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-    ;;;;;;;;;;;;;パラメータオブジェクトのチェックと追加;;;;;;;;;;;;;;;;;;
-    ;パラメータのオブジェクトのチェックと追加
-    ;パラメータのオブジェクトに関しては
-    ;1.パラメータ専用の環境をリセット
-    ;2.list構造であるかを判定.list構造でなければそれを追加して終了
-    ;3.(car list)を環境と照らしあわせてチェック(初期化後であれば当然#t)
-    ;4.(cdr list)が'()であれば終了.そうでなければ.....
-    ;のような感じで実装.
-    ;para-envはパラメータ専用のenv
-    ;para-envリセット
-    (set! para-env '())
-    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    ;関数定義のオブジェクトのチェック
+    ;(check-env fundef-obj env)
+    ;関数定義のオブジェクトを環境に追加.
+    (set! env (extend-env fundef-obj env))
+    ;パラメータ内の二重宣言をチェック
+    (check-def-para para-obj-list)
+    ;パラメータの環境を登録
+    (set! para-env para-obj-list)
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     ;返す構造体
     ;ここで返したいものはlet*で取り出しておく必要がある.
@@ -255,9 +237,9 @@
                             'nodecl)))
          ;decl-listから環境を生成する.
          (comp-env 
-          (env:separate-list 
+          (separate-list 
            ;listの各要素がlistであることを保証させるためのmake-list-list
-           (map env:make-list-list
+           (map make-list-list
                 (map (lambda (x) (stx:declaration_st-declarator-list x)) decl-list))
            )
           )
@@ -487,10 +469,17 @@
                         (stx:declarator_st (stx:id_st 'a 'test))))
    (stx:func_st 'func2 (stx:id_st 'a 'test))))
 
+(format "(analy-func_proto_st test1)!!!!!!!!!!")
 (analy-func_proto_st test1)
-(analy-func_proto_st test2)
+;(format "(analy-func_proto_st test2)!!!!!!!!!!")
+;(analy-func_proto_st test2)
+(format "(analy-func_def_st test3)!!!!!!!!!!")
 (analy-func_def_st test3)
-(analy-compound_st test4 current-lev)
-(analy-compound_st test5 current-lev)
-(analy-compound_st test6 current-lev)
-(analy-compound_st test7 current-lev)
+;(format "(analy-compound_st test4 current-lev)!!!!!!!!!!")
+;(analy-compound_st test4 current-lev)
+;(format "(analy-compound_st test5 current-lev)!!!!!!!!!!")
+;(analy-compound_st test5 current-lev)
+;(format "(analy-compound_st test6 current-lev)!!!!!!!!!!")
+;(analy-compound_st test6 current-lev)
+;(format "(analy-compound_st test7 current-lev)!!!!!!!!!!")
+;(analy-compound_st test7 current-lev)

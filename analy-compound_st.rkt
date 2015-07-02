@@ -10,8 +10,7 @@
 ;env、para-env初期化
 (define env '())
 (define para-env '())
-;compound-statementの解析にのみ用いる環境
-;(define comp-env '())
+
 ;objtypeの要素になりうる構造体.
 (struct type-pointer (pointer type) #:transparent)
 ;compound-statement内に

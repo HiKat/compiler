@@ -125,7 +125,7 @@
     ;para-envはパラメータ専用のenv
     ;para-envリセット
     (set! para-env para-obj-list)
-    ;二重宣言のみをチェック
+    (ch:check-para-env para-env)
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     ;返す構造体
@@ -143,7 +143,7 @@
                       
 
 ;;;;テスト
-#;(define test1
+(define test1
   (stx:func_proto_st
    (stx:spec_st 'int 'test)
    (stx:func_declarator_ast_st
@@ -163,6 +163,6 @@
    (stx:func_declarator_ast_null_st 'func 'test)))
 
 
-;(analy-func_proto_st test1)
+(analy-func_proto_st test1)
 ;(analy-func_proto_st test2)
   

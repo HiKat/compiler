@@ -8,7 +8,10 @@
 (define current-lev 0)
 (define env '())
 (define para-env '())
-(struct type-pointer (pointer type) #:transparent)
+(struct type_pointer (pointer type) #:transparent)
+;funはシンボル 'fun、outは戻り値の型、inは引数の型のリスト.
+(struct type_fun (fun out in) #:transparent)
+;ポインタ型のみリスト構造で(list 'pointe var)の形式.
 ;myenv.rkt内で定義
 ;(struct obj (name lev kind type)#:transparent)
 (struct para_flag (out-type para))
@@ -38,7 +41,7 @@
                    (lev 1)
                    (kind 'parm)            
                    (type (cond ((eq? flag 'normal) type)
-                               ((eq? flag 'pointer)(list 'pointer type)))))
+                               ((eq? flag 'pointer)(type_pointer 'pointer type)))))
               (obj name lev kind type)))
           para-list))
    ;;;;;内部定義ここまで                
@@ -85,10 +88,14 @@
          (para-obj-list (cond ((eq? para-list 'nopara) 'nopara)
                               (else (make-obj-from-paralist para-list))))
          (proto-type (cond ((eq? 'normal (para_flag-out-type flag))
-                            (stx:spec_st-type spec))
+                            (type_fun 'fun 
+                                      (stx:spec_st-type spec) 
+                                      (map (lambda (x) (obj-type x)) para-obj-list)))
                            ;(struct type-pointer (pointer type) #:transparent)
                            ((eq? 'pointer (para_flag-out-type flag))
-                            (type-pointer 'pointer (stx:spec_st-type spec)))))
+                            (type_fun 'fun
+                                      (type_pointer 'pointer (stx:spec_st-type spec))
+                                      (map (lambda (x) (obj-type x)) para-obj-list)))))
          (proto-obj (obj proto-name 0 'proto proto-type)))
     ;プロトタイプのオブジェクトのチェック
     ;(check-env proto-obj env)
@@ -134,7 +141,7 @@
                    (lev 1)
                    (kind 'parm)            
                    (type (cond ((eq? flag 'normal) type)
-                               ((eq? flag 'pointer)(list 'pointer type)))))
+                               ((eq? flag 'pointer)(type_pointer 'pointer type)))))
               (obj name lev kind type)))
           para-list))
   ;;;;;内部定義ここまで                
@@ -185,7 +192,7 @@
                             (stx:spec_st-type spec))
                            ;(struct type-pointer (pointer type) #:transparent)
                            ((eq? 'pointer (fundef_flag-out-type flag))
-                            (type-pointer 'pointer (stx:spec_st-type spec)))))
+                            (type_pointer 'pointer (stx:spec_st-type spec)))))
          (fundef-obj (obj fundef-name 0 'fun fundef-type)))
     ;関数定義のオブジェクトのチェック
     ;(check-env fundef-obj env)
@@ -276,7 +283,7 @@
                        ((stx:declarator_ast_st? decl) 'pointer)))
            (kind 'var)
            (type (cond ((eq? flag 'nomal) type)
-                       ((eq? flag 'pointer) (list 'pointer type)))))
+                       ((eq? flag 'pointer) (type_pointer 'pointer type)))))
       (obj name lev kind type)))
   ;;;;内部定義ここまで
   (let* (;typeに入っているのは (stx:spec_st 'intか'void ポジション)

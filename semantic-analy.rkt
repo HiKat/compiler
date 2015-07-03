@@ -421,6 +421,6 @@
 
 
 
-;(define p (open-input-file "kadai01.c"))
-;(port-count-lines! p)
-;(sem-analyze-tree (k08:parse-port p))
+(define p (open-input-file "kadai01.c"))
+(port-count-lines! p)
+(sem-analyze-tree (k08:parse-port p))

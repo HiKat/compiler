@@ -1,0 +1,126 @@
+#lang racket
+#lang racket
+(require (prefix-in k08: "kadai08.rkt"))
+(require (prefix-in sem: "semantic-analy.rkt"))
+(require (prefix-in stx: "mysyntax.rkt"))
+(require parser-tools/lex
+         (prefix-in : parser-tools/lex-sre)
+         parser-tools/yacc)
+(require "myenv.rkt")
+
+(define (analy-type t)
+  (begin (map type-check t)
+         (display "OK! THIS PROGRAM IS WELL TYPED.")))
+
+(define (check-type st)
+  (cond 
+    ((stx:declaration_st? st) 
+     (map type-check (stx:declaration_st-declarator-list st)))
+    ((stx:func_declarator_st? st) 
+     (begin (check-type (stx:func_declarator_st-name st))
+            (map check-type (stx:func_declarator_st-para-list st))))
+    ((stx:func_declarator_ast_st? st) 
+     (begin (check-type (stx:func_declarator_st-name st))
+            (map check-type (stx:func_declarator_st-para-list st))))
+    ((stx:func_proto_st? st) #t)
+    ((stx:func_def_st? st) 
+     (cond ((eq? 'nostat (stx:compound_st-statement-list 
+                          (stx:func_def_st-compound-state-list st))) 
+            #t)
+           (else 
+            (map form-check (stx:compound_st-statement-list 
+                                  (stx:func_def_st-compound-state-list st))))))
+    ((stx:spec_st? st) #t)
+    
+    
+    
+    
+    ((stx:assign_exp_st? st) 
+     (cond ((sametype? (stx:assign_exp_st-dest st)
+                       (stx:assign_exp_st-src st))
+            (type (stx:assign_exp_st-dest st)))
+            (else (error "ERROR NOT WELL TYPED" st))))
+    
+    ((stx:logic_exp_st? st) 
+     (cond ((and (type-int? (stx:logic_exp_st-op1 st))
+                 (type-int? (stx:logic_exp_st-op2 st))) 'int)))
+    
+    ((stx:rel_exp_st? st) 
+   (cond ((sametype? (stx:logic_exp_st-op1 st)
+                     (stx:logic_exp_st-op2 st))
+          'int)
+         (else (error "ERROR NOT WELL TYPED" st)))
+    ((stx:alge_exp_st? st) 
+     (cond ((eq? 'add (alge_exp_st-alge-ope st)) 
+            (cond ((and (type-int? (stx:logic_exp_st-op1 st))
+                        (type-int? (stx:logic_exp_st-op2 st)))
+                   'int)
+                  ((and (type-intp? (stx:logic_exp_st-op1 st))
+                        (type-int? (stx:logic_exp_st-op2 st)))
+                   'int-p)
+                  ((and (type-int? (stx:logic_exp_st-op1 st))
+                        (type-intp? (stx:logic_exp_st-op2 st)))
+                   'int-p)
+                  ((and (type-intpp? (stx:logic_exp_st-op1 st))
+                        (type-int? (stx:logic_exp_st-op2 st)))
+                   'int-pp)
+                  ((and (type-int? (stx:logic_exp_st-op1 st))
+                        (type-intpp? (stx:logic_exp_st-op2 st)))
+                   'int-pp)))
+           ((eq? 'sub (alge_exp_st-alge-ope st)) 
+            (cond ((and (type-intp? (stx:logic_exp_st-op1 st))
+                        (type-int? (stx:logic_exp_st-op2 st)))
+                   'int-p)
+                  ((and (type-intpp? (stx:logic_exp_st-op1 st))
+                        (type-int? (stx:logic_exp_st-op2 st)))
+                   'int-pp)))
+           ((or (eq? 'mul (alge_exp_st-alge-ope st)) 
+                (eq? 'div (alge_exp_st-alge-ope st))) 
+            (cond ((and (type-int? (stx:logic_exp_st-op1 st))
+                        (type-int? (stx:logic_exp_st-op2 st)))
+                   'int)))))
+    ((stx:unary_exp_st? st) 
+     (cond ((eq? 'amp (stx:unary_exp_st-mark st))
+            (cond ((type-int? st) 'int)
+                  (else (error "ERROR NOT WELL TYPED" st))))
+           ((eq? 'ast (stx:unary_exp_st-mark st))
+            (cond ((type-intp? st) 'int)
+                  ((type-intpp? st) 'int-p)))))
+    ((stx:constant_st? st) 'int)
+    ((stx:null_statement_st? st) 'int)
+    ((stx:func_st? st) """""""""""")
+   
+    
+    ((stx:exp_in_paren_st? st) 
+     (map form-check (stx:exp_in_paren_st-exp st)))
+    ;if文
+    ((stx:if_else_st? st) 
+     (begin (map form-check (stx:if_else_st-cond-exp st))
+            (map form-check (stx:if_else_st-state st))
+            (map form-check (stx:if_else_st-else-state st))))
+    ((stx:while_st? st) 
+     (begin (map form-check (stx:while_st-cond-exp st))
+            (map form-check (stx:while_st-statement st))))
+    ((stx:return_st? st) 
+     (map form-check(stx:return_st-exp st)))
+    ((stx:compound_st? st) 
+     (map form-check (stx:compound_st-statement-list st)))
+    
+    ((obj? st) (cond ((obj-)())
+                     (()())
+                     (()()))) 
+    ((position? st) #t)
+    (else (error "UNEXPECTED STRUCTURES IN AN ARGUMENT OF FORM-ANALY." st))))
+    
+  
+;型は'int、'int-p、int-pp 
+(define (sametype? x y) #t)
+(define (type-int? x) #t)
+(define (type-intp? x) #t)
+(define (type-intpp? x) #t)
+
+;テスト
+(define p (open-input-file "test01.c"))
+(port-count-lines! p)
+;(sem:sem-analyze-tree (k08:parse-port p))
+(form-analy (sem:sem-analyze-tree (k08:parse-port p)))

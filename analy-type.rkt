@@ -88,11 +88,22 @@
                   ((type-intpp? st) 'int-p)))))
     ((stx:constant_st? st) 'int)
     ((stx:null_statement_st? st) 'int)
-    ((stx:func_st? st) """""""""""")
-   
-    
+    ((stx:func_st? st) """""""""""") 
     ((stx:exp_in_paren_st? st) 
-     (map form-check (stx:exp_in_paren_st-exp st)))
+     (stx:exp_in_paren_st-exp st))
+    ((stx:return_st? st) 
+     (cond ((eq? (return_st-exp st) 'noreturn) 
+            'well-typed)
+           ((type-void? (stx:return_st_exp st))
+            (error "ERROR NOT WELL TYPED" st))
+           ((or (type-int? (stx:return_st_exp st))
+                (type-intp? (stx:return_st_exp st))
+                (type-intpp? (stx:return_st_exp st)))
+            "to do")))
+                 
+    
+    
+    
     ;if文
     ((stx:if_else_st? st) 
      (begin (map form-check (stx:if_else_st-cond-exp st))
@@ -101,8 +112,6 @@
     ((stx:while_st? st) 
      (begin (map form-check (stx:while_st-cond-exp st))
             (map form-check (stx:while_st-statement st))))
-    ((stx:return_st? st) 
-     (map form-check(stx:return_st-exp st)))
     ((stx:compound_st? st) 
      (map form-check (stx:compound_st-statement-list st)))
     
@@ -110,7 +119,7 @@
                      (()())
                      (()()))) 
     ((position? st) #t)
-    (else (error "UNEXPECTED STRUCTURES IN AN ARGUMENT OF FORM-ANALY." st))))
+    (else (error "UNEXPECTED STRUCTURES IN AN ARGUMENT OF ANALY-TYPE." st))))
     
   
 ;型は'int、'int-p、int-pp 
@@ -118,6 +127,7 @@
 (define (type-int? x) #t)
 (define (type-intp? x) #t)
 (define (type-intpp? x) #t)
+(define (type-void? x) #t)  
 
 ;テスト
 (define p (open-input-file "test01.c"))

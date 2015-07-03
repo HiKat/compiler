@@ -91,10 +91,10 @@
     (program ((program_with_print) 
               (cons 
                (stx:func_proto_st
-                (stx:spec_st 'int 'print-proto)
+                (stx:spec_st 'void 'print-proto)
                 (stx:func_declarator_st 'print 
                                         (stx:para_declaration_st (stx:spec_st 'int 'print-proto) 
-                                                                 (stx:id_st 'i 'print-proto))
+                                                                 (stx:id_st 'v 'print-proto))
                                         'print-proto)) 
                $1)));プログラムの冒頭に組込み関数 printのプロトタイプ宣言をつける.
 
@@ -322,9 +322,9 @@
 
 
 ;テスト
-(define p (open-input-file "kadai01.c"))
-(port-count-lines! p)
-(parse-port p)
+;(define p (open-input-file "kadai01.c"))
+;(port-count-lines! p)
+;(parse-port p)
 
 ;(define p2 (open-input-file "kadai01.c"))
 ;(port-count-lines! p2)

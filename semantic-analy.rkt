@@ -12,6 +12,7 @@
 (define comp-env '())
 (struct type_pointer (pointer type) #:transparent)
 ;funはシンボル 'fun、outは戻り値の型、inは引数の型のリスト.
+(struct type_array (type size) #:transparent)
 ;パラメータの無い時'noparaが入る.
 (struct type_fun (fun out in) #:transparent)
 ;ポインタ型のみリスト構造で(list 'pointe var)の形式.
@@ -35,14 +36,15 @@
                       (stx:declarator_st-var decl))
                      ((stx:declarator_ast_st? decl)
                       (stx:declarator_ast_st-var decl))))
-           (name (stx:id_st-name id))          
+           (name (stx:id_st-name id))         
            (flag (cond ((stx:declarator_st? decl) 'nomal)
                        ((stx:declarator_ast_st? decl) 'pointer)))
            (kind 'var)
-           (type (cond ((eq? flag 'nomal) type)
-                       ((eq? flag 'pointer) (list 'pointer type)))))
+           (type (cond ((stx:array_st? id) (type_array type (stx:array_st-num id)))
+                       (else (cond ((eq? flag 'nomal) type)
+                                   ((eq? flag 'pointer) (type_pointer 'pointer type)))))))
       (obj name lev kind type)))
-  ;;;;
+      ;;;;
   (let* (;typeに入っているのは (stx:spec_st 'intか'void ポジション)
          (type (stx:declaration_st-type-spec st))
          (declarator-list (stx:declaration_st-declarator-list st))
@@ -58,12 +60,6 @@
     (set! env (add-list obj-list env))
     ;構造体を返す.
     (stx:declaration_st type obj-list)))
-
-;(map (lambda (x) (check-decl x env)) (list (obj 'b 0 'var (type_pointer 'pointer 'void))))
-;(map (lambda (x) (check-decl x env)) 
-     ;(list (obj 'a 0 'var 'int) (obj 'b 0 'var (type_pointer 'pointer 'int)) (obj 'c 0 'var 'int)))
-
-;(list (obj 'b 0 'var '(pointer void)))
 
 
 (define (analy-func_proto_st st)
@@ -262,13 +258,13 @@
     (stx:func_def_st spec  
                      (cond 
                        ;para-obj-listはパラメータのobjのlist
-                       ((eq? 'noramal (fundef_flag-out-type flag)) 
+                       ((eq? 'normal (fundef_flag-out-type flag)) 
                         ;nameの部分をプロトタイプのオブジェクトで置き換える.
                         (stx:func_declarator_st fundef-obj para-obj-list fundef-pos))
                        ((eq? 'pointer (fundef_flag-out-type flag)) 
                         ;nameの部分をプロトタイプのオブジェクトで置き換える.
-                        (stx:func_declarator_ast_st fundef-obj para-obj-list fundef-pos) 
-                        ))
+                        (stx:func_declarator_ast_st fundef-obj para-obj-list fundef-pos))
+                       (else "ERROR IN ANALY-FUNC_DEF_ST"))
                      (analy-compound_st compo 2 env)
                      )))
 
@@ -276,7 +272,8 @@
   (let* ((flag (cond ((stx:compound_st? st) (comp_flag 'normal 'normal 1))
                      ((stx:compound_dec_st? st) (comp_flag 'normal 'nostat 2))
                      ((stx:compound_sta_st? st) (comp_flag 'nodecl 'normal 3))
-                     ((stx:compound_null_st? st) (comp_flag 'nodecl 'nostat 4))
+                     ((or (stx:null_statement_st? st) 
+                          (stx:compound_null_st? st)) (comp_flag 'nodecl 'nostat 4))
                      (else (error "ERROR IN ANALY-COMPOUND"))))
          ;decl-listには(list* stx:declaration_st...)
          (decl-list (cond ((eq? 1 (comp_flag-n flag)) (stx:compound_st-declaration-list st))
@@ -314,12 +311,10 @@
          (stat-list (cond ((eq? 'normal (comp_flag-stat flag)) 
                            (map* (lambda (x) (analy-compstate x this-lev comp-env)) stat-list))
                           ((eq? 'nostat (comp_flag-stat flag)) 
-                           'nostat)))
-         )
+                           'nostat))))
     ;意味解析終了時にlevを一つ繰り下げる
     ;(set! comp-lev (- lev 1))
-    ;(stx:compound_st decl-list stat-list)!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    comp-env))
+    (stx:compound_st decl-list stat-list)))
 
 (define (analy-compdecl st lev)
   ;;;;
@@ -335,12 +330,15 @@
                       (stx:declarator_st-var decl))
                      ((stx:declarator_ast_st? decl)
                       (stx:declarator_ast_st-var decl))))
-           (name (stx:id_st-name id))          
+           (name (cond ((stx:id_st? id) (stx:id_st-name id))
+                       ((stx:id_ast_st? id) (stx:id_ast_st-name id))
+                       ((stx:array_st? id) (stx:array_st-name id))))          
            (flag (cond ((stx:declarator_st? decl) 'nomal)
                        ((stx:declarator_ast_st? decl) 'pointer)))
            (kind 'var)
-           (type (cond ((eq? flag 'nomal) type)
-                       ((eq? flag 'pointer) (type_pointer 'pointer type)))))
+           (type (cond ((stx:array_st? id) (type_array type (stx:array_st-num id)))
+                       (else (cond ((eq? flag 'nomal) type)
+                                   ((eq? flag 'pointer) (type_pointer 'pointer type)))))))
       (obj name lev kind type)))
   ;;;;内部定義ここまで
   (let* (;typeに入っているのは (stx:spec_st 'intか'void ポジション)
@@ -379,7 +377,7 @@
         ((stx:unary_exp_st? st) 
          (stx:unary_exp_st (stx:unary_exp_st-mark st) 
                            (analy-compstate (stx:unary_exp_st-op st) lev env)
-                           (analy-compstate (stx:unary_exp_st-pos st) lev env)))
+                           (stx:unary_exp_st-pos st)))
         ((stx:constant_st? st) st)
         ((stx:exp_with_semi_st? st) 
          (stx:exp_with_semi_st (analy-compstate (stx:exp_with_semi_st-exp st) lev env)))
@@ -411,12 +409,12 @@
         ((or (stx:id_st? st)     
              (stx:id_ast_st? st))
          (check-var-ref st lev env))
-        (else (error "CONDIRION ERROR IN ANALY-COMPSTATE"))
+        (else (error "CONDITION ERROR IN ANALY-COMPSTATE FOR" st))
         ))
 
 (define (sem-analyze-tree t)
   (define (sem-analyze-struct st)
-    (cond ((stx:declaration_st? st) (analy-declaration_st st))
+    (cond ((stx:declaration_st? st) (analy-declaration_st st 0))
           ((stx:func_proto_st? st) (analy-func_proto_st st))
           ((stx:func_def_st? st) (analy-func_def_st st))
           (else 

@@ -293,19 +293,23 @@
                             (map* (lambda (x) (analy-compdecl x this-lev)) decl-list))                  
                            ((eq? 'nodecl (comp_flag-decl flag))
                             'nodecl)))
-         ;decl-listから環境を生成する.
+         ;decl-listからこのcompoun-statement内で新しく生成される環境を格納する.
          (comp-env 
           (cond 
             ((eq? 'nodecl decl-list) 'nodecl)
             (else (separate-list 
                 ;listの各要素がlistであることを保証させるためのmake-list-list
                 (map make-list-list
-                (map (lambda (x) (stx:declaration_st-declarator-list x)) decl-list))
-                )))
-          )
-         ;comp-envのチェック（自分自身のチェックと大域環境outer-envとのチェック.）
+                (map (lambda (x) (stx:declaration_st-declarator-list x)) decl-list))))))
          
-        
+         
+         ;;;;;;;;;;;;;要修正;;;;;;;;;;;;;;;
+         (i (display (format ">>>>> ~a\n\n" comp-env)))
+         
+         ;comp-envのチェック（自分自身のチェックと大域環境outer-envとのチェック.）
+         (comp-env-check (check-comp-env comp-env))
+         ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+         
          (comp-env (cond ((eq? 'nodecl comp-env) env)
                          (else (append comp-env outer-env))))
          (stat-list (cond ((eq? 'normal (comp_flag-stat flag)) 

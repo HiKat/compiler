@@ -12,14 +12,15 @@
 (struct func_declarator_ast_st (name para-list pos)#:transparent)
 (struct func_declarator_ast_null_st (name pos)#:transparent)
 ;例)nameは関数名、para-listは引数のリスト.
-;意味解析後はfunc_declaration_stとfunc_declaration_ast_stに
+;意味解析後はfunc_declaration_stに
 ;集約される. parameterなしはpara-listに代わりにシンボル'noparaが入る.
 ;意味解析後はname部にプロトタイプのオブジェクトが、para-listにパラメータのオブジェクトのリストが入る.
 
 
 (struct func_proto_st (type-spec func-declarator-st)#:transparent)
 (struct func_def_st (type-spec func-declarator-st compound-state-list)#:transparent)
-;例) (int funcname1 (id1 id2 *id3) compound_list) compound_listの中身は構造体declaration_listとstatement_listからなる.
+;例) (int funcname1 (id1 id2 *id3) compound_list) 
+;compound_listの中身は構造体declaration_listとstatement_listからなる.
 
 (struct declarator_st (var)#:transparent)
 (struct declarator_ast_st (var)#:transparent)
@@ -62,6 +63,8 @@
 
 (struct spec_st (type pos)#:transparent)
 ;データ型を表す構造体
+;意味解析以降はここにアクセスして型を調べる必要がなくなる.
+;型は全てオブジェクトを介して調べる.-
 
 (struct unary_exp_st (mark op pos)#:transparent)
 ;postfix_expを表す構造体.markは'minus、'ast、'amp
@@ -104,9 +107,12 @@
 
 (struct return_st (exp pos)#:transparent);posはreturnの位置.
 (struct return_null_st (exp pos)#:transparent)
+(struct sem_return_st (exp pos tag))
 ;return文を表す構造体.
 ;課題08以降でreturn_stに統合
 ;return_null_stは(stx:return_st 'noreturn pos)に
+;意味解析後はsem_return_stに統合
+;tagは関数定義のオブジェクト
 
 
 (struct compound_st (declaration-list statement-list)#:transparent)

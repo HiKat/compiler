@@ -13,6 +13,7 @@
 
 (define (form-check st)
   (cond 
+    ((not (list? st)) (list st))
     ((stx:declaration_st? st) #t)
     ((stx:func_declarator_st? st) #t)
     ((stx:func_declarator_ast_st? st) #t)
@@ -25,7 +26,13 @@
             (map form-check (stx:compound_st-statement-list 
                                   (stx:func_def_st-compound-state-list st))))))
     ((stx:assign_exp_st? st) 
-     (begin (map form-check (stx:assign_exp_st-dest st))
+     (begin (if (or (stx:unary_exp_st? (stx:assign_exp_st-dest st))
+                    (cond ((obj? (stx:assign_exp_st-dest st)) 
+                           (and (eq? 'var (obj-kind (stx:assign_exp_st-dest st)))
+                                (eq? type_array? (obj-type (stx:assign_exp_st-dest st)))))
+                          (else #f)))
+                #t
+                (error "ERROR! AN INVALID ASSIGN EXPRESSION FORM OF" st))
             (map form-check (stx:assign_exp_st-src st))))
     ((stx:logic_exp_st? st) 
      (begin (map form-check (stx:logic_exp_st-op1 st))
@@ -41,8 +48,8 @@
      (cond ((obj? (stx:unary_exp_st-op st)) 
             (cond ((eq? 'var (obj-kind (stx:unary_exp_st-op st)))
                    #t)
-                  (else (error "ERROR! INVALID FORM OF" st))))
-           (else (error "ERROR! INVALID FORM OF" st))))
+                  (else (error "ERROR! AN INVALID & FORM OF" st))))
+           (else (error "ERROR! AN INVALID & FORM OF" st))))
     ((stx:constant_st? st) #t)
     ((stx:null_statement_st? st) #t)
     ((stx:exp_in_paren_st? st) 

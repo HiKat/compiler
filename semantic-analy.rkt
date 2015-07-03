@@ -10,17 +10,7 @@
 (define env '())
 (define para-env '())
 (define comp-env '())
-(struct type_pointer (pointer type) #:transparent)
-;funはシンボル 'fun、outは戻り値の型、inは引数の型のリスト.
-(struct type_array (type size) #:transparent)
-;パラメータの無い時'noparaが入る.
-(struct type_fun (fun out in) #:transparent)
-;ポインタ型のみリスト構造で(list 'pointe var)の形式.
-;myenv.rkt内で定義
-;(struct obj (name lev kind type)#:transparent)
-(struct para_flag (out-type para))
-(struct fundef_flag (out-type para))
-(struct comp_flag (decl stat n))
+
 
 (define (analy-declaration_st st lev)
   ;;;;
@@ -431,6 +421,6 @@
 
 
 
-(define p (open-input-file "kadai01.c"))
-(port-count-lines! p)
-(sem-analyze-tree (k08:parse-port p))
+;(define p (open-input-file "kadai01.c"))
+;(port-count-lines! p)
+;(sem-analyze-tree (k08:parse-port p))

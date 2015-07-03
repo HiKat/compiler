@@ -1,6 +1,22 @@
 #lang racket
 (require (prefix-in stx: "mysyntax.rkt"))
 (provide (all-defined-out))
+
+
+
+(struct type_pointer (pointer type) #:transparent)
+;funはシンボル 'fun、outは戻り値の型、inは引数の型のリスト.
+(struct type_array (type size) #:transparent)
+;パラメータの無い時'noparaが入る.
+(struct type_fun (fun out in) #:transparent)
+;ポインタ型のみリスト構造で(list 'pointe var)の形式.
+;myenv.rkt内で定義
+;(struct obj (name lev kind type)#:transparent)
+(struct para_flag (out-type para))
+(struct fundef_flag (out-type para))
+(struct comp_flag (decl stat n))
+
+
 ;環境操作関数.
 (struct obj (name lev kind type)#:transparent)
 (define initial-env '())
@@ -156,7 +172,7 @@
   (cond ((eq? 'nodecl comp-env)
          (display (format "OK! NO DECLARATIONS IN COMPONUND STATEMENT\n")))
         ((eq? '() (cdr comp-env)) 
-         (display (format "OK! CORRENCT DECLARATIONS IN COMPONUND STATEMENT!!!!!!!!!!!\n")))
+         (display (format "OK! CORRENCT DECLARATIONS IN COMPONUND STATEMENT!\n")))
         (else (cond ((in-env? (obj-name (car comp-env)) (cdr comp-env))
                      (error "ERROR! REDEFINITION OF "(obj-name (car comp-env))))
                     (else (check-comp-env (cdr comp-env)))))))

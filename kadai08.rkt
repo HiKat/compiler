@@ -322,7 +322,7 @@
 
 
 ;テスト
-;(define p (open-input-file "kadai01.c"))
+;(define p (open-input-file "test01.c"))
 ;(port-count-lines! p)
 ;(parse-port p)
 

@@ -152,15 +152,14 @@
         referred-obj)))
 
 (define (check-comp-env comp-env)
-  (display (format "~a\n" comp-env))
-  #;(cond ((eq? 'nodecl comp-env)
+  ;(display (format "~a\n" comp-env))
+  (cond ((eq? 'nodecl comp-env)
          (display (format "OK! NO DECLARATIONS IN COMPONUND STATEMENT\n")))
         ((eq? '() (cdr comp-env)) 
          (display (format "OK! CORRENCT DECLARATIONS IN COMPONUND STATEMENT!!!!!!!!!!!\n")))
         (else (cond ((in-env? (obj-name (car comp-env)) (cdr comp-env))
                      (error "ERROR! REDEFINITION OF "(obj-name (car comp-env))))
-                    (else (check-comp-env (cdr comp-env))))))
-  )
+                    (else (check-comp-env (cdr comp-env)))))))
          
 
 

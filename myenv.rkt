@@ -17,7 +17,7 @@
 
 
 ;環境操作関数.
-(struct obj (name lev kind type)#:transparent)
+(struct obj (name lev kind type pos)#:transparent)
 (define initial-env '())
 
 (define (lookup-env name e)
@@ -140,7 +140,7 @@
                                        ((and (equal? name (obj-name x))
                                              (equal? 'fun (obj-kind x))) 
                                         (error "ERROR SAME NAME VAR AND FUNCTION " name))
-                                       (else (obj 'invalid 'invalid 'invalid 'invalid)))
+                                       (else (obj 'invalid 'invalid 'invalid 'invalid 'invalid)))
                                  (error "ERROR AN UNDEFINED IDENTIFIER OF VAR " name)))
                            env))))
   (if (equal? 'invalid (obj-type referred-obj))

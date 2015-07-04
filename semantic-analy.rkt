@@ -33,8 +33,14 @@
            (kind 'var)
            (type (cond ((stx:array_st? id) (type_array type (stx:array_st-num id)))
                        (else (cond ((equal? flag 'nomal) type)
-                                   ((equal? flag 'pointer) (type_pointer 'pointer type)))))))
-      (obj name lev kind type)))
+                                   ((equal? flag 'pointer) (type_pointer 'pointer type))))))
+           (pos (cond ((stx:id_st? id) 
+                      (stx:id_st-pos id))
+                     ((stx:id_ast_st? id)
+                      (stx:id_ast_st-pos id))
+                     ((stx:array_st? id)
+                      (stx:array_st-pos id)))))
+      (obj name lev kind type pos)))
       ;;;;
   (let* (;typeに入っているのは (stx:spec_st 'intか'void ポジション)
          (type (stx:declaration_st-type-spec st))
@@ -71,11 +77,13 @@
                                ((stx:id_ast_st? id) 'pointer)))
                    (name (cond ((equal? flag 'normal) (stx:id_st-name id))
                                ((equal? flag 'pointer)(stx:id_ast_st-name id))))
+                   (pos (cond ((stx:id_st? id) (stx:id_st-pos id))
+                              ((stx:id_ast_st? id) (stx:id_ast_st-pos id))))
                    (lev 1)
                    (kind 'parm)            
                    (type (cond ((equal? flag 'normal) type)
                                ((equal? flag 'pointer)(type_pointer 'pointer type)))))
-              (obj name lev kind type)))
+              (obj name lev kind type pos)))
           para-list))
    ;;;;;内部定義ここまで                
   (let* (;このspecがintで返り値が*intの場合あり.
@@ -133,7 +141,7 @@
                                       (cond ((equal? 'nopara para-obj-list)
                                              'nopara)
                                             (else (map (lambda (x) (obj-type x)) para-obj-list)))))))
-         (proto-obj (obj proto-name 0 'proto proto-type)))
+         (proto-obj (obj proto-name 0 'proto proto-type proto-pos)))
     ;プロトタイプのオブジェクトのチェック
     (check-proto proto-obj env)
     ;プロトタイプのオブジェクトを環境に追加.
@@ -164,11 +172,13 @@
                                ((stx:id_ast_st? id) 'pointer)))
                    (name (cond ((equal? flag 'normal) (stx:id_st-name id))
                                ((equal? flag 'pointer)(stx:id_ast_st-name id))))
+                   (pos (cond ((stx:id_st? id) (stx:id_st-pos id))
+                              ((stx:id_ast_st? id) (stx:id_ast_st-pos id))))
                    (lev 1)
                    (kind 'parm)            
                    (type (cond ((equal? flag 'normal) type)
                                ((equal? flag 'pointer)(type_pointer 'pointer type)))))
-              (obj name lev kind type)))
+              (obj name lev kind type pos)))
           para-list))
   ;;;;;内部定義ここまで                
   (let* (;このspecがintで返り値が*intの場合あり.
@@ -192,7 +202,7 @@
                               (stx:func_declarator_ast_st-name decl))
                              ((stx:func_declarator_ast_null_st? decl) 
                               (stx:func_declarator_ast_null_st-name decl))))
-         ;プロトタイプの位置情報
+         ;関数定義の位置情報
          (fundef-pos (cond ((stx:func_declarator_st? decl) 
                            (stx:func_declarator_st-pos decl))
                           ((stx:func_declarator_null_st? decl)
@@ -226,7 +236,7 @@
                                        (cond ((equal? 'nopara para-obj-list) 'nopara)
                                              (else (map (lambda (x) (obj-type x)) para-obj-list)))))
                             (else (error "IN VALID FUNCTION"))))
-         (fundef-obj (obj fundef-name 0 'fun fundef-type)))
+         (fundef-obj (obj fundef-name 0 'fun fundef-type fundef-pos)))
     ;関数定義のオブジェクトのチェック
     (check-func fundef-obj env)
     ;関数定義のオブジェクトを環境に追加.
@@ -314,14 +324,17 @@
                       (stx:declarator_ast_st-var decl))))
            (name (cond ((stx:id_st? id) (stx:id_st-name id))
                        ((stx:id_ast_st? id) (stx:id_ast_st-name id))
-                       ((stx:array_st? id) (stx:array_st-name id))))          
+                       ((stx:array_st? id) (stx:array_st-name id))))  
+           (pos (cond ((stx:id_st? id) (stx:id_st-pos id))
+                      ((stx:id_ast_st? id) (stx:id_ast_st-pos id))
+                      ((stx:array_st? id) (stx:array_st-pos id))))
            (flag (cond ((stx:declarator_st? decl) 'nomal)
                        ((stx:declarator_ast_st? decl) 'pointer)))
            (kind 'var)
            (type (cond ((stx:array_st? id) (type_array type (stx:array_st-num id)))
                        (else (cond ((equal? flag 'nomal) type)
                                    ((equal? flag 'pointer) (type_pointer 'pointer type)))))))
-      (obj name lev kind type)))
+      (obj name lev kind type pos)))
   ;;;;内部定義ここまで
   (let* (;typeに入っているのは (stx:spec_st 'intか'void ポジション)
          (type (stx:declaration_st-type-spec st))

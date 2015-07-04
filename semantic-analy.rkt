@@ -26,7 +26,8 @@
                       (stx:declarator_st-var decl))
                      ((stx:declarator_ast_st? decl)
                       (stx:declarator_ast_st-var decl))))
-           (name (stx:id_st-name id))         
+           (name (cond ((stx:id_st? id) (stx:id_st-name id))
+                       ((stx:array_st? id) (stx:array_st-name id))))
            (flag (cond ((stx:declarator_st? decl) 'nomal)
                        ((stx:declarator_ast_st? decl) 'pointer)))
            (kind 'var)
@@ -294,11 +295,6 @@
                 ;listの各要素がlistであることを保証させるためのmake-list-list
                 (map make-list-list
                 (map (lambda (x) (stx:declaration_st-declarator-list x)) decl-list))))))
-         
-         
-         ;;;;;;;;;;;;;要修正;;;;;;;;;;;;;;;
-         (i (display (format ">>>>> ~a\n\n" comp-env)))
-         
          ;comp-envのチェック（自分自身のチェックと大域環境outer-envとのチェック.）
          (comp-env-check (check-comp-env comp-env))
          ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -425,7 +421,7 @@
 
 
 
-
+;テスト
 ;(define p (open-input-file "test01.c"))
 ;(port-count-lines! p)
 ;(sem-analyze-tree (k08:parse-port p))

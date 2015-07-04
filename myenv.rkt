@@ -100,14 +100,14 @@
     ((eq? '() obj-list) (display (format "OK! CRRECT PARAMETERS OF FUNCTION PROTOTYPE.\n")))
     ((eq? 'nopara obj-list) (display(format "OK! CRRECT PARAMETERS OF FUNCTION PROTOTYPE.\n")))
     ((in-env? (obj-name (car obj-list)) (cdr obj-list))
-     (error "FAILED! SOME REDEFINITION IN PARAMETERS OF FUNCTION PROTOTYPE"))
+     (error "ERROR! SOME REDEFINITION IN PARAMETERS OF FUNCTION PROTOTYPE"))
     (else (check-proto-para (cdr obj-list)))))
 (define (check-def-para obj-list)
   (cond 
     ((eq? '() obj-list) (display (format "OK! CRRECT PARAMETERS OF FUNCTION PROTOTYPE.\n")))
     ((eq? 'nopara obj-list) (display(format "OK! CRRECT PARAMETERS OF FUNCTION PROTOTYPE.\n")))
     ((in-env? (obj-name (car obj-list)) (cdr obj-list))
-     (error "FAILED! SOME REDEFINITION IN PARAMETERS OF FUNCTION PROTOTYPE"))
+     (error "ERROR! SOME REDEFINITION IN PARAMETERS OF FUNCTION PROTOTYPE"))
     (else (check-proto-para (cdr obj-list)))))
 (define (check-proto obj env)
   (map 

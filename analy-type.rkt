@@ -27,7 +27,7 @@
                 ((type_array? (obj-type x))
                  (cond ((or (eq? 'void 
                                  (type_array-type (obj-type x)))
-                            (eq? (type_pointer 'void) 
+                            (eq? (type_pointer 'pointer 'void) 
                                  (type_array-type (obj-type x))))
                         (error "ERROR NOT WELL TYPED" st))))
                 ;宣言した変数が配列でない時
@@ -39,40 +39,46 @@
             decl-obj-list)
        'well-typed))
     ((stx:func_proto_st? st) 
+     (let* ((func-declarator (stx:func_proto_st-func-declarator-st st))
+            (func-para-list (stx:func_declarator_st-para-list func-declarator))
+            (func-obj (stx:func_declarator_st-name func-declarator))
+            (func-type (obj-type func-obj))
+            (func-out-type (type_fun-out func-type)))
+     ;関数プロトタイプの
      ;戻り値がvoidポインタはエラー
      ;パラメータがvoid型、voidポインタはエラー
-     (cond ((eq? 
-             (type_fun 'fun (type_pointer 'pointer 'void))
-             (obj-type 
-              (stx:func_declarator_st-name 
-                        (stx:func_proto_st-func-declarator-st st))))
-            (error "ERROR NOT WELL TYPED" st))
-           ((check-type-para 
-             (stx:func_declarator_st-para-list 
-              (stx:func_proto_st-func-declarator-st st)))
-            (error "ERROR NOT WELL TYPED" st))
-           (else 'well-typed)))                                  
+       (cond ;戻り値がvoidのポインタ型であるとき
+         ((eq? (type_pointer 'pointer 'void )
+               func-out-type)
+          (error "ERROR NOT WELL TYPED" st))
+         ;パラメターががvoid型、voidポインタ型であるとき
+         ;chcek-type-paraはこれらの型の以上がパラメータの中に無いかどうかを判定する.
+         ((eq? 'well-typed (check-type-para func-para-list))
+          'well-typed)
+         (else 'well-typed))))                                  
     ((stx:func_def_st? st) 
-      ;戻り値がvoidポインタはエラー
+     ;戻り値がvoidポインタはエラー
      ;パラメータがvoid型、voidポインタはエラー
-     (cond ((and (eq? 'well-typed 
-                      (cond ((eq? 
-                              (type_fun 'fun (type_pointer 'pointer 'void))
-                              (obj-type 
-                               (stx:func_declarator_st-name 
-                                (stx:func_proto_st-func-declarator-st st))))
-                             (error "ERROR NOT WELL TYPED" st))
-                            ((check-type-para 
-                              (stx:func_declarator_st-para-list 
-                               (stx:func_proto_st-func-declarator-st st)))
-                             (error "ERROR NOT WELL TYPED" st))
-                            (else 'well-typed)))
-                 ;begin文の前者がうまく実行されれば#tが出力される.
-                 ;そうでなければ勝手にエラーで止まる.
-                 (begin (map check-type (stx:func_def_st-compound-state-list st))
-                        #t))
-            'well-typed)
-           (else (error "ERROR NOT WELL TYPED" st))))
+     (let* ((func-declarator (stx:func_def_st-func-declarator-st st))
+            (func-para-list (stx:func_declarator_st-para-list func-declarator))
+            (func-obj (stx:func_declarator_st-name func-declarator))
+            (func-type (obj-type func-obj))
+            (func-out-type (type_fun-out func-type))
+            (func-compound-state (stx:compound_st-statement-list 
+                                 (stx:func_def_st-compound-state-list st))))
+       (cond ((and (eq? 'well-typed 
+                        (cond ((eq? (type_pointer 'pointer 'void )
+                                    func-out-type)
+                               (error "ERROR NOT WELL TYPED" st))
+                              ((eq? 'well-typed (check-type-para func-para-list))
+                               'well-typed)
+                              (else 'well-typed)))
+                   ;begin文の前者がうまく実行されれば#tが出力される.
+                   ;そうでなければ勝手にエラーで止まる.
+                   (begin (map check-type func-compound-state)
+                          #t))
+              'well-typed)
+             (else (error "ERROR NOT WELL TYPED" st)))))
     ((stx:null_statement_st? st) 'well-typed)       
     ((stx:exp_in_paren_st? st) 
      (check-type (stx:exp_in_paren_st-exp st)))
@@ -108,11 +114,17 @@
             ;各要素はerrorか'well-typedを返すので、mapが実行されれば
             ;必然的にlistの要素は'well-typedになっている.
             'well-typed))
-    (else (error "UNEXPECTED STRUCTURES FOR AN ARGUMENT OF ANALY-TYPE." st))))
+    (else (cond ((or (eq? 'int (type st))
+                     (eq? 'int-p (type st))
+                     (eq? 'int-pp (type st))
+                     (eq? 'void (type st)))
+                 'well-typed)
+                (else (error "ERROR NOT WELL TYPED" st))))))
     
   
 ;型は'int、'int-p、int-pp 
-(define (sametype? x y) #t)
+(define (sametype? x y)
+  (eq? (type x) (type y)))
 (define (type-int? x) 
   (eq? 'int (type x)))
 (define (type-intp? x)
@@ -121,10 +133,22 @@
   (eq? 'int-pp (type x)))
 (define (type-void? x)
   (eq? 'void (type x)))  
-;引数はdeclaration_st、func_proto_st、func_def_stのいずれか.
-;戻り値は#t
-(define (well-typed? x) #t)
-(define (check-type-para para-list) #t)
+
+;objのlistもしくは(list 'nopara)を受け取って
+;エラーすなわち
+;パラメターの中にvoid型、voidポインタ型がなければ
+;well-typedを返す.
+(define (check-type-para para-list) 
+  (cond ((eq? 'nopara para-list) 'well-typed)
+        (else (map (lambda (x) 
+                     (let ((x-type (obj-type x)))
+                       (begin (cond ((or (eq? 'void x-type)
+                                         (eq? (type_pointer 'pointer 'void) x-type))
+                                     (error "ERROR NOT WELL TYPED" x))
+                                    (else 'well-typed))
+                              'well-typed)))
+                   para-list))))
+
 (define (type st) 
   (cond ((stx:assign_exp_st? st) 
          (let* ((type-dest (type (stx:assign_exp_st-dest st)))
@@ -237,7 +261,15 @@
              ((not (type_array? type-obj)) 
               (cond ((eq? 'int type-obj) 'int)
                     ((eq? (type_pointer 'pointer 'int) type-obj) 'int-p)
-                    (else (error "ERROR NOT WELL TYPED" st)))))))))
+                    #;(else (begin 
+                            (display (format "~a ========== ~a\n" type-obj (type_pointer 'pointer 'int)))
+                            (if (symbol? (type_pointer-type type-obj)) 
+                                (display "なんでやねん1")  
+                                (display "なんでやねん") )
+                            (error "ERROR NOT WELL TYPED" type-obj))
+                     ;(eq? (type_pointer 'pointer 'int) type-obj)
+                     )
+                    )))))))
 
 
 

@@ -214,16 +214,18 @@
          ;para-obj-listは(list obj...)もしくは'nopara
          (para-obj-list (cond ((equal? para-list 'nopara) 'nopara)
                               (else (make-obj-from-paralist para-list))))
-         (fundef-type (cond ((equal? 'nopara para-obj-list) 'nopara) 
-                            ((equal? 'normal (fundef_flag-out-type flag))
+         (fundef-type (cond ((equal? 'normal (fundef_flag-out-type flag))
                              (type_fun 'fun
                                        (stx:spec_st-type spec)
-                                       (map (lambda (x) (obj-type x)) para-obj-list)))
+                                       (cond ((equal? 'nopara para-obj-list) 'nopara)
+                                             (else(map (lambda (x) (obj-type x)) para-obj-list)))))
                             ;(struct type-pointer (pointer type) #:transparent)
                             ((equal? 'pointer (fundef_flag-out-type flag))
                              (type_fun 'fun
                                        (type_pointer 'pointer (stx:spec_st-type spec))
-                                       (map (lambda (x) (obj-type x)) para-obj-list)))))
+                                       (cond ((equal? 'nopara para-obj-list) 'nopara)
+                                             (else (map (lambda (x) (obj-type x)) para-obj-list)))))
+                            (else (error "IN VALID FUNCTION"))))
          (fundef-obj (obj fundef-name 0 'fun fundef-type)))
     ;関数定義のオブジェクトのチェック
     (check-func fundef-obj env)
@@ -291,10 +293,9 @@
                           ((equal? 'nostat (comp_flag-stat flag)) 
                            'nostat))))
     ;意味解析終了時にlevを一つ繰り下げる
-    ;(set! comp-lev (- lev 1))
-    (display (format "comp-env is>>>>>>>>> ~a \n\n" comp-env))
-    (display (format "outer-env is>>>>>>>>> ~a \n\n" outer-env))
-    (display (format "new-comp-env is>>>>>>>>> ~a \n\n" new-comp-env))
+    ;(display (format "comp-env is>>>>>>>>> ~a \n\n" comp-env))
+    ;(display (format "outer-env is>>>>>>>>> ~a \n\n" outer-env))
+    ;(display (format "new-comp-env is>>>>>>>>> ~a \n\n" new-comp-env))
     (stx:compound_st decl-list stat-list)))
 
 (define (analy-compdecl st lev)

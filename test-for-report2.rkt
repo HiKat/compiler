@@ -8,19 +8,19 @@
   (port-count-lines! s)
   (k08:parse-port s)
   )
-#;(begin 
+(begin 
   (define p (open-input-file "test01.c"))
   (port-count-lines! p)
   (sem-analyze-tree (k08:parse-port p))
   )
 
-#;(begin 
+(begin 
   (define q (open-input-file "test01.c"))
   (port-count-lines! q)
   (analy-form (sem-analyze-tree (k08:parse-port q)))
   )
 
-#;(begin
+(begin
   (define r (open-input-file "test01.c"))
   (port-count-lines! r)
   (analy-type (sem-analyze-tree (k08:parse-port r)))

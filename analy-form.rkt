@@ -6,6 +6,7 @@
          (prefix-in : parser-tools/lex-sre)
          parser-tools/yacc)
 (require "myenv.rkt")
+(provide (all-defined-out))
 
 (define (analy-form t)
   (begin (map form-check t)
@@ -71,7 +72,7 @@
     
 
 ;テスト
-(define p (open-input-file "test01.c"))
-(port-count-lines! p)
-;(sem:sem-analyze-tree (k08:parse-port p))
-(analy-form (sem:sem-analyze-tree (k08:parse-port p)))
+;(define p (open-input-file "test01.c"))
+;(port-count-lines! p)
+;;(sem:sem-analyze-tree (k08:parse-port p))
+;(analy-form (sem:sem-analyze-tree (k08:parse-port p)))

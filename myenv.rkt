@@ -10,8 +10,7 @@
 ;パラメータの無い時'noparaが入る.
 (struct type_fun (fun out in) #:transparent)
 ;ポインタ型のみリスト構造で(list 'pointe var)の形式.
-;myenv.rkt内で定義
-;(struct obj (name lev kind type)#:transparent)
+
 (struct para_flag (out-type para))
 (struct fundef_flag (out-type para))
 (struct comp_flag (decl stat n))
@@ -22,7 +21,7 @@
 (define initial-env '())
 
 (define (lookup-env name e)
-  (if (eq? e initial-env) 
+  (if (equal? e initial-env) 
       #f
       (if (equal? (obj-name (car e)) name)
           (car e)
@@ -30,7 +29,7 @@
 
 
 (define (in-env? name e)
-  (if (eq? e initial-env) 
+  (if (equal? e initial-env) 
       #f
       (if (equal? (obj-name (car e)) name)
           #t
@@ -40,7 +39,7 @@
   (cons x e))
 
 (define (add-list l e)
-  (if (eq? l '()) 
+  (if (equal? l '()) 
       e
       (let* ((newenv (extend-env (car l) e)))
         (add-list (cdr l) newenv))))
@@ -48,8 +47,8 @@
 ;例) '((a) (b c d) (e f) (g)) -> '(a b c d e f g)
 (define (separate-list l)
   (cond 
-    ((eq? '() (cdr l)) (car l))
-    ((eq? '() (cddr l)) (append (car l) (cadr l)))
+    ((equal? '() (cdr l)) (car l))
+    ((equal? '() (cddr l)) (append (car l) (cadr l)))
     (else (separate-list (list (append (car l) (cadr l)) (caddr l))))))
 
 ;例)'(a (b c d) (e f) g) -> '((a) (b c d) (e f) (g))
@@ -79,50 +78,49 @@
 ;エラーもしくはメッセージを返す  
 ;para-envとenvの両方で探す  
 (define (check-decl obj env)
-  (map (lambda (x) (cond ((and (eq? (obj-name x) (obj-name obj))
-                               (eq? 'fun (obj-kind x))
-                               (eq? 0 (obj-lev x)))
+  (map (lambda (x) (cond ((and (equal? (obj-name x) (obj-name obj))
+                               (equal? 'fun (obj-kind x))
+                               (equal? 0 (obj-lev obj)))
+                          (error (display (format "ERROR! REDEFINITION OF '~a' AT" x))))
+                         ((and (equal? (obj-name x) (obj-name obj))
+                               (equal? 'var (obj-kind x))
+                               (equal? (obj-lev x) (obj-lev obj)))
                           (error "ERROR! REDEFINITION OF "(obj-name obj)))
-                         ((and (eq? (obj-name x) (obj-name obj))
-                               (eq? 'var (obj-kind x))
-                               (eq? (obj-lev x) (obj-lev obj)))
-                          (error "ERROR! REDEFINITION OF "(obj-name obj)))
-                         ((and (eq? (obj-name x) (obj-name obj))
-                               (eq? 'parm (obj-kind x)))
-                          (let* ((meaningless 1))
-                            (display (format "WARNING!! SAME NAME IN PARAMETERS AND VAR DECLARATIONS\n"))
-                            #t))))
+                         ((and (equal? (obj-name x) (obj-name obj))
+                               (equal? 'parm (obj-kind x)))
+                          (begin(display (format "WARNING!! SAME NAME IN PARAMETERS AND VAR DECLARATIONS\n"))
+                                #t))))
        env))
 
 
 (define (check-proto-para obj-list)
   (cond 
-    ((eq? '() obj-list) (display (format "OK! CRRECT PARAMETERS OF FUNCTION PROTOTYPE.\n")))
-    ((eq? 'nopara obj-list) (display(format "OK! CRRECT PARAMETERS OF FUNCTION PROTOTYPE.\n")))
+    ((equal? '() obj-list) (display (format "OK! CRRECT PARAMETERS OF FUNCTION PROTOTYPE.\n")))
+    ((equal? 'nopara obj-list) (display(format "OK! CRRECT PARAMETERS OF FUNCTION PROTOTYPE.\n")))
     ((in-env? (obj-name (car obj-list)) (cdr obj-list))
      (error "ERROR! SOME REDEFINITION IN PARAMETERS OF FUNCTION PROTOTYPE"))
     (else (check-proto-para (cdr obj-list)))))
 (define (check-def-para obj-list)
   (cond 
-    ((eq? '() obj-list) (display (format "OK! CRRECT PARAMETERS OF FUNCTION PROTOTYPE.\n")))
-    ((eq? 'nopara obj-list) (display(format "OK! CRRECT PARAMETERS OF FUNCTION PROTOTYPE.\n")))
+    ((equal? '() obj-list) (display (format "OK! CRRECT PARAMETERS OF FUNCTION PROTOTYPE.\n")))
+    ((equal? 'nopara obj-list) (display(format "OK! CRRECT PARAMETERS OF FUNCTION PROTOTYPE.\n")))
     ((in-env? (obj-name (car obj-list)) (cdr obj-list))
-     (error "ERROR! SOME REDEFINITION IN PARAMETERS OF FUNCTION PROTOTYPE"))
+     (error "ERROR! SOME REDEFINITION IN PARAMETERS OF FUNCTION DEFINITION"))
     (else (check-proto-para (cdr obj-list)))))
 (define (check-proto obj env)
   (map 
    ;プロトタイプとnameが同じ、levelがで0、typeが同じでないかどうかをmapで一つづつ判定する.
-   (lambda (x)(cond ((and (eq? (obj-name x) (obj-name obj))
-                          (eq? 0 (obj-lev x))
-                          (not (eq? (obj-type x) (obj-type obj))))
-                     (error "ERROR! REDEFINITION OF "(obj-name obj)))
+   (lambda (x)(cond ((and (equal? (obj-name x) (obj-name obj))
+                          (equal? 0 (obj-lev x))
+                          (not (equal? (obj-type x) (obj-type obj))))
+                     (error "ERROR! REDEFINITION OF "(obj-type x)(obj-type obj)))
                     (else (display (format "OK! CRRECT FUNCTION PROTOTYPE OF '~a'.\n" (obj-name obj))))))
    env))
 (define (check-func obj env)
   (map 
    ;関数定義とnameが同じ、kindが'funかどうかをmapで一つづつ判定する.
-   (lambda (x)(cond ((and (eq? (obj-name x) (obj-name obj))
-                          (eq? 'fun (obj-kind x)))
+   (lambda (x)(cond ((and (equal? (obj-name x) (obj-name obj))
+                          (equal? 'fun (obj-kind x)))
                      (error "ERROR! REDEFINITION OF "(obj-name obj)))
                     (else (display (format "OK! CRRECT FUNCTION PROTOTYPE OF '~a'.\n" (obj-name obj))))))
    env))  
@@ -134,17 +132,17 @@
           (lookup-env name 
                       (map (lambda (x) 
                              (if (in-env? name env)
-                                 (cond ((and (eq? name (obj-name x))
-                                             (or (eq? 'var (obj-kind x))
-                                                 (eq? 'parm (obj-kind x))))
+                                 (cond ((and (equal? name (obj-name x))
+                                             (or (equal? 'var (obj-kind x))
+                                                 (equal? 'parm (obj-kind x))))
                                         x)
-                                       ((and (eq? name (obj-name x))
-                                             (eq? 'fun (obj-kind x))) 
+                                       ((and (equal? name (obj-name x))
+                                             (equal? 'fun (obj-kind x))) 
                                         (error "ERROR SAME NAME VAR AND FUNCTION " name))
                                        (else (obj 'invalid 'invalid 'invalid 'invalid)))
                                  (error "ERROR AN UNDEFINED IDENTIFIER OF VAR " name)))
                            env))))
-  (if (eq? 'invalid (obj-type referred-obj))
+  (if (equal? 'invalid (obj-type referred-obj))
       (error "ERROR! INVALID IDENTIFIER" name)
       referred-obj)))
 
@@ -153,25 +151,26 @@
          (referred-obj 
           (lookup-env name 
                       (map (lambda (x) (if (in-env? name env)
-                                           (cond ((and (eq? name (obj-name x))
-                                                       (or (eq? 'fun (obj-kind x))
-                                                           (eq? 'proto (obj-kind x))))
+                                           (cond ((and (equal? name (obj-name x))
+                                                       (or (equal? 'fun (obj-kind x))
+                                                           (equal? 'proto (obj-kind x))))
                                                   x)
-                                                 ((and (eq? name (obj-name x))
-                                                       (eq? 'var (obj-kind x))) 
+                                                 ((and (equal? name (obj-name x))
+                                                       (equal? 'var (obj-kind x))) 
                                                   (error "ERROR AN UNDEFINED IDENTIFIER " name))
                                                  (else (obj 'invalid 'invalid 'invalid 'invalid)))
                                            (error "ERROR AN UNDEFINED IDENTIFIER OF FUNCTION" name)))
                            env))))
-    (if (eq? 'invalid (obj-type referred-obj))
+    (if (equal? 'invalid (obj-type referred-obj))
         (error "ERROR! INVALID IDENTIFIER" name)
         referred-obj)))
 
+;comp-env内のみで二重定義などが無いかどうかをチェックする.
 (define (check-comp-env comp-env)
   ;(display (format "~a\n" comp-env))
-  (cond ((eq? 'nodecl comp-env)
+  (cond ((equal? 'nodecl comp-env)
          (display (format "OK! NO DECLARATIONS IN COMPONUND STATEMENT\n")))
-        ((eq? '() (cdr comp-env)) 
+        ((equal? '() (cdr comp-env)) 
          (display (format "OK! CORRENCT DECLARATIONS IN COMPONUND STATEMENT!\n")))
         (else (cond ((in-env? (obj-name (car comp-env)) (cdr comp-env))
                      (error "ERROR! REDEFINITION OF "(obj-name (car comp-env))))

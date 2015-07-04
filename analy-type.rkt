@@ -6,6 +6,7 @@
          (prefix-in : parser-tools/lex-sre)
          parser-tools/yacc)
 (require "myenv.rkt")
+(provide (all-defined-out))
 ;myenv.rkt内で定義
 ;(struct obj (name lev kind type)#:transparent)
 
@@ -17,7 +18,7 @@
 ;戻り値は'well-typed
 (define (check-type st)
   (cond 
-    
+    ((list? st) (map check-type st))
     ((stx:declaration_st? st) 
      (let* ((decl-obj-list (stx:declaration_st-declarator-list st)))
        (map (lambda (x) 
@@ -25,16 +26,17 @@
                 ;宣言した変数が配列の時
                 ;void型、voidポインタ型はエラー
                 ((type_array? (obj-type x))
-                 (cond ((or (eq? 'void 
+                 (cond ((or (equal? 'void 
                                  (type_array-type (obj-type x)))
-                            (eq? (type_pointer 'pointer 'void) 
+                            (equal? (type_pointer 'pointer 'void) 
                                  (type_array-type (obj-type x))))
                         (error "ERROR NOT WELL TYPED" st))))
                 ;宣言した変数が配列でない時
                 ;void型、voidポインタ型はエラー
-                (else (cond ((eq? (type_pointer 'pointer 'void) (obj-type x))
+                (else (cond ((equal? (type_pointer 'pointer 'void) (obj-type x))
                              (error "ERROR NOT WELL TYPED" st))
-                            ((eq? 'void (obj-type x)))
+                            ((equal? 'void (obj-type x))
+                             (error "ERROR NOT WELL TYPED" st))
                             (else 'well-typed)))))
             decl-obj-list)
        'well-typed))
@@ -48,12 +50,12 @@
      ;戻り値がvoidポインタはエラー
      ;パラメータがvoid型、voidポインタはエラー
        (cond ;戻り値がvoidのポインタ型であるとき
-         ((eq? (type_pointer 'pointer 'void )
+         ((equal? (type_pointer 'pointer 'void )
                func-out-type)
           (error "ERROR NOT WELL TYPED" st))
          ;パラメターががvoid型、voidポインタ型であるとき
          ;chcek-type-paraはこれらの型の以上がパラメータの中に無いかどうかを判定する.
-         ((eq? 'well-typed (check-type-para func-para-list))
+         ((equal? 'well-typed (check-type-para func-para-list))
           'well-typed)
          (else 'well-typed))))                                  
     ((stx:func_def_st? st) 
@@ -65,85 +67,96 @@
             (func-type (obj-type func-obj))
             (func-out-type (type_fun-out func-type))
             (func-compound-state (stx:compound_st-statement-list 
+                                 (stx:func_def_st-compound-state-list st)))
+            (func-compound-decl (stx:compound_st-declaration-list 
                                  (stx:func_def_st-compound-state-list st))))
-       (cond ((and (eq? 'well-typed 
-                        (cond ((eq? (type_pointer 'pointer 'void )
-                                    func-out-type)
-                               (error "ERROR NOT WELL TYPED" st))
-                              ((eq? 'well-typed (check-type-para func-para-list))
-                               'well-typed)
-                              (else 'well-typed)))
+       (cond ((and (equal? 'well-typed 
+                           (cond ((equal? (type_pointer 'pointer 'void )
+                                          func-out-type)
+                                  (error "ERROR NOT WELL TYPED" st))
+                                 ((equal? 'well-typed (check-type-para func-para-list))
+                                  'well-typed)
+                                 (else 'well-typed)))
                    ;begin文の前者がうまく実行されれば#tが出力される.
                    ;そうでなければ勝手にエラーで止まる.
-                   (begin (map check-type func-compound-state)
-                          #t))
+                   (begin
+                     (cond ((equal? 'nodecl func-compound-decl) 'well-typed)
+                           (else (map check-type func-compound-decl)))
+                     (cond ((equal? 'nostat func-compound-state) 'well-typed)
+                           (else (map check-type func-compound-state)))
+                     #t))
               'well-typed)
              (else (error "ERROR NOT WELL TYPED" st)))))
     ((stx:null_statement_st? st) 'well-typed)       
     ((stx:exp_in_paren_st? st) 
      (check-type (stx:exp_in_paren_st-exp st)))
     ((stx:sem_return_st? st) 
-     (cond ((eq? (stx:sem_return_st-exp st) 'noreturn) 
+     (cond ((equal? (stx:sem_return_st-exp st) 'noreturn) 
             'well-typed)
            ((type-void? (stx:sem_return_st-exp st))
             (error "ERROR NOT WELL TYPED" st))
            ((and (type-int? (stx:sem_return_st-exp st))
-                 (eq? 'int (obj-type (stx:sem_return_st-tag st))))
+                 (equal? 'int (obj-type (stx:sem_return_st-tag st))))
             'well-typed)
            ((and (type-intp? (stx:sem_return_st-exp st))
-                 (eq? (type_pointer 'pointer 'int) 
+                 (equal? (type_pointer 'pointer 'int) 
                       (obj-type (stx:sem_return_st-tag st))))
             'well-typed)
            ((and (type-intp? (stx:sem_return_st-exp st))
-                 (eq? (type_pointer 'pointer 'int) 
+                 (equal? (type_pointer 'pointer 'int) 
                       (obj-type (stx:sem_return_st-tag st))))
             'well-typed)))
     ((stx:if_else_st? st)
      (cond ((and (type-int? (stx:if_else_st-cond-exp st)) 
-                 (eq? 'well-typed (check-type (stx:if_else_st-state st)))
-                 (eq? 'well-typed (check-type (stx:if_else_st-else-state st))))
+                 (equal? 'well-typed (check-type (stx:if_else_st-state st)))
+                 (equal? 'well-typed (check-type (stx:if_else_st-else-state st))))
             'well-typed)
            (else (error "ERROR NOT WELL TYPED" st))))
     ((stx:while_st? st) 
      (cond ((and (type-int? (stx:while_st-cond-exp st))
-                 (eq? 'well-typed (check-type (stx:while_st-statement st))))
+                 (equal? 'well-typed (check-type (stx:while_st-statement st))))
             'well-typed)
            (else (error "ERROR NOT WELL TYPED" st))))
     ((stx:compound_st? st) 
-     (begin (map check-type (stx:compound_st-statement-list st))
+     (begin 
+       (cond ((equal? 'nostat (stx:compound_st-statement-list st)) 'well-typed)
+             (else (map check-type (stx:compound_st-statement-list st))))
+       (cond ((equal? 'nodecl (stx:compound_st-declaration-list st)) 'well-typed)
+             (else (map check-type (stx:compound_st-declaration-list st))))
             ;各要素はerrorか'well-typedを返すので、mapが実行されれば
             ;必然的にlistの要素は'well-typedになっている.
-            'well-typed))
-    (else (cond ((or (eq? 'int (type st))
-                     (eq? (type_pointer 'pointer 'int) (type st))
-                     (eq? (type_pointer 'pointer (type_pointer 'pointer 'int)) (type st))
-                     (eq? 'void (type st)))
+       (display st)
+       'well-typed))
+    (else (cond ((or (equal? 'int (type st))
+                     (equal? (type_pointer 'pointer 'int) (type st))
+                     (equal? (type_pointer 'pointer (type_pointer 'pointer 'int)) (type st))
+                     (equal? 'void (type st)))
                  'well-typed)
                 (else (error "ERROR NOT WELL TYPED" st))))))
     
   
 ;型は'int、(type_pointer 'pointer 'int)、(type_pointer 'pointer (type_pointer 'pointer 'int))
 (define (sametype? x y)
-  (eq? (type x) (type y)))
+  (equal? (type x) (type y)))
 (define (type-int? x) 
-  (eq? 'int (type x)))
+  (equal? 'int (type x)))
 (define (type-intp? x)
-  (eq? (type_pointer 'pointer 'int) (type x)))
+  (equal? (type_pointer 'pointer 'int) (type x)))
 (define (type-intpp? x)
-  (eq? (type_pointer 'pointer (type_pointer 'pointer 'int)) (type x)))
+  (equal? (type_pointer 'pointer (type_pointer 'pointer 'int)) (type x)))
 (define (type-void? x)
-  (eq? 'void (type x)))  
+  (equal? 'void (type x)))  
 
 ;objのlistもしくは(list 'nopara)を受け取って
 ;エラーすなわち
 ;パラメターの中にvoid型、voidポインタ型がなければ
 ;well-typedを返す.
 (define (check-type-para para-list) 
-  (cond ((eq? 'nopara para-list) 'well-typed)
+  (cond ((equal? 'nopara para-list) 'well-typed)
         (else (map (lambda (x) 
                      (let ((x-type (obj-type x)))
-                       (begin (cond ((or (eq? 'void x-type)
-                                         (eq? (type_pointer 'pointer 'void) x-type))
+                       (begin (cond ((or (equal? 'void x-type)
+                                         (equal? (type_pointer 'pointer 'void) x-type))
                                      (error "ERROR NOT WELL TYPED" x))
                                     (else 'well-typed))
                               'well-typed)))
@@ -153,7 +166,7 @@
   (cond ((stx:assign_exp_st? st) 
          (let* ((type-dest (type (stx:assign_exp_st-dest st)))
                 (type-src (type (stx:assign_exp_st-src st))))
-           (cond ((eq? type-dest type-src)
+           (cond ((equal? type-dest type-src)
                   type-dest)
                  (else (error "ERROR NOT WELL TYPED" st)))))
         ((stx:logic_exp_st? st) 
@@ -167,14 +180,14 @@
         ((stx:rel_exp_st? st) 
          (let* ((type-op1 (type (stx:rel_exp_st-op1 st)))
                 (type-op2 (type (stx:rel_exp_st-op2 st))))
-           (cond ((eq? type-op1 type-op2)
+           (cond ((equal? type-op1 type-op2)
                   'int)
                  (else (error "ERROR NOT WELL TYPED" st)))))
         ((stx:alge_exp_st? st) 
          (let* ((type-op1 (stx:logic_exp_st-op1 st))
                 (type-op2 (stx:logic_exp_st-op2 st))
                 (ope (stx:alge_exp_st-alge-ope st)))
-           (cond ((eq? 'add ope) 
+           (cond ((equal? 'add ope) 
                   (cond ((and (type-int? type-op1)
                               (type-int? type-op2))
                          'int)
@@ -191,7 +204,7 @@
                               (type-intpp? type-op2))
                          (type_pointer 'pointer (type_pointer 'pointer 'int)))
                         (else (error "ERROR NOT WELL TYPED" st))))
-                 ((eq? 'sub ope) 
+                 ((equal? 'sub ope) 
                   (cond ((and (type-intp? type-op1)
                               (type-int? type-op2))
                          (type_pointer 'pointer 'int))
@@ -199,8 +212,8 @@
                               (type-int? type-op2))
                          (type_pointer 'pointer (type_pointer 'pointer 'int)))
                         (else (error "ERROR NOT WELL TYPED" st))))
-                 ((or (eq? 'mul ope) 
-                      (eq? 'div ope)) 
+                 ((or (equal? 'mul ope) 
+                      (equal? 'div ope)) 
                   (cond ((and (type-int? type-op1)
                               (type-int? type-op2))
                          'int)
@@ -210,10 +223,10 @@
          (let* ((mark (stx:unary_exp_st-mark st))
                 (op (stx:unary_exp_st-op st))
                 (type-op (type op)))
-           (cond ((eq? 'amp mark)
-                  (cond ((eq? 'int op) 'int)
+           (cond ((equal? 'amp mark)
+                  (cond ((equal? 'int op) 'int)
                         (else (error "ERROR NOT WELL TYPED" st))))
-                 ((eq? 'ast mark)
+                 ((equal? 'ast mark)
                   (cond ((equal? (type_pointer 'pointer 'int) type-op) 'int)
                         ((equal? (type_pointer 'pointer (type_pointer 'pointer 'int)) type-op) 
                          (type_pointer 'pointer 'int))
@@ -233,9 +246,9 @@
                 (func-out (type_fun-out func-type-fun))
                 ;パラメータのobjのlistもしくは'nopara
                 (func-para (stx:func_st-para st)))
-           (cond ((eq? (map (lambda (x) 
+           (cond ((equal? (map (lambda (x) 
                               (cond 
-                                ((eq? 'nopara x) 'nopara)
+                                ((equal? 'nopara x) 'nopara)
                                 ((obj? x) (obj-type x))
                                 ((stx:constant_st? x) 'int)
                                 (else (error "ERROR! INVALID FUNCTIONS." st))))
@@ -244,9 +257,9 @@
                   (cond 
                     ;関数の戻り値として許されるのは
                     ;int、intのポインタ型、void型
-                    ((eq? 'int func-out) 'int)
-                    ((eq? 'void func-out) 'void)
-                    ((eq? (type_pointer 'pointer 'int) func-out) (type_pointer 'pointer 'int))
+                    ((equal? 'int func-out) 'int)
+                    ((equal? 'void func-out) 'void)
+                    ((equal? (type_pointer 'pointer 'int) func-out) (type_pointer 'pointer 'int))
                     (else (error "ERROR NOT WELL TYPED" st))))
                  (else (error "ERROR NOT WELL TYPED" st)))))
         ((obj? st) 
@@ -255,12 +268,12 @@
              ;配列型のとき
              ((type_array? type-obj) 
               ;ポインタ型として許されるのはintのみ
-              (cond ((eq? 'int (type_array-type type-obj)) (type_pointer 'pointer 'int))
+              (cond ((equal? 'int (type_array-type type-obj)) (type_pointer 'pointer 'int))
                     (else (error "ERROR NOT WELL TYPED" st))))
              ;配列型でないとき
              ;許されるのはint、intのポインタ型のみ
              (else 
-              (cond ((eq? 'int type-obj) 'int)
+              (cond ((equal? 'int type-obj) 'int)
                     ((equal? (type_pointer 'pointer 'int) type-obj) (type_pointer 'pointer 'int))
                     (else (error "ERROR NOT WELL TYPED" type-obj)))))))))
 
@@ -269,7 +282,7 @@
 
   
 ;テスト
-(define p (open-input-file "test01.c"))
-(port-count-lines! p)
-;(sem:sem-analyze-tree (k08:parse-port p))
-(analy-type (sem:sem-analyze-tree (k08:parse-port p)))
+(define p100 (open-input-file "test01.c"))
+(port-count-lines! p100)
+;;(sem:sem-analyze-tree (k08:parse-port p100))
+(analy-type (sem:sem-analyze-tree (k08:parse-port p100)))

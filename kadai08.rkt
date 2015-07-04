@@ -3,7 +3,8 @@
          (prefix-in : parser-tools/lex-sre)
          parser-tools/yacc
          (prefix-in stx: "mysyntax.rkt")
-         (prefix-in k07u: "kadai07upgrade.rkt"))
+         ;(prefix-in k07u: "kadai07upgrade.rkt")
+         )
 (provide (all-defined-out))
 
 (define-empty-tokens tokens-without-value
@@ -322,9 +323,9 @@
 
 
 ;テスト
-;(define p (open-input-file "test01.c"))
-;(port-count-lines! p)
-;(parse-port p)
+(define p9999 (open-input-file "test01.c"))
+(port-count-lines! p9999)
+(parse-port p9999)
 
 ;(define p2 (open-input-file "kadai01.c"))
 ;(port-count-lines! p2)

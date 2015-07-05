@@ -33,7 +33,8 @@
                                 (eq? type_array? (obj-type (stx:assign_exp_st-dest st)))))
                           (else #f)))
                 #t
-                (error "ERROR! AN INVALID ASSIGN EXPRESSION FORM OF" st))
+                (error (format "ERROR! AN INVALID ASSIGN EXPRESSION FORM AT ~a" 
+                               (stx:assign_exp_st-pos st))))
             (map form-check (stx:assign_exp_st-src st))))
     ((stx:logic_exp_st? st) 
      (begin (map form-check (stx:logic_exp_st-op1 st))
@@ -49,7 +50,8 @@
      (cond ((obj? (stx:unary_exp_st-op st)) 
             (cond ((eq? 'var (obj-kind (stx:unary_exp_st-op st)))
                    #t)
-                  (else (error "ERROR! AN INVALID & FORM OF" st))))
+                  (else (error (format "ERROR! AN INVALID & FORM AT ~a" 
+                                       (stx:unary_exp_st st))))))
            (else (error "ERROR! AN INVALID & FORM OF" st))))
     ((stx:constant_st? st) #t)
     ((stx:null_statement_st? st) #t)
@@ -68,7 +70,8 @@
     ((stx:func_st? st) #t)
     ((obj? st) #t) 
     ((position? st) #t)
-    (else (error "UNEXPECTED STRUCTURES IN AN ARGUMENT OF ANALY-FORM." st))))
+    ;デバグ用エラー発生（実際にはどのようなプログラムを読み込んでもこの分岐には入らないはず.）
+    (else (error "ERROR! UNEXPECTED STRUCTURES IN AN ARGUMENT OF ANALY-FORM." st))))
     
 
 ;テスト

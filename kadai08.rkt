@@ -98,15 +98,15 @@
                                                                  (stx:id_st 'v 'print-proto))
                                         'print-proto)) 
                $1)));プログラムの冒頭に組込み関数 printのプロトタイプ宣言をつける.
-
+    
     (program_with_print ((external_declaration) $1)
                         ((program_with_print external_declaration) (cons $1 $2)))
     
     #;(stx:func_proto_st
-     (stx:spec_st 'int 'print-proto)
-     (stx:func_declarator_st 'print 
-                             (stx:para_declaration_st (stx:spec_st 'int 'print-proto) 
-                                                      (stx:id_st 'i 'print-proto))))
+       (stx:spec_st 'int 'print-proto)
+       (stx:func_declarator_st 'print 
+                               (stx:para_declaration_st (stx:spec_st 'int 'print-proto) 
+                                                        (stx:id_st 'i 'print-proto))))
     
     (external_declaration ((declaration) $1)
                           ((function_prototype) $1)
@@ -124,192 +124,190 @@
     (direct_declarator ((VAR) (stx:id_st $1 $1-start-pos))
                        ((VAR l_mid_paren NUM r_mid_paren)
                         (stx:array_st $1 $3 $1-start-pos)))
-   
-   (function_prototype ((type_specifier function_declarator semicolon)
-                        (stx:func_proto_st $1 $2)))
-   (function_declarator ((VAR l_small_paren parameter_type_list r_small_paren)
-                         (stx:func_declarator_st $1 $3 $1-start-pos))
-                        ((VAR l_small_paren r_small_paren)
-                         (stx:func_declarator_null_st $1 $1-start-pos))
-                        ((* VAR l_small_paren parameter_type_list r_small_paren)
-                         (stx:func_declarator_ast_st $2 $4 $2-start-pos))
-                        ((* VAR l_small_paren r_small_paren)
-                         (stx:func_declarator_ast_null_st $2 $2-start-pos)))
-   
-   (function_definition ((type_specifier function_declarator compound_statement)
-                         (stx:func_def_st $1 $2 $3)))
-   (parameter_type_list ((parameter_declaration) $1)
-                        ((parameter_type_list comma parameter_declaration)(cons $1 $3)))
-   (parameter_declaration ((type_specifier parameter_declarator)
-                           (stx:para_declaration_st $1 $2)))
-   (parameter_declarator ((VAR) (stx:id_st $1 $1-start-pos));構造体id_stを作成.
-                         ((* VAR)(stx:id_ast_st $2 $2-start-pos)));構造体id_ast_stを作成.
-   (type_specifier ((int) (stx:spec_st 'int $1-start-pos));構造体spec_stを作成.
-                   ((void) (stx:spec_st 'void $1-start-pos)));構造体spec_stを作成.
-   (statement ((semicolon) (stx:null_statement_st 'null))
-              ;((expression semicolon)(stx:exp_with_semi_st $1))
-              ((expression semicolon)$1)
-              ((compound_statement) $1)
-              ((if l_small_paren expression r_small_paren statement)
-               ;シンタックスシュガー
-               (stx:if_else_st $3 $5 (stx:null_statement_st 'null) $1-start-pos 'syntax-sygar))
-              ((if l_small_paren expression r_small_paren statement else statement)
-               (stx:if_else_st $3 $5 $7 $1-start-pos $6-start-pos));構造体if_else_stを作成.
-              ((while l_small_paren expression r_small_paren statement)
-               (stx:while_st $3 $5 $1-start-pos));構造体while-stを作成.
-              
-              ((for l_small_paren expression 
-                 semicolon expression 
-                 semicolon expression 
-                 r_small_paren statement)
-               ;(stx:for_0_st $3 $5 $7 $9 $1-start-pos)
-               (stx:compound_sta_st 
-                (cons 
-                 $3
-                 (stx:while_st $5 
-                               (stx:compound_sta_st (cons $9 $7)) 
-                               'syntax-sugar))));シンタックスシュガー        
-              ((for l_small_paren            
-                 semicolon expression 
-                 semicolon expression 
-                 r_small_paren statement)
-               ;(stx:for_1_st $4 $6 $8 $1-start-pos)
-               (stx:while_st $4 
-                             (stx:compound_sta_st (cons $8 $6))
-                             'syntax-sugar));シンタックスシュガー
-              ((for l_small_paren expression 
-                 semicolon            
-                 semicolon expression 
-                 r_small_paren statement)
-               ;(stx:for_2_st $3 $6 $8 $1-start-pos)
-               (stx:compound_sta_st
-                (cons
-                 $3
-                 (stx:while_st (stx:null_statement_st 'null) 
-                               (stx:compound_sta_st (cons $8 $6))
-                               'syntax-sugar))));シンタックスシュガー
-              ((for l_small_paren expression 
-                 semicolon expression 
-                 semicolon            
-                 r_small_paren statement)
-               ;(stx:for_3_st $3 $5 $8 $1-start-pos)
-               (stx:compound_sta_st
-                (cons
-                 $3
-                 (stx:while_st $5
-                               $8
-                               'syntax-sugar))));シンタックスシュガー
-              ((for l_small_paren expression 
-                 semicolon            
-                 semicolon            
-                 r_small_paren statement)
-               ;(stx:for_4_st $3 $7 $1-start-pos)
-               (stx:compound_sta_st
-                (cons 
-                 $3
-                 (stx:while_st (stx:null_statement_st 'null)
-                               $7
-                               'syntax-sugar))));シンタックスシュガー
-              ((for l_small_paren            
-                 semicolon expression 
-                 semicolon            
-                 r_small_paren statement)
-               ;(stx:for_5_st $4 $7 $1-start-pos)
-               (stx:while_st $4
-                         $7
-                         'syntax-sugat));シンタックスシュガー
-              ((for l_small_paren            
-                 semicolon            
-                 semicolon expression 
-                 r_small_paren statement)
-               ;(stx:for_6_st $5 $7 $1-start-pos)
-               (stx:while_st (stx:null_statement_st 'null)
-                         (stx:compound_sta_st (cons $7 $5))));シンタックスシュガー
-              ((for l_small_paren            
-                 semicolon            
-                 semicolon            
-                 r_small_paren statement)
-               ;(stx:for_7_st $6 $1-start-pos)
-               (stx:while_st (stx:null_statement_st 'null)
-                         $6
-                         'syntax-sugar));シンタックスシュガー
-              
-              ((return expression semicolon)(stx:return_st $2 $1-start-pos));構造体return_stを作成.
-              ((return semicolon)(stx:return_st 'noreturn $1-start-pos)));構造体return-null-stを作成.
-   (compound_statement ((l_big_paren declaration_list statement_list r_big_paren)(stx:compound_st $2 $3));構造体compound_stを作成.
-                       ((l_big_paren declaration_list r_big_paren)(stx:compound_dec_st $2));構造体compound_dec_stを作成.
-                       ((l_big_paren statement_list r_big_paren)(stx:compound_sta_st $2));構造体copound_sta_stを作成.
-                       ((l_big_paren r_big_paren)(stx:compound_null_st 'null)));構造体compound_null_stを作成.
-   (declaration_list ((declaration) $1)
-                     ((declaration_list declaration)(cons $1 $2)))
-   (statement_list ((statement) $1)
-                   ((statement_list statement)(cons $1 $2)))
-   (expression ((assign_expr) $1)
-               ((expression comma assign_expr)(cons $1 $3)))
-   (assign_expr ((logical_OR_expr) $1)
-                ((logical_OR_expr = assign_expr)(stx:assign_exp_st $1 $3 $2-start-pos)));構造体assign_exp_stを作成.
-   (logical_OR_expr ((logical_AND_expr) $1)
-                    ((logical_OR_expr or logical_AND_expr)(stx:logic_exp_st 'or $1 $3 $2-start-pos)));構造体logic_exp_stを作成.
-   (logical_AND_expr ((equality_expr) $1)
-                     ((logical_AND_expr and equality_expr)(stx:logic_exp_st 'and $1 $3 $2-start-pos)));構造体logic_exp_stを作成.
-   (equality_expr ((relational_expr) $1)
-                  ((equality_expr equal relational_expr)(stx:rel_exp_st 'equal $1 $3 $2-start-pos));構造体rel_exp_stを作成.
-                  ((equality_expr not relational_expr)(stx:rel_exp_st 'not $1 $3 $2-start-pos)));構造体rel_exp_stを作成.
-   
-   (relational_expr ((add_expr) $1)
-                    ((relational_expr less add_expr)
-                     (stx:rel_exp_st 'less $1 $3 $2-start-pos));構造体rel_exp_stを作成.
-                    ((relational_expr more add_expr)
-                     (stx:rel_exp_st 'more $1 $3 $2-start-pos));構造体rel_exp_stを作成.
-                    ((relational_expr and_less add_expr)
-                     (stx:rel_exp_st 'and_less $1 $3 $2-start-pos));構造体rel_exp_stを作成.
-                    ((relational_expr and_more add_expr)
-                     (stx:rel_exp_st 'adn_more $1 $3 $2-start-pos)));構造体rel_exp_stを作成.
-   
-   (add_expr ((mult_expr) $1)
-             ((add_expr + mult_expr)
-              (stx:alge_exp_st 'add $1 $3 $2-start-pos));構造体alge_exp_stを作成.
-             ((add_expr - mult_expr)
-              (stx:alge_exp_st 'sub $1 $3 $2-start-pos)));構造体alge_exp_stを作成.
-   (mult_expr ((unary_expr) $1)
-              ((mult_expr * unary_expr)
-               (stx:alge_exp_st 'mul $1 $3 $2-start-pos));構造体alge_exp_stを作成.
-              ((mult_expr / unary_expr)
-               (stx:alge_exp_st 'div $1 $3 $2-start-pos)));構造体alge_exp_stを作成.
-   (unary_expr ((postfix_expr) $1)
-               ((- unary_expr)
+    
+    (function_prototype ((type_specifier function_declarator semicolon)
+                         (stx:func_proto_st $1 $2)))
+    (function_declarator ((VAR l_small_paren parameter_type_list r_small_paren)
+                          (stx:func_declarator_st $1 $3 $1-start-pos))
+                         ((VAR l_small_paren r_small_paren)
+                          (stx:func_declarator_null_st $1 $1-start-pos))
+                         ((* VAR l_small_paren parameter_type_list r_small_paren)
+                          (stx:func_declarator_ast_st $2 $4 $2-start-pos))
+                         ((* VAR l_small_paren r_small_paren)
+                          (stx:func_declarator_ast_null_st $2 $2-start-pos)))
+    
+    (function_definition ((type_specifier function_declarator compound_statement)
+                          (stx:func_def_st $1 $2 $3)))
+    (parameter_type_list ((parameter_declaration) $1)
+                         ((parameter_type_list comma parameter_declaration)(cons $1 $3)))
+    (parameter_declaration ((type_specifier parameter_declarator)
+                            (stx:para_declaration_st $1 $2)))
+    (parameter_declarator ((VAR) (stx:id_st $1 $1-start-pos))
+                          ((* VAR)(stx:id_ast_st $2 $2-start-pos)))
+    (type_specifier ((int) (stx:spec_st 'int $1-start-pos))
+                    ((void) (stx:spec_st 'void $1-start-pos)))
+    (statement ((semicolon) (stx:null_statement_st 'null))
+               ((expression semicolon)$1)
+               ((compound_statement) $1)
+               ((if l_small_paren expression r_small_paren statement)
                 ;シンタックスシュガー
-                (stx:alge_exp_st 'sub (stx:constant_st 0 'syntax-sugar) $2 $1-start-pos))
-               ((& unary_expr)
-                (if (stx:exp_in_paren_st? $2) 
-                    (if (stx:unary_exp_st? (stx:exp_in_paren_st-exp $2)) 
-                        (if (eq? 'ast 
-                                 (stx:unary_exp_st-mark (stx:exp_in_paren_st-exp $2)))
-                            ;間接参照式のシンタックスシュガー
-                            (stx:unary_exp_st-op (stx:exp_in_paren_st-exp $2))
-                            (stx:unary_exp_st 'amp $2 $1-start-pos))
-                        (stx:unary_exp_st 'amp $2 $1-start-pos))
-                    (stx:unary_exp_st 'amp $2 $1-start-pos)))
-               ((* unary_expr)
-                (stx:unary_exp_st 'ast $2 $1-start-pos)))
-   
-   (postfix_expr ((primary_expr) $1)
-                 ((postfix_expr l_mid_paren expression r_mid_paren)
-                  ;(stx:array_var_st $1 $3  $1-start-pos)
-                  ;配列参照式のシンタックスシュガー
-                  (stx:unary_exp_st 'ast 
-                                    (stx:alge_exp_st 'add $1 $3 'syntax-sugar) 
-                                    'syntax-sugar))
-                 ((VAR l_small_paren argument_expression_list r_small_paren)
-                  (stx:func_st $1 $3))
-                 ((VAR l_small_paren r_small_paren)
-                  (stx:func_st $1 'nopara)))
-   (primary_expr ((VAR)(stx:id_st $1 $1-start-pos))
-                 ((NUM) (stx:constant_st $1 $1-start-pos))
-                 ((l_small_paren expression r_small_paren) 
-                  (stx:exp_in_paren_st $2)))
-   (argument_expression_list ((assign_expr) $1)
-                             ((argument_expression_list comma assign_expr)(cons $1 $3))))))
+                (stx:if_else_st $3 $5 (stx:null_statement_st 'null) $1-start-pos 'syntax-sygar))
+               ((if l_small_paren expression r_small_paren statement else statement)
+                (stx:if_else_st $3 $5 $7 $1-start-pos $6-start-pos))
+               ((while l_small_paren expression r_small_paren statement)
+                (stx:while_st $3 $5 $1-start-pos))        
+               ((for l_small_paren expression 
+                  semicolon expression 
+                  semicolon expression 
+                  r_small_paren statement)
+                ;シンタックスシュガー   
+                (stx:compound_sta_st 
+                 (cons 
+                  $3
+                  (stx:while_st $5 
+                                (stx:compound_sta_st (cons $9 $7)) 
+                                'syntax-sugar))))     
+               ((for l_small_paren            
+                  semicolon expression 
+                  semicolon expression 
+                  r_small_paren statement)
+                ;シンタックスシュガー
+                (stx:while_st $4 
+                              (stx:compound_sta_st (cons $8 $6))
+                              'syntax-sugar))
+               ((for l_small_paren expression 
+                  semicolon            
+                  semicolon expression 
+                  r_small_paren statement)
+                ;シンタックスシュガー
+                (stx:compound_sta_st
+                 (cons
+                  $3
+                  (stx:while_st (stx:null_statement_st 'null) 
+                                (stx:compound_sta_st (cons $8 $6))
+                                'syntax-sugar))))
+               ((for l_small_paren expression 
+                  semicolon expression 
+                  semicolon            
+                  r_small_paren statement)
+                ;シンタックスシュガー
+                (stx:compound_sta_st
+                 (cons
+                  $3
+                  (stx:while_st $5
+                                $8
+                                'syntax-sugar))))
+               ((for l_small_paren expression 
+                  semicolon            
+                  semicolon            
+                  r_small_paren statement)
+                ;シンタックスシュガー
+                (stx:compound_sta_st
+                 (cons 
+                  $3
+                  (stx:while_st (stx:null_statement_st 'null)
+                                $7
+                                'syntax-sugar))))
+               ((for l_small_paren            
+                  semicolon expression 
+                  semicolon            
+                  r_small_paren statement)
+                ;シンタックスシュガー
+                (stx:while_st $4
+                              $7
+                              'syntax-sugat))
+               ((for l_small_paren            
+                  semicolon            
+                  semicolon expression 
+                  r_small_paren statement)
+                ;シンタックスシュガー
+                (stx:while_st (stx:null_statement_st 'null)
+                              (stx:compound_sta_st (cons $7 $5))))
+               ((for l_small_paren            
+                  semicolon            
+                  semicolon            
+                  r_small_paren statement)
+                ;シンタックスシュガー
+                (stx:while_st (stx:null_statement_st 'null)
+                              $6
+                              'syntax-sugar))
+               
+               ((return expression semicolon)(stx:return_st $2 $1-start-pos))
+               ((return semicolon)(stx:return_st 'noreturn $1-start-pos)))
+    (compound_statement ((l_big_paren declaration_list statement_list r_big_paren)(stx:compound_st $2 $3))
+                        ((l_big_paren declaration_list r_big_paren)(stx:compound_dec_st $2))
+                        ((l_big_paren statement_list r_big_paren)(stx:compound_sta_st $2))
+                        ((l_big_paren r_big_paren)(stx:compound_null_st 'null)))
+    (declaration_list ((declaration) $1)
+                      ((declaration_list declaration)(cons $1 $2)))
+    (statement_list ((statement) $1)
+                    ((statement_list statement)(cons $1 $2)))
+    (expression ((assign_expr) $1)
+                ((expression comma assign_expr)(cons $1 $3)))
+    (assign_expr ((logical_OR_expr) $1)
+                 ((logical_OR_expr = assign_expr)(stx:assign_exp_st $1 $3 $2-start-pos)))
+    (logical_OR_expr ((logical_AND_expr) $1)
+                     ((logical_OR_expr or logical_AND_expr)(stx:logic_exp_st 'or $1 $3 $2-start-pos)))
+    (logical_AND_expr ((equality_expr) $1)
+                      ((logical_AND_expr and equality_expr)(stx:logic_exp_st 'and $1 $3 $2-start-pos)))
+    (equality_expr ((relational_expr) $1)
+                   ((equality_expr equal relational_expr)(stx:rel_exp_st 'equal $1 $3 $2-start-pos))
+                   ((equality_expr not relational_expr)(stx:rel_exp_st 'not $1 $3 $2-start-pos)))
+    
+    (relational_expr ((add_expr) $1)
+                     ((relational_expr less add_expr)
+                      (stx:rel_exp_st 'less $1 $3 $2-start-pos))
+                     ((relational_expr more add_expr)
+                      (stx:rel_exp_st 'more $1 $3 $2-start-pos))
+                     ((relational_expr and_less add_expr)
+                      (stx:rel_exp_st 'and_less $1 $3 $2-start-pos))
+                     ((relational_expr and_more add_expr)
+                      (stx:rel_exp_st 'adn_more $1 $3 $2-start-pos)))
+    
+    (add_expr ((mult_expr) $1)
+              ((add_expr + mult_expr)
+               (stx:alge_exp_st 'add $1 $3 $2-start-pos))
+              ((add_expr - mult_expr)
+               (stx:alge_exp_st 'sub $1 $3 $2-start-pos)))
+    (mult_expr ((unary_expr) $1)
+               ((mult_expr * unary_expr)
+                (stx:alge_exp_st 'mul $1 $3 $2-start-pos))
+               ((mult_expr / unary_expr)
+                (stx:alge_exp_st 'div $1 $3 $2-start-pos)))
+    (unary_expr ((postfix_expr) $1)
+                ((- unary_expr)
+                 ;シンタックスシュガー
+                 (stx:alge_exp_st 'sub (stx:constant_st 0 'syntax-sugar) $2 $1-start-pos))
+                ((& unary_expr)
+                 (if (stx:exp_in_paren_st? $2) 
+                     (if (stx:unary_exp_st? (stx:exp_in_paren_st-exp $2)) 
+                         (if (eq? 'ast 
+                                  (stx:unary_exp_st-mark (stx:exp_in_paren_st-exp $2)))
+                             ;間接参照式のシンタックスシュガー
+                             (stx:unary_exp_st-op (stx:exp_in_paren_st-exp $2))
+                             (stx:unary_exp_st 'amp $2 $1-start-pos))
+                         (stx:unary_exp_st 'amp $2 $1-start-pos))
+                     (stx:unary_exp_st 'amp $2 $1-start-pos)))
+                ((* unary_expr)
+                 (stx:unary_exp_st 'ast $2 $1-start-pos)))
+    
+    (postfix_expr ((primary_expr) $1)
+                  ((postfix_expr l_mid_paren expression r_mid_paren)
+                   ;(stx:array_var_st $1 $3  $1-start-pos)
+                   ;配列参照式のシンタックスシュガー
+                   (stx:unary_exp_st 'ast 
+                                     (stx:alge_exp_st 'add $1 $3 'syntax-sugar) 
+                                     'syntax-sugar))
+                  ((VAR l_small_paren argument_expression_list r_small_paren)
+                   (stx:func_st $1 $3))
+                  ((VAR l_small_paren r_small_paren)
+                   (stx:func_st $1 'nopara)))
+    (primary_expr ((VAR)(stx:id_st $1 $1-start-pos))
+                  ((NUM) (stx:constant_st $1 $1-start-pos))
+                  ((l_small_paren expression r_small_paren) 
+                   (stx:exp_in_paren_st $2)))
+    (argument_expression_list ((assign_expr) $1)
+                              ((argument_expression_list comma assign_expr)(cons $1 $3))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -323,9 +321,9 @@
 
 
 ;テスト
-(define p9999 (open-input-file "test01.c"))
-(port-count-lines! p9999)
-(parse-port p9999)
+;(define p9999 (open-input-file "test01.c"))
+;(port-count-lines! p9999)
+;(parse-port p9999)
 
 ;(define p2 (open-input-file "kadai01.c"))
 ;(port-count-lines! p2)

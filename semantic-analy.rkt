@@ -229,7 +229,6 @@
                                        (stx:spec_st-type spec)
                                        (cond ((equal? 'nopara para-obj-list) 'nopara)
                                              (else(map (lambda (x) (obj-type x)) para-obj-list)))))
-                            ;(struct type-pointer (pointer type) #:transparent)
                             ((equal? 'pointer (fundef_flag-out-type flag))
                              (type_fun 'fun
                                        (type_pointer 'pointer (stx:spec_st-type spec))
@@ -283,29 +282,29 @@
          (comp-env 
           (cond 
             ((equal? 'nodecl decl-list) 'nodecl)
-            (else (separate-list 
-                ;listの各要素がlistであることを保証させるためのmake-list-list
-                (map make-list-list
-                (map (lambda (x) (stx:declaration_st-declarator-list x)) decl-list))))))
+            (else ;listの各要素がlistであることを保証させるためのmake-list-list
+             (flatten (map (lambda (x) (stx:declaration_st-declarator-list x)) decl-list)))))
          ;comp-envのチェック
-         ;代入は意味は無い.let*の代入文の段階でチェックを実行しておく必要があるためこのようにした.
+         ;代入には意味は無い.let*の代入文の段階でチェックを実行しておく必要があるためこのようにした.
          ;comp-env内のみで二重定義などが無いかどうかをチェックする.
          (comp-env-check (check-comp-env comp-env))
          ;大域環境と照らし合わせる
-         (comp-env-check (map (lambda (x) (check-decl x outer-env)) comp-env))
-         (comp-env-check (map (lambda (x) (check-decl x para-env)) comp-env))
-         ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-         
-         (new-comp-env (cond ((equal? 'nodecl comp-env) env)
-                         (else (append comp-env outer-env))))
+         (comp-env-check (cond ((equal? 'nodecl comp-env) #t) 
+                               (else (map (lambda (x) (check-decl x outer-env)) comp-env))))
+         (comp-env-check (cond ((equal? 'nodecl comp-env) #t)
+                               (else (map (lambda (x) (check-decl x para-env)) comp-env))))
+         ;outer-envは大域環境を含む.
+         (new-comp-env (cond ((equal? 'nodecl comp-env) outer-env)
+                             (else (append comp-env outer-env))))
          (stat-list (cond ((equal? 'normal (comp_flag-stat flag)) 
                            (map* (lambda (x) (analy-compstate x this-lev new-comp-env func-tag)) stat-list))
                           ((equal? 'nostat (comp_flag-stat flag)) 
                            'nostat))))
-    ;意味解析終了時にlevを一つ繰り下げる
+    ;デバグ用
     ;(display (format "comp-env is>>>>>>>>> ~a \n\n" comp-env))
     ;(display (format "outer-env is>>>>>>>>> ~a \n\n" outer-env))
     ;(display (format "new-comp-env is>>>>>>>>> ~a \n\n" new-comp-env))
+    (display (format "decl-list!!!!!!!!!  \n ~a \n" decl-list))
     (stx:compound_st decl-list stat-list)))
 
 (define (analy-compdecl st lev)
@@ -405,7 +404,12 @@
                                        (flatten (stx:func_st-para st)))))))
         ((or (stx:id_st? st)     
              (stx:id_ast_st? st))
+         ;stはid_stもしくはid_ast_st
+         ;levはcompound-statementのレベル
+         ;envは大域環境(objのlist)
+         (display env)
          (check-var-ref st lev env))
+        ;デバグ用.（本来はどんなプログラムを書いてもこの分岐には入らないはず.）
         (else (error "AN UNEXPECTED STRUCTURE! CONDITION ERROR IN ANALY-COMPSTATE FOR" st))
         ))
 
@@ -426,7 +430,7 @@
 
 
 ;テスト
-(define p101 (open-input-file "test01.c"))
-(port-count-lines! p101)
-(sem-analyze-tree (k08:parse-port p101))
+;(define p101 (open-input-file "test01.c"))
+;(port-count-lines! p101)
+;(sem-analyze-tree (k08:parse-port p101))
 

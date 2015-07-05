@@ -78,35 +78,40 @@
 ;エラーもしくはメッセージを返す  
 ;para-envとenvの両方で探す  
 (define (check-decl obj env)
-  (cond ((equal? 'nopara env) #t)
+  (cond ((or (equal? 'nopara env) (equal? 'nodecl env)) #t)
         (else (map (lambda (x) (cond ((and (equal? (obj-name x) (obj-name obj))
                                            (equal? 'fun (obj-kind x))
                                            (equal? 0 (obj-lev obj)))
-                                      (error (display (format "ERROR! REDEFINITION OF '~a' AT" x))))
+                                      (error (format "ERROR! REDEFINITION OF '~a' AT ~a" 
+                                                     (obj-name obj)(obj-pos obj))))
                                      ((and (equal? (obj-name x) (obj-name obj))
-                               (equal? 'var (obj-kind x))
-                               (equal? (obj-lev x) (obj-lev obj)))
-                                      (error "ERROR! REDEFINITION OF "(obj-name obj)))
+                                           (equal? 'var (obj-kind x))
+                                           (equal? (obj-lev x) (obj-lev obj)))
+                                      (error (format "ERROR! REDEFINITION OF '~a' AT ~a" 
+                                                     (obj-name obj)(obj-pos obj))))
                                      ((and (equal? (obj-name x) (obj-name obj))
                                            (equal? 'parm (obj-kind x)))
-                                      (begin(display (format "WARNING!! SAME NAME IN PARAMETERS AND VAR DECLARATIONS\n"))
-                                            #t))))
+                                      (begin
+                                        (display (format "WARNING!! SAME NAME IN PARAMETERS AND VAR DECLARATIONS\n"))
+                                        #t))))
                    env))))
 
 
 (define (check-proto-para obj-list)
   (cond 
-    ((equal? '() obj-list) (display (format "OK! CRRECT PARAMETERS OF FUNCTION PROTOTYPE.\n")))
-    ((equal? 'nopara obj-list) (display(format "OK! CRRECT PARAMETERS OF FUNCTION PROTOTYPE.\n")))
+    ((equal? '() obj-list) (display (format "OK! CRRECT PARAMETERS OF FUNCTION PROTOTYPE\n")))
+    ((equal? 'nopara obj-list) (display(format "OK! CRRECT PARAMETERS OF FUNCTION PROTOTYPE\n")))
     ((in-env? (obj-name (car obj-list)) (cdr obj-list))
-     (error "ERROR! SOME REDEFINITION IN PARAMETERS OF FUNCTION PROTOTYPE"))
+     (error (format "ERROR! REDEFINITION OF '~a' AT ~a IN PARAMETERS OF FUNCTION PROTOTYPE" 
+                    (obj-name (car obj-list)) (obj-pos (car obj-list)))))
     (else (check-proto-para (cdr obj-list)))))
 (define (check-def-para obj-list)
   (cond 
     ((equal? '() obj-list) (display (format "OK! CRRECT PARAMETERS OF FUNCTION PROTOTYPE.\n")))
     ((equal? 'nopara obj-list) (display(format "OK! CRRECT PARAMETERS OF FUNCTION PROTOTYPE.\n")))
     ((in-env? (obj-name (car obj-list)) (cdr obj-list))
-     (error "ERROR! SOME REDEFINITION IN PARAMETERS OF FUNCTION DEFINITION"))
+     (error (format "ERROR! SOME REDEFINITION OF '~a' AT ~a IN PARAMETERS OF FUNCTION DEFINITION"
+                    (obj-name (car obj-list)) (obj-pos (car obj-list)))))
     (else (check-proto-para (cdr obj-list)))))
 (define (check-proto obj env)
   (map 
@@ -114,7 +119,8 @@
    (lambda (x)(cond ((and (equal? (obj-name x) (obj-name obj))
                           (equal? 0 (obj-lev x))
                           (not (equal? (obj-type x) (obj-type obj))))
-                     (error "ERROR! INVALID FUNCTION PROTOTYPE." x obj))
+                     (error (format "ERROR! INVALID FUNCTION PROTOTYPE '~a' AT ~a"
+                                    (obj-name obj) (obj-pos obj))))
                     (else (display (format "OK! CRRECT FUNCTION PROTOTYPE OF '~a'.\n" (obj-name obj))))))
    env))
 (define (check-func obj env)
@@ -122,33 +128,46 @@
    ;関数定義とnameが同じ、kindが'funかどうかをmapで一つづつ判定する.
    (lambda (x)(cond ((and (equal? (obj-name x) (obj-name obj))
                           (equal? 'fun (obj-kind x)))
-                     (error "ERROR! REDEFINITION OF "(obj-name obj)))
+                     (error (format "ERROR! REDEFINITION OF '~a' AT ~a"
+                                    (obj-name obj) (obj-pos obj))))
                     (else (display (format "OK! CRRECT FUNCTION PROTOTYPE OF '~a'.\n" (obj-name obj))))))
    env))  
+
 ;引数stはstx:id_stもしくはstx:id_ast_st
 (define (check-var-ref st lev env)
-  (let* ((name (cond ((stx:id_st? st) (stx:id_st-name st))
-                     ((stx:id_ast_st? st) (stx:id_ast_st-name st))))
-         (referred-obj 
-          (lookup-env name 
-                      (map (lambda (x) 
-                             (if (in-env? name env)
-                                 (cond ((and (equal? name (obj-name x))
-                                             (or (equal? 'var (obj-kind x))
-                                                 (equal? 'parm (obj-kind x))))
-                                        x)
-                                       ((and (equal? name (obj-name x))
-                                             (equal? 'fun (obj-kind x))) 
-                                        (error "ERROR SAME NAME VAR AND FUNCTION " name))
-                                       (else (obj 'invalid 'invalid 'invalid 'invalid 'invalid)))
-                                 (error "ERROR AN UNDEFINED IDENTIFIER OF VAR " name)))
-                           env))))
-  (if (equal? 'invalid (obj-type referred-obj))
-      (error "ERROR! INVALID IDENTIFIER" name)
-      referred-obj)))
-
+    (let* ((name (cond ((stx:id_st? st) (stx:id_st-name st))
+                       ((stx:id_ast_st? st) (stx:id_ast_st-name st))))
+           (pos (cond ((stx:id_st? st) (stx:id_st-pos st))
+                      ((stx:id_ast_st? st) (stx:id_ast_st-pos st))))
+           (same-name-list (cond ((equal? '() env) 
+                                  (error (format "ERROR! AN UNDEFINED IDENTIFIER OF VAR '~a' AT ~a" name pos)))
+                                 (else (flatten (map (lambda (x) (cond ((equal? name (obj-name x)) x)
+                                                                       (else '())))
+                                                     env)))))
+           (correct-var-obj (cond 
+                              ((equal? '() same-name-list) 
+                               (error (format "ERROR! AN UNDEFINED IDENTIFIER OF VAR '~a' AT ~a" name pos)))
+                              (else (flatten (map (lambda(x) 
+                                           (cond ((and (equal? name (obj-name x))
+                                                       (or (equal? 'var (obj-kind x))
+                                                           (equal? 'parm (obj-kind x))))
+                                                  x)
+                                                 ((and (equal? name (obj-name x))
+                                                       (equal? 'func (obj-kind x)))
+                                                  '())
+                                                 (else'())))
+                                         env))))))
+      (cond ((equal? '() correct-var-obj)
+             (error (format "ERROR! AN UNDEFINED IDENTIFIER OF VAR! '~a' AT ~a" name pos)))
+            (else (car correct-var-obj)))))
+           
+                              
+                                        
+                              
+                                     
 (define (check-func-ref st lev env)
   (let* ((name (stx:func_st-name st))
+         ;(pos (stx:func_st-pos st))
          (referred-obj 
           (lookup-env name 
                       (map (lambda (x) (if (in-env? name env)
@@ -184,17 +203,17 @@
 ;;;;;;;;テスト;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 #;(
    (define test101
-     (list (obj 'a 1 'parm 'int) (obj 'b 1 'parm '(pointer int)) (obj 'c 1 'parm 'int)))
+     (list (obj 'a 1 'parm 'int 'test) (obj 'b 1 'parm '(pointer int) 'test) (obj 'c 1 'parm 'int 'test)))
    (define test102
-     (list (obj 'a 1 'parm 'int) (obj 'a 1 'parm '(pointer int)) (obj 'c 1 'parm 'int)))
+     (list (obj 'a 1 'parm 'int 'test) (obj 'a 1 'parm '(pointer int) 'test) (obj 'c 1 'parm 'int 'test)))
    (check-proto-para test101)
    ;下はエラー発生
    ;(check-proto-para test102)
    
    (define env2 initial-env)
-   (define a (obj 'name1 'lev1 'kind1 'int))
-   (define b (obj 'name2 'lev2 'kind2 'void))
-   (define c (obj 'name2 'lev3 'kind3 'void))
+   (define a (obj 'name1 'lev1 'kind1 'int 'test))
+   (define b (obj 'name2 'lev2 'kind2 'void 'test))
+   (define c (obj 'name2 'lev3 'kind3 'void 'test))
    (set! env2 (extend-env a env2))
    (set! env2 (extend-env b env2))
    (set! env2 (extend-env c env2))
@@ -207,7 +226,7 @@
    (define test (list 'a (list 'b 'c 'd) (list 'e 'f) 'g))
    (define test103 (map make-list-list test))
    (separate-list test103)
-   )
+  )
 
 
 

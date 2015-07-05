@@ -6,22 +6,19 @@
 (begin
   (define s (open-input-file "test01.c"))
   (port-count-lines! s)
-  (k08:parse-port s)
-  )
+  (k08:parse-port s))
+
 (begin 
   (define p (open-input-file "test01.c"))
   (port-count-lines! p)
-  (sem-analyze-tree (k08:parse-port p))
-  )
+  (sem-analyze-tree (k08:parse-port p)))
 
 (begin 
   (define q (open-input-file "test01.c"))
   (port-count-lines! q)
-  (analy-form (sem-analyze-tree (k08:parse-port q)))
-  )
+  (analy-form (sem-analyze-tree (k08:parse-port q))))
 
 (begin
   (define r (open-input-file "test01.c"))
   (port-count-lines! r)
-  (analy-type (sem-analyze-tree (k08:parse-port r)))
-)
+  (analy-type (sem-analyze-tree (k08:parse-port r))))

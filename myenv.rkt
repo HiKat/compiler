@@ -136,9 +136,15 @@
 ;引数stはstx:id_stもしくはstx:id_ast_st
 (define (check-var-ref st lev env)
     (let* ((name (cond ((stx:id_st? st) (stx:id_st-name st))
-                       ((stx:id_ast_st? st) (stx:id_ast_st-name st))))
+                       ((stx:id_ast_st? st) (stx:id_ast_st-name st))
+                       ((stx:array_var_st? st) (stx:array_var_st-name st))))
            (pos (cond ((stx:id_st? st) (stx:id_st-pos st))
-                      ((stx:id_ast_st? st) (stx:id_ast_st-pos st))))
+                      ((stx:id_ast_st? st) (stx:id_ast_st-pos st))
+                      ((stx:array_var_st? st) (stx:array_var_st-pos st))))
+           (array-or-not (cond ((stx:id_st? st) 'n)
+                      ((stx:id_ast_st? st) 'n)
+                      ((stx:array_var_st? st) 'y)))
+           
            (same-name-list (cond ((equal? '() env) 
                                   (error (format "ERROR! AN UNDEFINED IDENTIFIER OF VAR '~a' AT ~a" name pos)))
                                  (else (flatten (map (lambda (x) (cond ((equal? name (obj-name x)) x)
@@ -148,19 +154,51 @@
                               ((equal? '() same-name-list) 
                                (error (format "ERROR! AN UNDEFINED IDENTIFIER OF VAR '~a' AT ~a" name pos)))
                               (else (flatten (map (lambda(x) 
-                                           (cond ((and (equal? name (obj-name x))
-                                                       (or (equal? 'var (obj-kind x))
-                                                           (equal? 'parm (obj-kind x))))
-                                                  x)
-                                                 ((and (equal? name (obj-name x))
-                                                       (equal? 'func (obj-kind x)))
-                                                  '())
-                                                 (else'())))
-                                         env))))))
+                                                    (cond ((and (equal? name (obj-name x))
+                                                                (or (equal? 'var (obj-kind x))
+                                                                    (equal? 'parm (obj-kind x))))
+                                                           x)
+                                                          ((and (equal? name (obj-name x))
+                                                                (equal? 'func (obj-kind x)))
+                                                           '())
+                                                          (else'())))
+                                                  env))))))
       (cond ((equal? '() correct-var-obj)
              (error (format "ERROR! AN UNDEFINED IDENTIFIER OF VAR! '~a' AT ~a" name pos)))
-            (else (car correct-var-obj)))))
-           
+            (else (cond ((equal? 'n array-or-not) (find-correct-var correct-var-obj lev))
+                        ((equal? 'y array-or-not)
+                         (let* ((num (stx:array_var_st-num st))
+                                (ref-obj (find-correct-var correct-var-obj lev))
+                                (name (obj-name ref-obj))
+                                (lev (obj-lev ref-obj))
+                                (kind (obj-lev ref-obj))
+                                (pos (obj-pos ref-obj)))
+                           (obj name lev kind (type_array 'int num) pos))))))))
+
+;引数は
+;同名で'varもしくは'parmのobjがlistになったもの.
+;('()は引数に入らない.)
+;出力は
+;適切なobj
+;list内から最もlevelの高いobjを取り出す.
+(define (find-correct-var ls lev)
+  (cond 
+    ;デバグ用.通常はこの分岐には入らないはず.
+    ((and (equal? 0 lev) (<= 2 (length ls))) (error (format "ERROR! IN FIND-CORRECT-VAR ~a ~a" ls lev)))
+    ((and (equal? 0 lev) (equal? 1 (length ls))) (car ls))
+    (else (cond ((equal? '() 
+                        (flatten (map (lambda (x) (cond ((equal? lev (obj-lev x)) x)
+                                                        (else '())))
+                                      ls)))
+                 (find-correct-var ls (- lev 1)))
+                (else (car (flatten (map (lambda (x) (cond ((equal? lev (obj-lev x)) x)
+                                                        (else '())))
+                                      ls))))))))
+                 
+                   
+
+
+
                               
                                         
                               

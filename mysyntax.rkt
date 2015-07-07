@@ -57,9 +57,8 @@
 
 (struct array_st (name num pos)#:transparent);宣言時.posはnameの位置.
 (struct array_var_st (name num pos)#:transparent);配列参照式.posはnameの位置.
-;終端記号となりうる配列を表す構造体.
-;課題08以降ではarray_var_stは廃止.
-;意味解析以降でarray_stも廃止.
+;終端記号となりうる配列を表す構造体..
+;意味解析以降で共に廃止.
 
 (struct spec_st (type pos)#:transparent)
 ;データ型を表す構造体
@@ -107,7 +106,7 @@
 
 (struct return_st (exp pos)#:transparent);posはreturnの位置.
 (struct return_null_st (exp pos)#:transparent)
-(struct sem_return_st (exp pos tag))
+(struct sem_return_st (exp pos tag)#:transparent)
 ;return文を表す構造体.
 ;課題08以降でreturn_stに統合
 ;return_null_stは(stx:return_st 'noreturn pos)に

@@ -178,8 +178,8 @@
                 (type-src (type (stx:assign_exp_st-src st))))
            (cond ((equal? type-dest type-src)
                   type-dest)
-                 (else (error (format "ERROR NOT WELL TYPED '=' AT ~a" 
-                                      (stx:assign_exp_st-pos st)))))))
+                 (else (error (format "ERROR NOT WELL TYPED '=' AT ~a ~a" 
+                                      (stx:assign_exp_st-pos st) st))))))
         ((stx:logic_exp_st? st) 
          (let* ((type-op1 (type (stx:logic_exp_st-op1 st)))
                 (type-op2 (type (stx:logic_exp_st-op2 st))))
@@ -257,7 +257,7 @@
                   (cond ((equal? (type_pointer 'pointer 'int) type-op) 'int)
                         ((equal? (type_pointer 'pointer (type_pointer 'pointer 'int)) type-op) 
                          (type_pointer 'pointer 'int))
-                        (else (error (format "ERROR NOT WELL TYPED '*' AT ~a" pos)))))
+                        (else (error (format "ERROR NOT WELL TYPED '*' AT ~a" st)))))
                  ;デバグ用.(本来はどんなプログラムを書いてもこの分岐には入らないはず.)
                  (else (error "ERROR NOT WELL TYPED" st)))))
         ((stx:constant_st? st) 'int)
@@ -301,7 +301,7 @@
              ;配列型のとき
              ((type_array? type-obj) 
               ;ポインタ型として許されるのはintのみ
-              (cond ((equal? 'int (type_array-type type-obj)) (type_pointer 'pointer 'int))
+              (cond ((equal? 'int (type_array-type type-obj)) 'int)
                     (else (error (format "ERROR NOT WELL TYPED '~a' AT ~a"
                                          (obj-name st) (obj-pos st))))))
              ;配列型でないとき
@@ -320,4 +320,4 @@
 ;(define p100 (open-input-file "test01.c"))
 ;(port-count-lines! p100)
 ;;(sem:sem-analyze-tree (k08:parse-port p100))
-;(analy-type (sem:sem-analyze-tree (k08:parse-port p100))
+;(analy-type (sem:sem-analyze-tree (k08:parse-port p100)))

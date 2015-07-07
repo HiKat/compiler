@@ -35,13 +35,13 @@
                        (else (cond ((equal? flag 'nomal) type)
                                    ((equal? flag 'pointer) (type_pointer 'pointer type))))))
            (pos (cond ((stx:id_st? id) 
-                      (stx:id_st-pos id))
-                     ((stx:id_ast_st? id)
-                      (stx:id_ast_st-pos id))
-                     ((stx:array_st? id)
-                      (stx:array_st-pos id)))))
+                       (stx:id_st-pos id))
+                      ((stx:id_ast_st? id)
+                       (stx:id_ast_st-pos id))
+                      ((stx:array_st? id)
+                       (stx:array_st-pos id)))))
       (obj name lev kind type pos)))
-      ;;;;
+  ;;;;
   (let* (;typeに入っているのは (stx:spec_st 'intか'void ポジション)
          (type (stx:declaration_st-type-spec st))
          (declarator-list (stx:declaration_st-declarator-list st))
@@ -72,7 +72,7 @@
                    (type (stx:spec_st-type (stx:para_declaration_st-type-spec para-decl)))
                    ;idはstx:id_stかstx:id_ast_st
                    (id (stx:para_declaration_st-para para-decl))
-                    ;flagはポインタ型なら'pointer、そうでなければ'normal
+                   ;flagはポインタ型なら'pointer、そうでなければ'normal
                    (flag (cond ((stx:id_st? id) 'normal)
                                ((stx:id_ast_st? id) 'pointer)))
                    (name (cond ((equal? flag 'normal) (stx:id_st-name id))
@@ -85,7 +85,7 @@
                                ((equal? flag 'pointer)(type_pointer 'pointer type)))))
               (obj name lev kind type pos)))
           para-list))
-   ;;;;;内部定義ここまで                
+  ;;;;;内部定義ここまで                
   (let* (;このspecがintで返り値が*intの場合あり.
          ;返り値は最終的にはここの型とflagで決定される.
          ;specはstx:spec_st
@@ -108,23 +108,23 @@
                             (stx:func_declarator_ast_null_st-name decl))))
          ;プロトタイプの位置情報
          (proto-pos (cond ((stx:func_declarator_st? decl) 
-                            (stx:func_declarator_st-pos decl))
-                           ((stx:func_declarator_null_st? decl)
-                            (stx:func_declarator_null_st-pos decl))
-                           ((stx:func_declarator_ast_st? decl) 
-                            (stx:func_declarator_ast_st-pos decl))
-                           ((stx:func_declarator_ast_null_st? decl) 
-                            (stx:func_declarator_ast_null_st-pos decl))))
+                           (stx:func_declarator_st-pos decl))
+                          ((stx:func_declarator_null_st? decl)
+                           (stx:func_declarator_null_st-pos decl))
+                          ((stx:func_declarator_ast_st? decl) 
+                           (stx:func_declarator_ast_st-pos decl))
+                          ((stx:func_declarator_ast_null_st? decl) 
+                           (stx:func_declarator_ast_null_st-pos decl))))
          ;para-listは(list* (stx:para_declaration_st...)...)
          ;もしくはパラメータが無いときは'noparaが入っている.
          (para-list (cond ((stx:func_declarator_st? decl) 
-                            (stx:func_declarator_st-para-list decl))
-                           ((stx:func_declarator_null_st? decl)
-                            'nopara)
-                           ((stx:func_declarator_ast_st? decl) 
-                            (stx:func_declarator_ast_st-para-list decl))
-                           ((stx:func_declarator_ast_null_st? decl) 
-                            'nopara)))
+                           (stx:func_declarator_st-para-list decl))
+                          ((stx:func_declarator_null_st? decl)
+                           'nopara)
+                          ((stx:func_declarator_ast_st? decl) 
+                           (stx:func_declarator_ast_st-para-list decl))
+                          ((stx:func_declarator_ast_null_st? decl) 
+                           'nopara)))
          ;para-obj-listは(list obj...)もしくは'nopara
          (para-obj-list (cond ((equal? para-list 'nopara) 'nopara)
                               (else (make-obj-from-paralist para-list))))
@@ -195,22 +195,22 @@
                      ((stx:func_declarator_ast_st? decl) (fundef_flag 'pointer 'normal))
                      ((stx:func_declarator_ast_null_st? decl) (fundef_flag 'pointer 'none))))
          (fundef-name (cond ((stx:func_declarator_st? decl) 
-                              (stx:func_declarator_st-name decl))
-                             ((stx:func_declarator_null_st? decl)
-                              (stx:func_declarator_null_st-name decl))
-                             ((stx:func_declarator_ast_st? decl) 
-                              (stx:func_declarator_ast_st-name decl))
-                             ((stx:func_declarator_ast_null_st? decl) 
-                              (stx:func_declarator_ast_null_st-name decl))))
+                             (stx:func_declarator_st-name decl))
+                            ((stx:func_declarator_null_st? decl)
+                             (stx:func_declarator_null_st-name decl))
+                            ((stx:func_declarator_ast_st? decl) 
+                             (stx:func_declarator_ast_st-name decl))
+                            ((stx:func_declarator_ast_null_st? decl) 
+                             (stx:func_declarator_ast_null_st-name decl))))
          ;関数定義の位置情報
          (fundef-pos (cond ((stx:func_declarator_st? decl) 
-                           (stx:func_declarator_st-pos decl))
-                          ((stx:func_declarator_null_st? decl)
-                           (stx:func_declarator_null_st-pos decl))
-                          ((stx:func_declarator_ast_st? decl) 
-                           (stx:func_declarator_ast_st-pos decl))
-                          ((stx:func_declarator_ast_null_st? decl) 
-                           (stx:func_declarator_ast_null_st-pos decl))))
+                            (stx:func_declarator_st-pos decl))
+                           ((stx:func_declarator_null_st? decl)
+                            (stx:func_declarator_null_st-pos decl))
+                           ((stx:func_declarator_ast_st? decl) 
+                            (stx:func_declarator_ast_st-pos decl))
+                           ((stx:func_declarator_ast_null_st? decl) 
+                            (stx:func_declarator_ast_null_st-pos decl))))
          ;para-listは(list* (stx:para_declaration_st...)...)
          ;もしくはパラメータが無いときは'noparaが入っている.
          (para-list (cond ((stx:func_declarator_st? decl) 
@@ -249,7 +249,7 @@
     ;ここで返したいものはlet*で取り出しておく必要がある.
     (stx:func_def_st spec  
                      (stx:func_declarator_st fundef-obj para-obj-list fundef-pos)
-                     (analy-compound_st compo 2 env fundef-obj)
+                     (analy-compound_st compo 1 env fundef-obj)
                      )))
 
 (define (analy-compound_st st lev outer-env func-tag)
@@ -272,11 +272,11 @@
          (this-lev (+ lev 1))
          ;decl-listに入っているのは(list stx:declaration_st...)か'nodecl
          (decl-list (cond ((equal? 'normal (comp_flag-decl flag)) 
-                            ;このときオブジェクトはcomp-envに追加する必要がある.
-                            ;(map* analy-compdecl decl-list
-                            (map* (lambda (x) (analy-compdecl x this-lev)) decl-list))                  
-                           ((equal? 'nodecl (comp_flag-decl flag))
-                            'nodecl)))
+                           ;このときオブジェクトはcomp-envに追加する必要がある.
+                           ;(map* analy-compdecl decl-list
+                           (map* (lambda (x) (analy-compdecl x this-lev)) decl-list))                  
+                          ((equal? 'nodecl (comp_flag-decl flag))
+                           'nodecl)))
          ;decl-listからこのcompoun-statement内で新しく生成される環境を格納する.
          ;comp-env内はこのcompound-statement内で新しく定義されたオブジェクトのlist
          (comp-env 
@@ -304,7 +304,8 @@
     ;(display (format "comp-env is>>>>>>>>> ~a \n\n" comp-env))
     ;(display (format "outer-env is>>>>>>>>> ~a \n\n" outer-env))
     ;(display (format "new-comp-env is>>>>>>>>> ~a \n\n" new-comp-env))
-    (display (format "decl-list!!!!!!!!!  \n ~a \n" decl-list))
+    ;(display (format "decl-list!!!!!!!!!  \n ~a \n" decl-list))
+    (display (format "this-lev  ~a ~a \n\n" st this-lev)) 
     (stx:compound_st decl-list stat-list)))
 
 (define (analy-compdecl st lev)
@@ -369,9 +370,50 @@
                           (analy-compstate (stx:alge_exp_st-op2 st) lev env func-tag)
                           (stx:alge_exp_st-pos st)))
         ((stx:unary_exp_st? st) 
-         (stx:unary_exp_st (stx:unary_exp_st-mark st) 
-                           (analy-compstate (stx:unary_exp_st-op st) lev env func-tag)
-                           (stx:unary_exp_st-pos st)))
+         (let* ((normal-out (stx:unary_exp_st (stx:unary_exp_st-mark st) 
+                                              (analy-compstate (stx:unary_exp_st-op st) lev env func-tag)
+                                              (stx:unary_exp_st-pos st)))
+                (pos (stx:unary_exp_st-pos st)))
+           ;*で表された配列参照式を判別する.
+           (cond ((equal? 'ast (stx:unary_exp_st-mark st))
+                  (cond ((stx:exp_in_paren_st? (stx:unary_exp_st-op st)) 
+                         (cond ((stx:alge_exp_st? (stx:exp_in_paren_st-exp (stx:unary_exp_st-op st)))
+                                (cond ((equal? 'add 
+                                               (stx:alge_exp_st-alge-ope 
+                                                (stx:exp_in_paren_st-exp (stx:unary_exp_st-op st))))
+                                       (cond ((and (stx:id_st? (stx:alge_exp_st-op1 
+                                                                (stx:exp_in_paren_st-exp 
+                                                                 (stx:unary_exp_st-op st))))
+                                                   (stx:constant_st? (stx:alge_exp_st-op2 
+                                                                      (stx:exp_in_paren_st-exp 
+                                                                       (stx:unary_exp_st-op st)))))
+                                              (analy-compstate 
+                                               (stx:array_var_st (stx:id_st-name (stx:alge_exp_st-op1 
+                                                                                  (stx:exp_in_paren_st-exp 
+                                                                                   (stx:unary_exp_st-op st))))
+                                                                 (stx:constant_st-cons (stx:alge_exp_st-op2 
+                                                                                        (stx:exp_in_paren_st-exp 
+                                                                                         (stx:unary_exp_st-op st))))
+                                                                 pos) lev env func-tag))
+                                             ((and (stx:id_st? (stx:alge_exp_st-op2 
+                                                                (stx:exp_in_paren_st-exp 
+                                                                 (stx:unary_exp_st-op st))))
+                                                   (stx:constant_st? (stx:alge_exp_st-op1 
+                                                                      (stx:exp_in_paren_st-exp 
+                                                                       (stx:unary_exp_st-op st)))))
+                                              (analy-compstate 
+                                               (stx:array_var_st (stx:id_st-name (stx:alge_exp_st-op2 
+                                                                                  (stx:exp_in_paren_st-exp 
+                                                                                   (stx:unary_exp_st-op st))))
+                                                                 (stx:constant_st-cons (stx:alge_exp_st-op1 
+                                                                                        (stx:exp_in_paren_st-exp 
+                                                                                         (stx:unary_exp_st-op st))))
+                                                                 pos) lev env func-tag))
+                                             (else normal-out)))
+                                      (else normal-out)))
+                               (else normal-out)))
+                        (else normal-out)))
+                 (else normal-out))))
         ((stx:constant_st? st) st)
         ((stx:exp_with_semi_st? st) 
          (stx:exp_with_semi_st (analy-compstate (stx:exp_with_semi_st-exp st) lev env func-tag)))
@@ -394,7 +436,7 @@
              (stx:compound_dec_st? st) 
              (stx:compound_sta_st? st) 
              (stx:compound_null_st? st))
-             (analy-compound_st st lev env func-tag))
+         (analy-compound_st st lev env func-tag))
         ;チェック時は環境に'nodeclが入ることがあることに注意.
         ((stx:func_st? st) 
          (stx:func_st (check-func-ref st lev env) 
@@ -403,12 +445,15 @@
                                          (analy-compstate x lev env func-tag))
                                        (flatten (stx:func_st-para st)))))))
         ((or (stx:id_st? st)     
-             (stx:id_ast_st? st))
+             (stx:id_ast_st? st)
+             (stx:array_var_st? st))
          ;stはid_stもしくはid_ast_st
          ;levはcompound-statementのレベル
          ;envは大域環境(objのlist)
-         (display env)
-         (check-var-ref st lev env))
+         ;デバグ用環境確認
+         ;(display env)
+         (begin (display (format "cheeeeeeeeccccccccck  ~a\n!!!!!!~a\n   ~a \n\n\n" st env lev))
+                (check-var-ref st lev env)))
         ;デバグ用.（本来はどんなプログラムを書いてもこの分岐には入らないはず.）
         (else (error "AN UNEXPECTED STRUCTURE! CONDITION ERROR IN ANALY-COMPSTATE FOR" st))
         ))

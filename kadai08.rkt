@@ -3,7 +3,7 @@
          (prefix-in : parser-tools/lex-sre)
          parser-tools/yacc
          (prefix-in stx: "mysyntax.rkt")
-         ;(prefix-in k07u: "kadai07upgrade.rkt")
+         (prefix-in k07u: "kadai07upgrade.rkt")
          )
 (provide (all-defined-out))
 
@@ -281,13 +281,17 @@
                 ((& unary_expr)
                  (if (stx:exp_in_paren_st? $2) 
                      (if (stx:unary_exp_st? (stx:exp_in_paren_st-exp $2)) 
-                         (if (eq? 'ast 
-                                  (stx:unary_exp_st-mark (stx:exp_in_paren_st-exp $2)))
+                         (if (equal? 'ast 
+                                     (stx:unary_exp_st-mark (stx:exp_in_paren_st-exp $2)))
                              ;間接参照式のシンタックスシュガー
                              (stx:unary_exp_st-op (stx:exp_in_paren_st-exp $2))
                              (stx:unary_exp_st 'amp $2 $1-start-pos))
                          (stx:unary_exp_st 'amp $2 $1-start-pos))
-                     (stx:unary_exp_st 'amp $2 $1-start-pos)))
+                     (if (stx:unary_exp_st? $2)
+                         (if (equal? 'ast (stx:unary_exp_st-mark $2)) 
+                             (stx:unary_exp_st-op $2) 
+                             (stx:unary_exp_st 'amp $2 $1-start-pos))
+                         (stx:unary_exp_st 'amp $2 $1-start-pos))))
                 ((* unary_expr)
                  (stx:unary_exp_st 'ast $2 $1-start-pos)))
     
@@ -296,7 +300,7 @@
                    ;(stx:array_var_st $1 $3  $1-start-pos)
                    ;配列参照式のシンタックスシュガー
                    (stx:unary_exp_st 'ast 
-                                     (stx:alge_exp_st 'add $1 $3 'syntax-sugar) 
+                                     (stx:exp_in_paren_st (stx:alge_exp_st 'add $1 $3 'syntax-sugar))
                                      'syntax-sugar))
                   ((VAR l_small_paren argument_expression_list r_small_paren)
                    (stx:func_st $1 $3))
@@ -321,13 +325,18 @@
 
 
 ;テスト
-;(define p9999 (open-input-file "test01.c"))
-;(port-count-lines! p9999)
-;(parse-port p9999)
+#;(begin
+(define p9999 (open-input-file "test01.c"))
+(port-count-lines! p9999)
+(parse-port p9999)
+)
 
-;(define p2 (open-input-file "kadai01.c"))
-;(port-count-lines! p2)
-;(k07u:syn-to-code (parse-port p2))
+#;(begin
+(define p2 (open-input-file "kadai01.c"))
+(port-count-lines! p2)
+(display "THIS IS RESULT OF KADAI07")
+(k07u:syn-to-code (parse-port p2))
+)
 
 
 

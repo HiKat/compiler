@@ -94,8 +94,9 @@
                (stx:func_proto_st
                 (stx:spec_st 'void 'print-proto)
                 (stx:func_declarator_st 'print 
-                                        (stx:para_declaration_st (stx:spec_st 'int 'print-proto) 
-                                                                 (stx:id_st 'v 'print-proto))
+                                        (stx:para_declaration_st 
+                                         (stx:spec_st 'int 'print-proto)                         
+                                         (stx:id_st 'v 'print-proto))
                                         'print-proto)) 
                $1)));プログラムの冒頭に組込み関数 printのプロトタイプ宣言をつける.
     
@@ -151,7 +152,10 @@
                ((compound_statement) $1)
                ((if l_small_paren expression r_small_paren statement)
                 ;シンタックスシュガー
-                (stx:if_else_st $3 $5 (stx:null_statement_st 'null) $1-start-pos 'syntax-sygar))
+                (stx:if_else_st $3 
+                                $5 
+                                (stx:null_statement_st 'null) 
+                                $1-start-pos 'syntax-sygar))
                ((if l_small_paren expression r_small_paren statement else statement)
                 (stx:if_else_st $3 $5 $7 $1-start-pos $6-start-pos))
                ((while l_small_paren expression r_small_paren statement)
@@ -234,10 +238,14 @@
                
                ((return expression semicolon)(stx:return_st $2 $1-start-pos))
                ((return semicolon)(stx:return_st 'noreturn $1-start-pos)))
-    (compound_statement ((l_big_paren declaration_list statement_list r_big_paren)(stx:compound_st $2 $3))
-                        ((l_big_paren declaration_list r_big_paren)(stx:compound_dec_st $2))
-                        ((l_big_paren statement_list r_big_paren)(stx:compound_sta_st $2))
-                        ((l_big_paren r_big_paren)(stx:compound_null_st 'null)))
+    (compound_statement ((l_big_paren declaration_list statement_list r_big_paren)
+                         (stx:compound_st $2 $3))
+                        ((l_big_paren declaration_list r_big_paren)
+                         (stx:compound_dec_st $2))
+                        ((l_big_paren statement_list r_big_paren)
+                         (stx:compound_sta_st $2))
+                        ((l_big_paren r_big_paren)
+                         (stx:compound_null_st 'null)))
     (declaration_list ((declaration) $1)
                       ((declaration_list declaration)(cons $1 $2)))
     (statement_list ((statement) $1)
@@ -245,14 +253,19 @@
     (expression ((assign_expr) $1)
                 ((expression comma assign_expr)(cons $1 $3)))
     (assign_expr ((logical_OR_expr) $1)
-                 ((logical_OR_expr = assign_expr)(stx:assign_exp_st $1 $3 $2-start-pos)))
+                 ((logical_OR_expr = assign_expr)
+                  (stx:assign_exp_st $1 $3 $2-start-pos)))
     (logical_OR_expr ((logical_AND_expr) $1)
-                     ((logical_OR_expr or logical_AND_expr)(stx:logic_exp_st 'or $1 $3 $2-start-pos)))
+                     ((logical_OR_expr or logical_AND_expr)
+                      (stx:logic_exp_st 'or $1 $3 $2-start-pos)))
     (logical_AND_expr ((equality_expr) $1)
-                      ((logical_AND_expr and equality_expr)(stx:logic_exp_st 'and $1 $3 $2-start-pos)))
+                      ((logical_AND_expr and equality_expr)
+                       (stx:logic_exp_st 'and $1 $3 $2-start-pos)))
     (equality_expr ((relational_expr) $1)
-                   ((equality_expr equal relational_expr)(stx:rel_exp_st 'equal $1 $3 $2-start-pos))
-                   ((equality_expr not relational_expr)(stx:rel_exp_st 'not $1 $3 $2-start-pos)))
+                   ((equality_expr equal relational_expr)
+                    (stx:rel_exp_st 'equal $1 $3 $2-start-pos))
+                   ((equality_expr not relational_expr)
+                    (stx:rel_exp_st 'not $1 $3 $2-start-pos)))
     
     (relational_expr ((add_expr) $1)
                      ((relational_expr less add_expr)
@@ -277,7 +290,10 @@
     (unary_expr ((postfix_expr) $1)
                 ((- unary_expr)
                  ;シンタックスシュガー
-                 (stx:alge_exp_st 'sub (stx:constant_st 0 'syntax-sugar) $2 $1-start-pos))
+                 (stx:alge_exp_st 'sub 
+                                  (stx:constant_st 0 'syntax-sugar) 
+                                  $2 
+                                  $1-start-pos))
                 ((& unary_expr)
                  (if (stx:exp_in_paren_st? $2) 
                      (if (stx:unary_exp_st? (stx:exp_in_paren_st-exp $2)) 
@@ -300,7 +316,8 @@
                    ;(stx:array_var_st $1 $3  $1-start-pos)
                    ;配列参照式のシンタックスシュガー
                    (stx:unary_exp_st 'ast 
-                                     (stx:exp_in_paren_st (stx:alge_exp_st 'add $1 $3 'syntax-sugar))
+                                     (stx:exp_in_paren_st 
+                                      (stx:alge_exp_st 'add $1 $3 'syntax-sugar))
                                      'syntax-sugar))
                   ((VAR l_small_paren argument_expression_list r_small_paren)
                    (stx:func_st $1 $3))
@@ -321,24 +338,10 @@
 
 (define (parse-port p)
   (program-parser (lambda () (sub-program-lexer p))))
-
-
-
-;テスト
 #;(begin
-(define p9999 (open-input-file "test01.c"))
-(port-count-lines! p9999)
-(parse-port p9999)
-)
-
-#;(begin
-(define p2 (open-input-file "kadai01.c"))
-(port-count-lines! p2)
-(display "THIS IS RESULT OF KADAI07")
-(k07u:syn-to-code (parse-port p2))
-)
-
-
+  (define p9999 (open-input-file "kadai01.c"))
+  (port-count-lines! p9999)
+  (parse-port p9999))
 
 
 

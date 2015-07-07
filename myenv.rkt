@@ -92,7 +92,8 @@
                                      ((and (equal? (obj-name x) (obj-name obj))
                                            (equal? 'parm (obj-kind x)))
                                       (begin
-                                        (display (format "WARNING!! SAME NAME IN PARAMETERS AND VAR DECLARATIONS\n"))
+                                        (display 
+                                         (format "WARNING!! SAME NAME IN PARAMETERS AND VAR DECLARATIONS\n"))
                                         #t))))
                    env))))
 
@@ -119,9 +120,12 @@
    (lambda (x)(cond ((and (equal? (obj-name x) (obj-name obj))
                           (equal? 0 (obj-lev x))
                           (not (equal? (obj-type x) (obj-type obj))))
-                     (error (format "ERROR! INVALID FUNCTION PROTOTYPE '~a' AT ~a"
+                     (error 
+                      (format "ERROR! INVALID FUNCTION PROTOTYPE '~a' AT ~a"
                                     (obj-name obj) (obj-pos obj))))
-                    (else (display (format "OK! CRRECT FUNCTION PROTOTYPE OF '~a'.\n" (obj-name obj))))))
+                    (else 
+                     (display (format "OK! CRRECT FUNCTION PROTOTYPE OF '~a'.\n" 
+                                      (obj-name obj))))))
    env))
 (define (check-func obj env)
   (map 
@@ -137,7 +141,10 @@
 (define (check-var-ref st lev env)
     (let* ((name (cond ((stx:id_st? st) (stx:id_st-name st))
                        ((stx:id_ast_st? st) (stx:id_ast_st-name st))
-                       ((stx:array_var_st? st) (stx:array_var_st-name st))))
+                       ((stx:array_var_st? st) 
+                        (cond ((stx:id_st? (stx:array_var_st-name st))
+                               (stx:id_st-name (stx:array_var_st-name st)))
+                              (else (stx:array_var_st-name st))))))
            (pos (cond ((stx:id_st? st) (stx:id_st-pos st))
                       ((stx:id_ast_st? st) (stx:id_ast_st-pos st))
                       ((stx:array_var_st? st) (stx:array_var_st-pos st))))
@@ -171,7 +178,7 @@
                                 (ref-obj (find-correct-var correct-var-obj lev))
                                 (name (obj-name ref-obj))
                                 (lev (obj-lev ref-obj))
-                                (kind (obj-lev ref-obj))
+                                (kind (obj-kind ref-obj))
                                 (pos (obj-pos ref-obj)))
                            (obj name lev kind (type_array 'int num) pos))))))))
 
@@ -216,7 +223,7 @@
                                                  ((and (equal? name (obj-name x))
                                                        (equal? 'var (obj-kind x))) 
                                                   (error "ERROR AN UNDEFINED IDENTIFIER " name))
-                                                 (else (obj 'invalid 'invalid 'invalid 'invalid)))
+                                                 (else (obj 'invalid 'invalid 'invalid 'invalid 'invalid)))
                                            (error "ERROR AN UNDEFINED IDENTIFIER OF FUNCTION" name)))
                            env))))
     (if (equal? 'invalid (obj-type referred-obj))

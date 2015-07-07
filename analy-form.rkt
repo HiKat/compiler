@@ -17,7 +17,6 @@
     ((not (list? st)) (list st))
     ((stx:declaration_st? st) #t)
     ((stx:func_declarator_st? st) #t)
-    ;((stx:func_declarator_ast_st? st) #t)
     ((stx:func_proto_st? st) #t)
     ((stx:func_def_st? st) 
      (cond ((eq? 'nostat (stx:compound_st-statement-list 
@@ -25,7 +24,7 @@
             #t)
            (else 
             (map form-check (stx:compound_st-statement-list 
-                                  (stx:func_def_st-compound-state-list st))))))
+                             (stx:func_def_st-compound-state-list st))))))
     ((stx:assign_exp_st? st) 
      (begin (if (or (stx:unary_exp_st? (stx:assign_exp_st-dest st))
                     (cond ((obj? (stx:assign_exp_st-dest st)) 
@@ -52,7 +51,8 @@
                    #t)
                   (else (error (format "ERROR! AN INVALID & FORM AT ~a" 
                                        (stx:unary_exp_st st))))))
-           (else (error "ERROR! AN INVALID & FORM OF" st))))
+           (else (error (format "ERROR! AN INVALID & FORM AT ~a" 
+                                (stx:unary_exp_st st))))))
     ((stx:constant_st? st) #t)
     ((stx:null_statement_st? st) #t)
     ((stx:exp_in_paren_st? st) 
@@ -72,7 +72,7 @@
     ((position? st) #t)
     ;デバグ用エラー発生（実際にはどのようなプログラムを読み込んでもこの分岐には入らないはず.）
     (else (error "ERROR! UNEXPECTED STRUCTURES IN AN ARGUMENT OF ANALY-FORM." st))))
-    
+
 
 ;テスト
 ;(define p (open-input-file "test01.c"))

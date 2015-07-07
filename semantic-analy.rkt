@@ -133,14 +133,16 @@
                                       (stx:spec_st-type spec) 
                                       (cond ((equal? 'nopara para-obj-list)
                                              'nopara)
-                                            (else (map (lambda (x) (obj-type x)) para-obj-list)))))
+                                            (else (map (lambda (x) (obj-type x)) 
+                                                       para-obj-list)))))
                            ;(struct type-pointer (pointer type) #:transparent)
                            ((equal? 'pointer (para_flag-out-type flag))
                             (type_fun 'fun
                                       (type_pointer 'pointer (stx:spec_st-type spec))
                                       (cond ((equal? 'nopara para-obj-list)
                                              'nopara)
-                                            (else (map (lambda (x) (obj-type x)) para-obj-list)))))))
+                                            (else (map (lambda (x) (obj-type x)) 
+                                                       para-obj-list)))))))
          (proto-obj (obj proto-name 0 'proto proto-type proto-pos)))
     ;プロトタイプのオブジェクトのチェック
     (check-proto proto-obj env)
@@ -228,12 +230,14 @@
                              (type_fun 'fun
                                        (stx:spec_st-type spec)
                                        (cond ((equal? 'nopara para-obj-list) 'nopara)
-                                             (else(map (lambda (x) (obj-type x)) para-obj-list)))))
+                                             (else(map (lambda (x) (obj-type x))
+                                                       para-obj-list)))))
                             ((equal? 'pointer (fundef_flag-out-type flag))
                              (type_fun 'fun
                                        (type_pointer 'pointer (stx:spec_st-type spec))
                                        (cond ((equal? 'nopara para-obj-list) 'nopara)
-                                             (else (map (lambda (x) (obj-type x)) para-obj-list)))))
+                                             (else (map (lambda (x) (obj-type x)) 
+                                                        para-obj-list)))))
                             (else (error "IN VALID FUNCTION"))))
          (fundef-obj (obj fundef-name 0 'fun fundef-type fundef-pos)))
     ;関数定義のオブジェクトのチェック
@@ -260,13 +264,18 @@
                           (stx:compound_null_st? st)) (comp_flag 'nodecl 'nostat 4))
                      (else (error "UNEXPECTED STRUCTURE! ERROR IN ANALY-COMPOUND." st))))
          ;decl-listには(list* stx:declaration_st...)
-         (decl-list (cond ((equal? 1 (comp_flag-n flag)) (stx:compound_st-declaration-list st))
-                          ((equal? 2 (comp_flag-n flag)) (stx:compound_dec_st-declaration-list st))
-                          ((or (equal? 3 (comp_flag-n flag))(equal? 4 (comp_flag-n flag))) 'nodecl)))
+         (decl-list (cond ((equal? 1 (comp_flag-n flag)) 
+                           (stx:compound_st-declaration-list st))
+                          ((equal? 2 (comp_flag-n flag)) 
+                           (stx:compound_dec_st-declaration-list st))
+                          ((or (equal? 3 (comp_flag-n flag))
+                               (equal? 4 (comp_flag-n flag))) 'nodecl)))
          ;statement-listにはstatementのlist*が入る.
          ;処理する際はmap*で
-         (stat-list (cond ((equal? 1 (comp_flag-n flag)) (stx:compound_st-statement-list st))
-                          ((equal? 3 (comp_flag-n flag)) (stx:compound_sta_st-statement-list st))
+         (stat-list (cond ((equal? 1 (comp_flag-n flag)) 
+                           (stx:compound_st-statement-list st))
+                          ((equal? 3 (comp_flag-n flag)) 
+                           (stx:compound_sta_st-statement-list st))
                           ((or (equal? 2 (comp_flag-n flag))(equal? 4 (comp_flag-n flag))) 'nostat)))
          ;意味解析開始時にlevを一つ繰り上げる 
          (this-lev (+ lev 1))
@@ -297,15 +306,11 @@
          (new-comp-env (cond ((equal? 'nodecl comp-env) outer-env)
                              (else (append comp-env outer-env))))
          (stat-list (cond ((equal? 'normal (comp_flag-stat flag)) 
-                           (map* (lambda (x) (analy-compstate x this-lev new-comp-env func-tag)) stat-list))
+                           (map* 
+                            (lambda (x) (analy-compstate x this-lev new-comp-env func-tag))
+                            stat-list))
                           ((equal? 'nostat (comp_flag-stat flag)) 
                            'nostat))))
-    ;デバグ用
-    ;(display (format "comp-env is>>>>>>>>> ~a \n\n" comp-env))
-    ;(display (format "outer-env is>>>>>>>>> ~a \n\n" outer-env))
-    ;(display (format "new-comp-env is>>>>>>>>> ~a \n\n" new-comp-env))
-    ;(display (format "decl-list!!!!!!!!!  \n ~a \n" decl-list))
-    (display (format "this-lev  ~a ~a \n\n" st this-lev)) 
     (stx:compound_st decl-list stat-list)))
 
 (define (analy-compdecl st lev)
@@ -371,67 +376,57 @@
                           (stx:alge_exp_st-pos st)))
         ((stx:unary_exp_st? st) 
          (let* ((normal-out (stx:unary_exp_st (stx:unary_exp_st-mark st) 
-                                              (analy-compstate (stx:unary_exp_st-op st) lev env func-tag)
+                                              (analy-compstate 
+                                               (stx:unary_exp_st-op st) lev env func-tag)
                                               (stx:unary_exp_st-pos st)))
                 (pos (stx:unary_exp_st-pos st)))
            ;*で表された配列参照式を判別する.
            (cond ((equal? 'ast (stx:unary_exp_st-mark st))
                   (cond ((stx:exp_in_paren_st? (stx:unary_exp_st-op st)) 
-                         (cond ((stx:alge_exp_st? (stx:exp_in_paren_st-exp (stx:unary_exp_st-op st)))
+                         (cond ((stx:alge_exp_st? (stx:exp_in_paren_st-exp 
+                                                   (stx:unary_exp_st-op st)))
                                 (cond ((equal? 'add 
                                                (stx:alge_exp_st-alge-ope 
-                                                (stx:exp_in_paren_st-exp (stx:unary_exp_st-op st))))
-                                       (cond ((and (stx:id_st? (stx:alge_exp_st-op1 
-                                                                (stx:exp_in_paren_st-exp 
-                                                                 (stx:unary_exp_st-op st))))
-                                                   (stx:constant_st? (stx:alge_exp_st-op2 
-                                                                      (stx:exp_in_paren_st-exp 
-                                                                       (stx:unary_exp_st-op st)))))
-                                              (analy-compstate 
-                                               (stx:array_var_st (stx:id_st-name (stx:alge_exp_st-op1 
-                                                                                  (stx:exp_in_paren_st-exp 
-                                                                                   (stx:unary_exp_st-op st))))
-                                                                 (stx:constant_st-cons (stx:alge_exp_st-op2 
-                                                                                        (stx:exp_in_paren_st-exp 
-                                                                                         (stx:unary_exp_st-op st))))
-                                                                 pos) lev env func-tag))
-                                             ((and (stx:id_st? (stx:alge_exp_st-op2 
-                                                                (stx:exp_in_paren_st-exp 
-                                                                 (stx:unary_exp_st-op st))))
-                                                   (stx:constant_st? (stx:alge_exp_st-op1 
-                                                                      (stx:exp_in_paren_st-exp 
-                                                                       (stx:unary_exp_st-op st)))))
-                                              (analy-compstate 
-                                               (stx:array_var_st (stx:id_st-name (stx:alge_exp_st-op2 
-                                                                                  (stx:exp_in_paren_st-exp 
-                                                                                   (stx:unary_exp_st-op st))))
-                                                                 (stx:constant_st-cons (stx:alge_exp_st-op1 
-                                                                                        (stx:exp_in_paren_st-exp 
-                                                                                         (stx:unary_exp_st-op st))))
-                                                                 pos) lev env func-tag))
-                                             (else normal-out)))
+                                                (stx:exp_in_paren_st-exp 
+                                                 (stx:unary_exp_st-op st))))
+                                       ;ここまでで*(x + y)の形までが保証される.
+                                       (analy-compstate 
+                                        (stx:array_var_st 
+                                         (stx:alge_exp_st-op1 
+                                          (stx:exp_in_paren_st-exp 
+                                           (stx:unary_exp_st-op st)))
+                                         (stx:alge_exp_st-op2 
+                                          (stx:exp_in_paren_st-exp 
+                                           (stx:unary_exp_st-op st)))
+                                         pos) lev env func-tag))
                                       (else normal-out)))
                                (else normal-out)))
                         (else normal-out)))
                  (else normal-out))))
         ((stx:constant_st? st) st)
         ((stx:exp_with_semi_st? st) 
-         (stx:exp_with_semi_st (analy-compstate (stx:exp_with_semi_st-exp st) lev env func-tag)))
+         (stx:exp_with_semi_st 
+          (analy-compstate (stx:exp_with_semi_st-exp st) lev env func-tag)))
         ((stx:exp_in_paren_st? st) 
-         (stx:exp_in_paren_st (analy-compstate (stx:exp_in_paren_st-exp st) lev env func-tag)))
+         (stx:exp_in_paren_st 
+          (analy-compstate (stx:exp_in_paren_st-exp st) lev env func-tag)))
         ((stx:if_else_st? st) 
-         (stx:if_else_st (analy-compstate (stx:if_else_st-cond-exp st) lev env func-tag)
-                         (analy-compstate (stx:if_else_st-state st) lev env func-tag)
-                         (analy-compstate (stx:if_else_st-else-state st) lev env func-tag)
-                         (stx:if_else_st-if-pos st)
-                         (stx:if_else_st-else-pos st)))
+         (stx:if_else_st 
+          (analy-compstate (stx:if_else_st-cond-exp st) lev env func-tag)   
+          (analy-compstate (stx:if_else_st-state st) lev env func-tag)                        
+          (analy-compstate (stx:if_else_st-else-state st) lev env func-tag)
+          (stx:if_else_st-if-pos st)
+          (stx:if_else_st-else-pos st)))
         ((stx:while_st? st) 
-         (stx:while_st (analy-compstate (stx:while_st-cond-exp st) lev env func-tag)
-                       (analy-compound_st (stx:while_st-statement st) lev env func-tag)))
+         (stx:while_st 
+          (analy-compstate (stx:while_st-cond-exp st) lev env func-tag)
+          (analy-compound_st (stx:while_st-statement st) lev env func-tag)
+          (stx:while_st-pos st)))
         ((stx:return_st? st) 
-         (stx:sem_return_st (analy-compstate (stx:return_st-exp st) lev env func-tag) 
-                            (stx:return_st-pos st) 
-                            func-tag))
+         (stx:sem_return_st 
+          (analy-compstate (stx:return_st-exp st) lev env func-tag) 
+          (stx:return_st-pos st) 
+          func-tag))
         ((or (stx:compound_st? st) 
              (stx:compound_dec_st? st) 
              (stx:compound_sta_st? st) 
@@ -450,10 +445,9 @@
          ;stはid_stもしくはid_ast_st
          ;levはcompound-statementのレベル
          ;envは大域環境(objのlist)
-         ;デバグ用環境確認
-         ;(display env)
-         (begin (display (format "cheeeeeeeeccccccccck  ~a\n!!!!!!~a\n   ~a \n\n\n" st env lev))
-                (check-var-ref st lev env)))
+         (check-var-ref st lev 
+                        (append (cond ((equal? 'nopara para-env) '()) 
+                                      (else para-env)) env)))
         ;デバグ用.（本来はどんなプログラムを書いてもこの分岐には入らないはず.）
         (else (error "AN UNEXPECTED STRUCTURE! CONDITION ERROR IN ANALY-COMPSTATE FOR" st))
         ))
@@ -475,7 +469,8 @@
 
 
 ;テスト
-;(define p101 (open-input-file "test01.c"))
-;(port-count-lines! p101)
-;(sem-analyze-tree (k08:parse-port p101))
+#;(begin
+    (define p101 (open-input-file "kadai01.c"))
+    (port-count-lines! p101)
+    (sem-analyze-tree (k08:parse-port p101)))
 

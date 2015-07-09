@@ -185,14 +185,14 @@
              (else (error (format "ERROR NOT WELL TYPED '=' AT ~a ~a" 
                                   (stx:assign_exp_st-pos st) st))))))
     ((stx:logic_exp_st? st) 
-     (let* ((type-op1 (type (stx:logic_exp_st-op1 st)))
-            (type-op2 (type (stx:logic_exp_st-op2 st))))
+     (let* ((type-op1 (stx:logic_exp_st-op1 st))
+            (type-op2 (stx:logic_exp_st-op2 st)))
        (cond ((and (type-int? type-op1) 
                    (type-int? type-op2))
               'int)
              (else (error (format "ERROR NOT WELL TYPED '~a' AT ~a" 
                                   (cond ((equal? 'or (stx:logic_exp_st-log-ope st)) '||)
-                                        ((equal? 'or (stx:logic_exp_st-log-ope st)) '&&))
+                                        ((equal? 'and (stx:logic_exp_st-log-ope st)) '&&))
                                   (stx:logic_exp_st-pos st)))))))
     
     ((stx:rel_exp_st? st) 

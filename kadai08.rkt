@@ -339,7 +339,7 @@
 (define (parse-port p)
   (program-parser (lambda () (sub-program-lexer p))))
 #;(begin
-  (define p9999 (open-input-file "kadai01.c"))
+  (define p9999 (open-input-file "test01.c"))
   (port-count-lines! p9999)
   (parse-port p9999))
 

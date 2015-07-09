@@ -1,11 +1,15 @@
 #lang racket
 (provide (all-defined-out))
 
-(define (map* func list*)
+#;(define (map* func list*)
   (cond 
     ((cons? list*) (append (map* func (car list*))
                            (map* func (cdr list*))))
     (else (cons (func list*) '()))))
+
+(define (map* func list*)
+  (cond ((list? list*) (map func list*))
+        (else (map func (flatten list*)))))
 
 ;テスト
 (define (squa x)

@@ -163,7 +163,11 @@
                            (else (syn-to-inter decls)))
                      (cond ((equal? 'nostat stmts) '())
                            (else (syn-to-inter stmts))))))           
-    ((stx:func_st? st) '())
+    ((stx:func_st? st) 
+     (let* ((vars (stx:func_st-para st))
+            (f (obj-name (stx:func_st-name st)))
+            (temp (make-temp)))
+       (correct-let (in:letstmt temp (in:callstmt temp f vars)))))
     ((list? st) (flatten (map syn-to-inter st)))
     ((obj? st) (in:varexp st))
     (else (error (format "\n check syn-to-code! ~a\n" st)))))
@@ -175,4 +179,4 @@
 (port-count-lines! p)
 (display 
  (format "\n\n;;;;;;;;;;;;;;;;;;;;;;;;;;;以下が中間命令生成の実行結果です;;;;;;;;;;;;;;;;;;;;;;;;.\n"))
-(gen-intermed (sem-analyze-tree (k08:parse-port p)))
+;(gen-intermed (sem-analyze-tree (k08:parse-port p)))

@@ -448,6 +448,7 @@
          (check-var-ref st lev 
                         (append (cond ((equal? 'nopara para-env) '()) 
                                       (else para-env)) env)))
+        ((cons? st) (flatten (list (car st) (cdr st))))
         ;デバグ用.（本来はどんなプログラムを書いてもこの分岐には入らないはず.）
         (else (error "AN UNEXPECTED STRUCTURE! CONDITION ERROR IN ANALY-COMPSTATE FOR" st))
         ))
@@ -469,8 +470,8 @@
 
 
 ;テスト
-#;(begin
-    (define p101 (open-input-file "kadai01.c"))
+(begin
+    (define p101 (open-input-file "test01.c"))
     (port-count-lines! p101)
     (sem-analyze-tree (k08:parse-port p101)))
 

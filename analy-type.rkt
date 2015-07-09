@@ -6,6 +6,7 @@
          (prefix-in : parser-tools/lex-sre)
          parser-tools/yacc)
 (require "myenv.rkt")
+(require "mymap.rkt")
 (provide (all-defined-out))
 ;myenv.rkt内で定義
 ;(struct obj (name lev kind type)#:transparent)
@@ -17,8 +18,11 @@
 ;引数は構造体
 ;戻り値は'well-typed
 (define (check-type st)
+  (let* ((st (flatten st)))
+   (cond ((equal? 1 (length st)) (display (format "WELL TYPED STRUCTURE\n")))
+         (else
   (cond 
-    ((list? st) (map check-type st))
+    ;((list? st) (map check-type st))
     ((stx:declaration_st? st) 
      (let* ((decl-obj-list (stx:declaration_st-declarator-list st)))
        (map (lambda (x) 
@@ -142,7 +146,7 @@
                      (equal? (type_pointer 'pointer (type_pointer 'pointer 'int)) (type st))
                      (equal? 'void (type st)))
                  'well-typed)
-                (else (error "ERROR NOT WELL TYPED" st))))))
+                (else (error "ERROR NOT WELL TYPED" st)))))))))
 
 
 ;型は'int、(type_pointer 'pointer 'int)、(type_pointer 'pointer (type_pointer 'pointer 'int))
@@ -173,7 +177,8 @@
                               'well-typed)))
                    para-list))))
 
-(define (type st) 
+(define (type st)
+  (let* ((st (flatten st)))
   (cond 
     ((stx:sem_return_st? st) (type (stx:sem_return_st-exp st)))
     ((stx:exp_in_paren_st? st) (type (stx:exp_in_paren_st-exp st)))
@@ -182,8 +187,8 @@
             (type-src (type (stx:assign_exp_st-src st))))
        (cond ((equal? type-dest type-src)
               type-dest)
-             (else (error (format "ERROR NOT WELL TYPED '=' AT ~a ~a" 
-                                  (stx:assign_exp_st-pos st) st))))))
+             (else (error (format "ERROR NOT WELL TYPED '=' AT" 
+                                  (stx:assign_exp_st-pos st)))))))
     ((stx:logic_exp_st? st) 
      (let* ((type-op1 (stx:logic_exp_st-op1 st))
             (type-op2 (stx:logic_exp_st-op2 st)))
@@ -206,7 +211,8 @@
                                         ((equal? 'less (stx:rel_exp_st-rel-ope st)) '<)
                                         ((equal? 'and_less (stx:rel_exp_st-rel-ope st)) '<=)
                                         ((equal? 'more (stx:rel_exp_st-rel-ope st)) '>)
-                                        ((equal? 'and_more (stx:rel_exp_st-rel-ope st)) '>=))
+                                        ((equal? 'and_more (stx:rel_exp_st-rel-ope st)) '>=)
+                                        (else (error "ERROR")))
                                   (stx:rel_exp_st-pos st)))))))
     ((stx:alge_exp_st? st) 
      (let* ((type-op1 (stx:alge_exp_st-op1 st))
@@ -313,14 +319,16 @@
           (cond ((equal? 'int type-obj) 'int)
                 ((equal? (type_pointer 'pointer 'int) type-obj) (type_pointer 'pointer 'int))
                 (else (error (format "ERROR NOT WELL TYPED '~a' AT ~a"
-                                     (obj-name st) (obj-pos st)))))))))))
+                                     (obj-name st) (obj-pos st)))))))))   
+    ;デバグ用.
+    (else (error (format "ERROR! ~a" st))))))
 
 
 
 
 
 ;テスト
-;(define p100 (open-input-file "kadai01.c"))
-;(port-count-lines! p100)
+(define p100 (open-input-file "test01.c"))
+(port-count-lines! p100)
 ;;(sem:sem-analyze-tree (k08:parse-port p100))
-;(analy-type (sem:sem-analyze-tree (k08:parse-port p100)))
+(analy-type (sem:sem-analyze-tree (k08:parse-port p100)))

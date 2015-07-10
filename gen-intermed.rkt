@@ -131,18 +131,45 @@
          temp3)))
     ((stx:alge_exp_st? st) 
      (let* ((op (stx:alge_exp_st-alge-ope st))
+            (op (cond ((equal? 'add op) '+)
+                      ((equal? 'sub op) '-)
+                      ((equal? 'mul op) '*)
+                      ((equal? 'div op) '/)))
             (op1 (stx:alge_exp_st-op1 st))
             (op2 (stx:alge_exp_st-op2 st))
             (temp1 (syn-to-inter op1))
             (temp2 (syn-to-inter op2))
-            (temp3 (make-temp)))
-       (begin
-         (set! intermed-code
-               (append 
-                intermed-code
-                (flatten (list (correct-let 
-                                (in:letstmt temp3 (in:aopexp op temp1 temp2)))))))
-         temp3)))
+            (temp3 (make-temp))
+            (op1-type (cond ((in:varexp? op1) (cond ((type_pointer? (obj-type (in:varexp-var op1))) 'int-pointer)
+                                                    (else 'int)))
+                            (else 'int)))
+            (op2-type (cond ((in:varexp? op2) (cond ((type_pointer? (obj-type (in:varexp-var op1))) 'int-pointer)
+                                                    (else 'int)))
+                            (else 'int))))
+       (cond ((and (equal? 'int-pointer op1-type) (equal? 'int op2-type)) 
+              (begin
+                (set! intermed-code
+                      (append 
+                       intermed-code
+                       (flatten (list (correct-let 
+                                       (in:letstmt temp3 (in:aopexp op temp1 (in:aopexp 'mul (in:intexp 4) temp2))))))))
+                temp3))
+             ((and (equal? 'int-pointer op2-type) (equal? 'int op1-type)) 
+              (begin
+                (set! intermed-code
+                      (append 
+                       intermed-code
+                       (flatten (list (correct-let 
+                                       (in:letstmt temp3 temp1 (in:aopexp op temp2 (in:aopexp 'mul (in:intexp 4)))))))))
+                temp3))
+             (else
+              (begin
+                (set! intermed-code
+                      (append 
+                       intermed-code
+                       (flatten (list (correct-let 
+                                       (in:letstmt temp3 (in:aopexp op temp1 temp2)))))))
+                temp3)))))
     ((stx:unary_exp_st? st) 
      (let* ((op (stx:unary_exp_st-mark st))
             (op1 (stx:unary_exp_st-op st)))

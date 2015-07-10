@@ -1,4 +1,6 @@
 #lang racket
+
+;一時変数の再使用、最適化の余地あり.
 (require parser-tools/lex
          (prefix-in : parser-tools/lex-sre)
          parser-tools/yacc)
@@ -13,16 +15,19 @@
 (define temp 0)
 (define temp-name 'temp0) 
 (define intermed-code (list '()))
+(define temp-decl (list '()))
 ;一時変数を作成する関数.
 ;引数無し
 ;返り値
 ;新しい一時変数名
 (define (make-temp)
   (let* ((new-temp (+ 1 temp))
-         (new-name (string->symbol (string-append "temp" (number->string temp)))))
+         (new-name (string->symbol (string-append "temp" (number->string temp))))
+         (new-obj (obj new-name 'temp 'temp 'temp 'temp)))
     (set! temp new-temp)
     (set! temp-name new-name)
-    (obj new-name 'temp 'temp 'temp 'temp)))
+    (set! temp-decl (flatten (append temp-decl (list (in:vardecl new-obj)))))
+    new-obj))
 
 (define (ref-temp)
   (obj temp-name 'temp 'temp 'temp 'temp))
@@ -43,8 +48,9 @@
 ;中間命令列
 
 (define (gen-intermed st) 
-  (let* ((out (flatten (map syn-to-inter st))))
-    (append (flatten intermed-code) out)))
+  (let* ((out (flatten (map syn-to-inter st)))
+         (temp-decl-space temp-decl))
+    (append temp-decl (append (flatten intermed-code) out))))
 
 ;引数
 ;抽象構文構造体

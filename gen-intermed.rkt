@@ -11,7 +11,8 @@
 (provide (all-defined-out))
 
 (define temp 0)
-(define temp-name 'temp0)
+(define temp-name 'temp0) 
+(define intermed-code (list '()))
 ;一時変数を作成する関数.
 ;引数無し
 ;返り値
@@ -40,20 +41,23 @@
 ;抽象構文木
 ;戻り値
 ;中間命令列
-(define (gen-intermed st) (flatten (map syn-to-inter st)))
+
+(define (gen-intermed st) 
+  (let* ((out (flatten (map syn-to-inter st))))
+    (append (flatten intermed-code) out)))
 
 ;引数
 ;抽象構文構造体
 ;戻り値
 ;中間命令構造体
-;constant_stの扱いは??
+;
 (define (syn-to-inter st) 
   (cond
     ((stx:declaration_st? st) 
      (let* (;declarator-listはobjのlistもしくはobj単体 
             (decl-ls (stx:declaration_st-declarator-list st)))
        (cond ((obj? decl-ls) (in:vardecl (decl-ls)))
-             ((list? decl-ls) (map (lambda (x) (in:vardecl x)) decl-ls))
+             ((list? decl-ls) (flatten (map (lambda (x) (in:vardecl x)) decl-ls)))
              (error (format "\n check syn-to-code! ~a\n" st)))))
     ((stx:func_def_st? st) (let* ((fun-dec (stx:func_def_st-func-declarator-st st))
                                   (fun-obj (stx:func_declarator_st-name fun-dec))
@@ -67,38 +71,44 @@
     ((stx:func_proto_st? st) '())
     ((stx:assign_exp_st? st) 
      (let* ((dest (stx:assign_exp_st-dest st))
-            (src (stx:assign_exp_st-src st)))
-       ;ここは(syn-to-inter dest)にする必要はないはず.
-       (correct-let (in:letstmt dest (syn-to-inter src)))))
+            (src (stx:assign_exp_st-src st))
+            (temp (make-temp)))
+       (cond ((stx:unary_exp_st? dest) (in:writestmt dest src))
+             ((stx:unary_exp_st? src) (in:readstmt dest src))
+             (else (in:letstmt dest (syn-to-inter src))))))
     ((stx:logic_exp_st? st) 
      (let* ((op (stx:logic_exp_st-log-ope st))
             (op1 (stx:logic_exp_st-op1 st))
             (op2 (stx:logic_exp_st-op2 st))
-            (temp1 (make-temp))
-            (temp2 (make-temp))
+            (temp1 (syn-to-inter op1))
+            (temp2 (syn-to-inter op2))
             (temp3 (make-temp)))
        (cond ((equal? 'or op)
-              (list (correct-let (in:letstmt temp1 (syn-to-inter op1)))
-                    (correct-let (in:letstmt temp2 (syn-to-inter op2)))
-                    (in:ifstmt temp1 
-                               (correct-let 
-                                (in:letstmt temp3 (in:intexp 1))) 
-                                (in:ifstmt temp2 
-                                           (in:intexp 1) 
-                                           (correct-let 
-                                            (in:letstmt temp3 (in:intexp 0)))))))
+              (begin
+                (set! 
+                 intermed-code
+                 (append 
+                  intermed-code 
+                  (flatten (list (in:ifstmt temp1 
+                                            (correct-let 
+                                             (in:letstmt temp3 (in:intexp 1))) 
+                                            (in:ifstmt temp2 
+                                                       (in:intexp 1) 
+                                                       (correct-let 
+                                                        (in:letstmt temp3 (in:intexp 0)))))))))
+                temp3))
              ((equal? 'and op)
-              (list (correct-let 
-                     (in:letstmt temp1 (syn-to-inter op1)))
-                    (correct-let 
-                     (in:letstmt temp2 (syn-to-inter op2)))
-                    (in:ifstmt temp1 
-                               (in:ifstmt temp2 
-                                          (correct-let 
-                                           (in:letstmt temp3 (in:intexp 1))) 
-                                          (correct-let (in:letstmt temp3 (in:intexp 0)))) 
-                               (correct-let 
-                                (in:letstmt temp3 (in:intexp 0)))))))))                              
+              (begin 
+                (set! intermed-code
+                      (append intermed-code
+                              (flatten (list (in:ifstmt temp1 
+                                                        (in:ifstmt temp2 
+                                                                   (correct-let 
+                                                                    (in:letstmt temp3 (in:intexp 1))) 
+                                                                   (correct-let (in:letstmt temp3 (in:intexp 0)))) 
+                                                        (correct-let 
+                                                         (in:letstmt temp3 (in:intexp 0))))))))
+                temp3)))))                              
     ((stx:rel_exp_st? st) 
      (let* ((op (stx:rel_exp_st-rel-ope st))
             (op (cond ((equal? 'not op) '!=)
@@ -109,74 +119,100 @@
                       ((equal? 'and_more op) '=<)))
             (op1 (stx:rel_exp_st-op1 st))
             (op2 (stx:rel_exp_st-op2 st))
-            (temp1 (make-temp))
-            (temp2 (make-temp))
+            (temp1 (syn-to-inter op1))
+            (temp2 (syn-to-inter op2))
             (temp3 (make-temp)))
-       (list (correct-let (in:letstmt temp1 (syn-to-inter op1)))
-             (correct-let (in:letstmt temp2 (syn-to-inter op2)))
-             (correct-let
-              (in:letstmt temp3 (in:relopexp op temp1 temp2))))))       
+       (begin
+         (set! intermed-code
+               (append 
+                intermed-code
+                (flatten (list (correct-let
+                                (in:letstmt temp3 (in:relopexp op temp1 temp2)))))))
+         temp3)))
     ((stx:alge_exp_st? st) 
      (let* ((op (stx:alge_exp_st-alge-ope st))
             (op1 (stx:alge_exp_st-op1 st))
             (op2 (stx:alge_exp_st-op2 st))
-            (temp1 (make-temp))
-            (temp2 (make-temp))
+            (temp1 (syn-to-inter op1))
+            (temp2 (syn-to-inter op2))
             (temp3 (make-temp)))
-       (list (correct-let (in:letstmt temp1 (syn-to-inter op1)))
-             (correct-let (in:letstmt temp2 (syn-to-inter op2)))
-             (correct-let 
-              (in:letstmt temp3 (in:aopexp op temp1 temp2))))))
-    ((stx:unary_exp_st? st) '())
+       (begin
+         (set! intermed-code
+               (append 
+                intermed-code
+                (flatten (list (correct-let 
+                                (in:letstmt temp3 (in:aopexp op temp1 temp2)))))))
+         temp3)))
+    ((stx:unary_exp_st? st) 
+     (let* ((op (stx:unary_exp_st-mark st))
+            (op1 (stx:unary_exp_st-op st)))
+       (cond ((equal? 'amp op) (in:addrexp op1))
+             (else st))))
     ((stx:constant_st? st) 
      (let* ((num (stx:constant_st-cons st))
             (temp (make-temp)))
-       (correct-let 
-        (in:letstmt temp (in:intexp num)))))
-    ((stx:null_statement_st? st) (in:emptystmt))
+       (begin
+       (set! intermed-code
+             (append 
+              intermed-code
+              (flatten (list (correct-let 
+                              (in:letstmt temp (in:intexp num)))))))
+       temp)))
+    ((stx:null_statement_st? st) 
+     (begin
+     (set! intermed-code (append intermed-code (flatten (list (in:emptystmt)))))
+     '()))
     ((stx:exp_in_paren_st? st) (syn-to-inter (stx:exp_in_paren_st-exp st)))
     ((stx:if_else_st? st) 
      (let* ((var (stx:if_else_st-cond-exp st))
             (stmt1 (stx:if_else_st-state st))
             (stmt2 (stx:if_else_st-else-state st))
             (temp (make-temp)))
-       (list (syn-to-inter var)
-             (in:ifstmt (ref-temp) 
-                        (syn-to-inter stmt1)
-                        (syn-to-inter stmt2)))))
-    ((stx:while_st? st) 
-     (let* ((var (stx:while_st-cond-exp st))
+       (in:ifstmt (syn-to-inter var) 
+                  (syn-to-inter stmt1)
+                  (syn-to-inter stmt2))))
+       ((stx:while_st? st) 
+        (let* ((var (stx:while_st-cond-exp st))
             (stmt (stx:while_st-statement st))
             (temp (make-temp)))
-       (list (syn-to-inter var)
-             (in:whilestmt (ref-temp) (syn-to-inter stmt)))))
+          (in:whilestmt (syn-to-inter var) (syn-to-inter stmt))))
     ((stx:sem_return_st? st) 
      (let* ((ret (stx:sem_return_st-exp st))
             (temp (make-temp)))
-       (list (correct-let 
-              (in:letstmt temp (syn-to-inter ret)))
-             (in:returnstmt temp))))
+       (in:returnstmt (syn-to-inter ret))))
     ((stx:compound_st? st) 
      (let* ((decls (stx:compound_st-declaration-list st))
             (stmts (stx:compound_st-statement-list st)))
        (in:compdstmt (cond ((equal? 'nodecl decls) '())
-                           (else (syn-to-inter decls)))
+                           (else (flatten (map syn-to-inter decls))))
                      (cond ((equal? 'nostat stmts) '())
-                           (else (syn-to-inter stmts))))))           
+                           (else (flatten (map syn-to-inter stmts)))))))           
     ((stx:func_st? st) 
-     (let* ((vars (stx:func_st-para st))
-            (f (obj-name (stx:func_st-name st)))
-            (temp (make-temp)))
-       (correct-let (in:letstmt temp (in:callstmt temp f vars)))))
-    ((list? st) (flatten (map syn-to-inter st)))
+     (let* ((vars (flatten (stx:func_st-para st)));varsは図べて一旦変数に格納してそれを関数呼び出しに入れる.
+            (f (stx:func_st-name st))
+            (temp (make-temp))
+            (let-var (map (lambda (x) (correct-let (in:letstmt (make-temp) x))) vars)))
+       (begin 
+         (set! 
+          intermed-code
+          (append 
+           intermed-code
+           (flatten (list
+                     let-var
+                     (correct-let 
+                      (in:letstmt temp 
+                                  (in:callstmt temp 
+                                               f 
+                                               (map (lambda (x) (in:letstmt-var x)) let-var))))))))
+         temp)))
     ((obj? st) (in:varexp st))
     (else (error (format "\n check syn-to-code! ~a\n" st)))))
 
 
 
 ;テスト
-(define p (open-input-file "test01.c"))
+(define p (open-input-file "test03.c"))
 (port-count-lines! p)
 (display 
  (format "\n\n;;;;;;;;;;;;;;;;;;;;;;;;;;;以下が中間命令生成の実行結果です;;;;;;;;;;;;;;;;;;;;;;;;.\n"))
-;(gen-intermed (sem-analyze-tree (k08:parse-port p)))
+(gen-intermed (sem-analyze-tree (k08:parse-port p)))

@@ -357,7 +357,7 @@
          st)
         ((stx:assign_exp_st? st) 
          (stx:assign_exp_st (analy-compstate (stx:assign_exp_st-dest st) lev env func-tag)
-                            (analy-compstate(stx:assign_exp_st-src st) lev env func-tag)
+                            (analy-compstate (stx:assign_exp_st-src st) lev env func-tag)
                             (stx:assign_exp_st-pos st)))
         ((stx:logic_exp_st? st) 
          (stx:logic_exp_st (stx:logic_exp_st-log-ope st) 
@@ -408,8 +408,7 @@
          (stx:exp_with_semi_st 
           (analy-compstate (stx:exp_with_semi_st-exp st) lev env func-tag)))
         ((stx:exp_in_paren_st? st) 
-         (stx:exp_in_paren_st 
-          (analy-compstate (stx:exp_in_paren_st-exp st) lev env func-tag)))
+          (analy-compstate (stx:exp_in_paren_st-exp st) lev env func-tag))
         ((stx:if_else_st? st) 
          (stx:if_else_st 
           (analy-compstate (stx:if_else_st-cond-exp st) lev env func-tag)   
@@ -436,9 +435,10 @@
         ((stx:func_st? st) 
          (stx:func_st (check-func-ref st lev env) 
                       (cond ((equal? 'nopara (stx:func_st-para st)) 'nopara)
-                            (else (map (lambda (x) 
-                                         (analy-compstate x lev env func-tag))
-                                       (flatten (stx:func_st-para st)))))))
+                            (else (flatten 
+                                   (map (lambda (x) 
+                                          (analy-compstate x lev env func-tag))
+                                        (flatten (stx:func_st-para st))))))))
         ((or (stx:id_st? st)     
              (stx:id_ast_st? st)
              (stx:array_var_st? st))
@@ -470,7 +470,7 @@
 
 
 ;テスト
-(begin
+#;(begin
     (define p101 (open-input-file "test01.c"))
     (port-count-lines! p101)
     (sem-analyze-tree (k08:parse-port p101)))

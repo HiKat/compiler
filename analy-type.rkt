@@ -255,7 +255,7 @@
                                          (cond ((equal? 'mul ope) '*)
                                                ((equal? 'div ope) '/))
                                          pos)))))
-             ;デバグ用.（本来はどんなプログラムを書いてもこの分岐には入らないはず.）
+             ;デバグ用.(本来はどんなプログラムを書いてもこの分岐には入らないはず.)
              (else (error "ERROR NOT WELL TYPED" st)))))
     ((stx:unary_exp_st? st) 
      (let* ((mark (stx:unary_exp_st-mark st))

@@ -440,14 +440,27 @@
                                           (analy-compstate x lev env func-tag))
                                         (flatten (stx:func_st-para st))))))))
         ((or (stx:id_st? st)     
-             (stx:id_ast_st? st)
-             (stx:array_var_st? st))
+             (stx:id_ast_st? st))
          ;stはid_stもしくはid_ast_st
          ;levはcompound-statementのレベル
          ;envは大域環境(objのlist)
          (check-var-ref st lev 
                         (append (cond ((equal? 'nopara para-env) '()) 
                                       (else para-env)) env)))
+        ((stx:array_var_st? st)
+         (cond ((number? (stx:array_var_st-num st))
+                ;stはid_stもしくはid_ast_st
+                ;levはcompound-statementのレベル
+                ;envは大域環境(objのlist)
+                (check-var-ref st lev 
+                               (append (cond ((equal? 'nopara para-env) '()) 
+                                             (else para-env)) env)))
+               (else (let* ((original-name (stx:array_var_st-name st))
+                            (original-pos (stx:array_var_st-pos st))
+                            (new-num (analy-compstate (stx:array_var_st-num st) lev env func-tag)))
+                       (check-var-ref (stx:array_var_st original-name new-num original-pos) lev 
+                               (append (cond ((equal? 'nopara para-env) '()) 
+                                             (else para-env)) env))))))
         ((cons? st) (flatten (list (car st) (cdr st))))
         ;デバグ用.（本来はどんなプログラムを書いてもこの分岐には入らないはず.）
         (else (error "AN UNEXPECTED STRUCTURE! CONDITION ERROR IN ANALY-COMPSTATE FOR" st))

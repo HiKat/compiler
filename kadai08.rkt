@@ -170,7 +170,8 @@
                   $3
                   (stx:while_st $5 
                                 (stx:compound_sta_st (cons $9 $7)) 
-                                'syntax-sugar))))     
+                                'syntax-sugar)))
+                )     
                ((for l_small_paren            
                   semicolon expression 
                   semicolon expression 
@@ -339,7 +340,7 @@
 (define (parse-port p)
   (program-parser (lambda () (sub-program-lexer p))))
 #;(begin
-  (define p9999 (open-input-file "test01.c"))
+  (define p9999 (open-input-file "test03.c"))
   (port-count-lines! p9999)
   (parse-port p9999))
 

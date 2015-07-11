@@ -14,7 +14,7 @@
 
 (define temp 0)
 ;(define temp-name 'temp0) 
-(define intermed-code (list '()))
+;(define intermed-code (list '()))
 (define temp-decl (list '()))
 (define intermed-decllist (list '()))
 (define int-load '())
@@ -23,7 +23,7 @@
 ;返り値
 ;新しい一時変数名
 ;一時変数の宣言文を局所的に行う場合
-(define (make-temp)
+(define (make-temp intermed-code)
   (let* ((new-temp (+ 1 temp))
          (new-name (string->symbol (string-append "temp" (number->string temp))))
          (new-obj (obj new-name 'temp 'temp 'temp 'temp)))
@@ -60,25 +60,24 @@
 ;中間命令列
 
 (define (gen-intermed st) 
-  (let* ((out (map syn-to-inter st))
+  (let* ((out (map syn-to-inter-decl-func st))
          (temp-decl-space temp-decl))
-    (flatten (list int-load temp-decl-space out))))
+    (flatten (list temp-decl-space out))))
 
 ;引数
 ;抽象構文構造体
 ;戻り値
 ;中間命令構造体
 ;
-(define (syn-to-inter st) 
+(define (syn-to-inter-decl-func st) 
   (cond
     ((stx:declaration_st? st) 
      (let* (;declarator-listはobjのlistもしくはobj単体 
-            (decl-ls (stx:declaration_st-declarator-list st))
-            (meaningless (set! intermed-code '())))
+            (decl-ls (stx:declaration_st-declarator-list st)))
        (cond ((obj? decl-ls) 
               (in:vardecl (decl-ls)))
              ((list? decl-ls) 
-              (flatten (append intermed-code (map (lambda (x) (in:vardecl x)) decl-ls))))
+              (flatten (append temp-decl (map (lambda (x) (in:vardecl x)) decl-ls))))
              (error (format "\n check syn-to-code! ~a\n" st)))))
     ((stx:func_def_st? st) (let* ((fun-dec (stx:func_def_st-func-declarator-st st))
                                   (fun-obj (stx:func_declarator_st-name fun-dec))
@@ -88,29 +87,33 @@
                              (in:fundef fun-obj 
                                         (cond ((equal? 'nopara fun-para-list) '())
                                               (else (map (lambda (x) (in:vardecl x)) fun-para-list)))
-                                        (syn-to-inter fun-body)))) 
+                                        (syn-to-inter fun-body '()))))
     ((stx:func_proto_st? st) '())
+    (else (error st))))
+
+(define (syn-to-inter st intermed-code) 
+  (cond
     ((stx:assign_exp_st? st) 
      (let* ((dest (stx:assign_exp_st-dest st))
             (src (stx:assign_exp_st-src st)))
        (begin
-         #;(set! intermed-code 
+         (set! intermed-code 
                (append intermed-code
                        (list (cond ((stx:unary_exp_st? dest) (in:writestmt dest src))
                                    ((stx:unary_exp_st? src) (in:readstmt dest src))
                                    (else (in:letstmt dest (syn-to-inter src)))))))
-         (cond ((stx:unary_exp_st? dest) (in:writestmt (syn-to-inter dest) src))
+         #;(cond ((stx:unary_exp_st? dest) (in:writestmt (syn-to-inter dest) src))
                ((stx:unary_exp_st? src) (in:readstmt (syn-to-inter dest) src))
-               (else (in:letstmt (syn-to-inter dest) (syn-to-inter src)))))
-         ;dest
-         ))
-    ((stx:logic_exp_st? st) 
+               (else (in:letstmt (syn-to-inter dest) (syn-to-inter src))))
+         dest
+         )))
+    ((stx:logic_exp_st? st)
      (let* ((op (stx:logic_exp_st-log-ope st))
             (op1 (stx:logic_exp_st-op1 st))
             (op2 (stx:logic_exp_st-op2 st))
             (temp1 (syn-to-inter op1))
             (temp2 (syn-to-inter op2))
-            (temp3 (syn-to-inter (make-temp))))
+            (temp3 (syn-to-inter (make-temp intermed-code))))
        (cond ((equal? 'or op)
               (begin
                 (set! 
@@ -149,7 +152,7 @@
             (op2 (stx:rel_exp_st-op2 st))
             (temp1 (syn-to-inter op1))
             (temp2 (syn-to-inter op2))
-            (temp3 (syn-to-inter (make-temp))))
+            (temp3 (syn-to-inter (make-temp intermed-code))))
        (begin
          (set! intermed-code
                (append 
@@ -167,7 +170,7 @@
             (op2 (stx:alge_exp_st-op2 st))
             (temp1 (syn-to-inter op1))
             (temp2 (syn-to-inter op2))
-            (temp3 (syn-to-inter (make-temp)))
+            (temp3 (syn-to-inter (make-temp intermed-code)))
             (op1-type (cond ((in:varexp? op1) (cond ((type_pointer? (obj-type (in:varexp-var op1))) 'int-pointer)
                                                     (else 'int)))
                             (else 'int)))
@@ -205,13 +208,12 @@
              (else st))))
     ((stx:constant_st? st) 
      (let* ((num (stx:constant_st-cons st))
-            (temp (syn-to-inter (make-temp))))
+            (temp (syn-to-inter (make-temp intermed-code))))
        (begin
        (set! intermed-code
              (append 
               intermed-code
-              (flatten (list  
-                              (in:letstmt temp (in:intexp num))))))
+              (flatten (list (in:letstmt temp (in:intexp num))))))
        temp)))
     ((stx:null_statement_st? st) 
      (begin
@@ -222,39 +224,48 @@
      (let* ((var (stx:if_else_st-cond-exp st))
             (stmt1 (syn-to-inter (stx:if_else_st-state st)))
             (stmt2 (syn-to-inter (stx:if_else_st-else-state st))))
-       (in:ifstmt (syn-to-inter var) 
-                  stmt1
-                  stmt2)))
+       (begin
+         (set! intermed-code (flatten (append 
+                                       intermed-code 
+                                       (list (in:ifstmt (syn-to-inter var) 
+                                                        stmt1
+                                                        stmt2)))))
+         '())))
     ((stx:while_st? st) 
      (let* ((var (stx:while_st-cond-exp st))
             ;(meanignless (set! intermed-code '()))
             (stmt (syn-to-inter (stx:while_st-statement st)))
             ;(stmt-intermed intermed-code)
             )
-       (in:whilestmt (syn-to-inter var) stmt)))
+       (begin
+         (set! intermed-code (flatten (append 
+                                       intermed-code 
+                                       (list (in:whilestmt (syn-to-inter var) stmt)))))
+         '())))
     ((stx:sem_return_st? st) 
      (let* ((ret (stx:sem_return_st-exp st)))
-       (in:returnstmt (syn-to-inter ret))))
+       (begin
+         (set! intermed-code (flatten (append
+                                       intermed-code 
+                                       (list (in:returnstmt (syn-to-inter ret))))))
+         '())))
     ((stx:compound_st? st) 
      (let* ((decls (stx:compound_st-declaration-list st))
             (stmts (stx:compound_st-statement-list st))
-            (original-intermed intermed-code)
             ;中間命令のスタックの初期化
-            (meaningless (set! intermed-code '()))
+            (intermed-code '())
              ;一時変数作成のcounterの初期化
             (meaningless (set! temp 0))
             (decl (cond ((equal? 'nodecl decls) '())
-                        (else (flatten (map syn-to-inter decls)))))
+                        (else (flatten (map (lambda (x) (syn-to-inter x intermed-code)) decls)))))
             (stmt (cond ((equal? 'nostat stmts) '())
-                           (else (flatten (map syn-to-inter stmts)))))
-            (stmt-intermed intermed-code)
-            (meaningless (set! intermed-code original-intermed)))
-       (in:compdstmt decl (flatten (append stmt-intermed stmt)))))          
+                           (else (flatten (map (lambda (x) (syn-to-inter x intermed-code)) stmts))))))
+       (in:compdstmt decl (flatten (append intermed-code stmt)))))          
     ((stx:func_st? st) 
      (let* ((vars (flatten (stx:func_st-para st)));varsは図べて一旦変数に格納してそれを関数呼び出しに入れる.
             (f (stx:func_st-name st))
-            (temp (syn-to-inter (make-temp)))
-            (let-var (map (lambda (x) (correct-let (in:letstmt (make-temp) x))) vars)))
+            (temp (syn-to-inter (make-temp intermed-code)))
+            (let-var (map (lambda (x) (correct-let (in:letstmt (make-temp intermed-code) x))) vars)))
        (begin 
          (set! 
           intermed-code

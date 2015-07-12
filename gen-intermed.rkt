@@ -29,20 +29,10 @@
          (new-obj (obj new-name 'temp 'temp 'temp 'temp)))
     (set! temp new-temp)
     ;(set! temp-name new-name)
-    (set! intermed-code (flatten (append intermed-code (list (in:vardecl new-obj)))))
-    new-obj))
-
-#;(define (make-temp)
-  (let* ((new-temp (+ 1 temp))
-         (new-name (string->symbol (string-append "temp" (number->string temp))))
-         (new-obj (obj new-name 'temp 'temp 'temp 'temp)))
-    (set! temp new-temp)
-    (set! temp-name new-name)
+    ;(set! intermed-code (flatten (append intermed-code (list (in:vardecl new-obj)))))
     (set! temp-decl (flatten (append temp-decl (list (in:vardecl new-obj)))))
     new-obj))
 
-#;(define (ref-temp)
-  (obj temp-name 'temp 'temp 'temp 'temp))
 
 ;代入する際に冗長な表現を削除する関数.
 ;引数はletstmt
@@ -240,18 +230,23 @@
             (stmts (stx:compound_st-statement-list st))
             (original-intermed intermed-code)
             (original-temp temp)
+            (original-temp-decl temp-decl)
             ;中間命令のスタックの初期化
             (meaningless (set! intermed-code '()))
              ;一時変数作成のcounterの初期化
             (meaningless (set! temp 0))
+            ;一時変数宣言のスタックを初期化
+            (meaningless (set! temp-decl (list '())))
             (decl (cond ((equal? 'nodecl decls) '())
                         (else (flatten (map syn-to-inter decls)))))
             (stmt (cond ((equal? 'nostat stmts) '())
                            (else (flatten (map syn-to-inter stmts)))))
             (stmt-intermed intermed-code)
+            (stmt-temp-decl temp-decl)
             (meaningless (set! intermed-code original-intermed))
-            (meaningless (set! temp original-temp)))
-       (in:compdstmt decl (flatten (append stmt-intermed stmt)))))          
+            (meaningless (set! temp original-temp))
+            (meaningless (set! temp-decl original-temp-decl)))
+       (in:compdstmt (flatten (append decl stmt-temp-decl)) (flatten (append stmt-intermed stmt)))))          
     ((stx:func_st? st) 
      (let* ((vars (flatten (stx:func_st-para st)));varsは図べて一旦変数に格納してそれを関数呼び出しに入れる.
             (f (stx:func_st-name st))

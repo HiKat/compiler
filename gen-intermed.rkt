@@ -239,6 +239,7 @@
      (let* ((decls (stx:compound_st-declaration-list st))
             (stmts (stx:compound_st-statement-list st))
             (original-intermed intermed-code)
+            (original-temp temp)
             ;中間命令のスタックの初期化
             (meaningless (set! intermed-code '()))
              ;一時変数作成のcounterの初期化
@@ -248,13 +249,14 @@
             (stmt (cond ((equal? 'nostat stmts) '())
                            (else (flatten (map syn-to-inter stmts)))))
             (stmt-intermed intermed-code)
-            (meaningless (set! intermed-code original-intermed)))
+            (meaningless (set! intermed-code original-intermed))
+            (meaningless (set! temp original-temp)))
        (in:compdstmt decl (flatten (append stmt-intermed stmt)))))          
     ((stx:func_st? st) 
      (let* ((vars (flatten (stx:func_st-para st)));varsは図べて一旦変数に格納してそれを関数呼び出しに入れる.
             (f (stx:func_st-name st))
             (temp (syn-to-inter (make-temp)))
-            (let-var (map (lambda (x) (correct-let (in:letstmt (make-temp) x))) vars)))
+            (let-var (map (lambda (x) (correct-let (in:letstmt (make-temp) (syn-to-inter x)))) vars)))
        (begin 
          (set! 
           intermed-code
@@ -268,13 +270,26 @@
                                                f 
                                                (map (lambda (x) (in:letstmt-var x)) let-var))))))))
          temp)))
-    ((obj? st) (in:varexp st))
+    ((obj? st) (cond ((type_array? (obj-type st))
+                      (let* ((name (obj-name st))
+                             (lev (obj-lev st))
+                             (kind (obj-kind st))
+                             (array-type (type_array-type (obj-type st)))
+                             (array-size (type_array-size (obj-type st)))
+                             (pos (obj-pos st)))
+                        (obj name lev kind (type_array array-type (syn-to-inter array-size)) pos))
+                      ;(error "ERROR")
+                      )
+                     (else 
+                      (in:varexp st)
+                      ;(error "ERROR")
+                      )))
     (else (error (format "\n check syn-to-code! ~a\n" st)))))
 
 
 
 ;テスト
-(define p (open-input-file "test03.c"))
+(define p (open-input-file "test01.c"))
 (port-count-lines! p)
 (display 
  (format "\n\n;;;;;;;;;;;;;;;;;;;;;;;;;;;以下が中間命令生成の実行結果です;;;;;;;;;;;;;;;;;;;;;;;;.\n"))

@@ -283,9 +283,52 @@
 
 
 
+;引数は
+;中間命令文の構造体
+;compdstmt外側での一時変数の宣言
+(define (optimize-cmpd st outer-temp-decls)
+  (cond ((in:compdstmt? st)
+         (let* ((decls (in:compdstmt-decls st))
+                (stmts (in:compdstmt-stmts st))
+                (temp-decls 
+                 (filter (lambda (x) (equal? 'temp (obj-type (in:vardecl-var x)))) decls))
+                (new-var-decls (remove* temp-decls decls))
+                (new-temp-decls 
+                 ;declsのうちでouter-declに含まれないもの
+                 ;本当はdeclsのうち一時変数とプログラム中での宣言を区別して、
+                 ;前者は全て残し、後者は最適化する必要がある.
+                 (remove* outer-temp-decls temp-decls))
+                (new-outer-decls (flatten (append (list outer-temp-decls) (list new-temp-decls)))))
+           (in:compdstmt (flatten (append (list new-var-decls) (list new-temp-decls)))
+                         (flatten (map (lambda (x) (optimize-cmpd x new-outer-decls)) stmts)))))
+        ((in:ifstmt? st)
+         (let* ((var (in:ifstmt-var st))
+                (stmt1 (in:ifstmt-stmt1 st))
+                (stmt2 (in:ifstmt-stmt2 st)))
+           (in:ifstmt var 
+                      (optimize-cmpd stmt1 outer-temp-decls) 
+                      (optimize-cmpd stmt2 outer-temp-decls))))
+        ((in:whilestmt? st)
+         (let* ((var (in:whilestmt-var st))
+                (stmt (in:whilestmt-stmt st)))
+           (in:whilestmt var (optimize-cmpd stmt outer-temp-decls))))
+        (else st)))
+
+(define (optimize-intermed intermed)
+  (map (lambda (x) (cond ((in:fundef? x) 
+                          (let* ((var (in:fundef-var x))
+                                 (parms (in:fundef-parms x))
+                                 (body (optimize-cmpd (in:fundef-body x) '())))
+                            (in:fundef var parms body)))
+                         (else x)))
+       intermed))
+
+(define (gen-optimized-intermed tree)
+  (optimize-intermed (gen-intermed tree)))
+
 ;テスト
 (define p (open-input-file "test01.c"))
 (port-count-lines! p)
 (display 
  (format "\n\n;;;;;;;;;;;;;;;;;;;;;;;;;;;以下が中間命令生成の実行結果です;;;;;;;;;;;;;;;;;;;;;;;;.\n"))
-(gen-intermed (sem-analyze-tree (k08:parse-port p)))
+(gen-optimized-intermed (sem-analyze-tree (k08:parse-port p)))

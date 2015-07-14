@@ -11,7 +11,11 @@
 (require "gen-intermed.rkt")
 (provide (all-defined-out))
 
+;spの位置
 (define sp 0)
+;関数内で作成されたオフセットとobjの対応.
+(define fun-stack '())
+
 
 ;オフセットを追加したdecl構造体obj-off
 (struct obj-off (name lev kind type pos off) #:transparent)
@@ -21,8 +25,10 @@
          (lev (obj-lev ob))
          (kind (obj-kind ob))
          (type (obj-type ob))
-         (pos (obj-pos ob)))
-    (obj-off name lev kind type pos off)))
+         (pos (obj-pos ob))
+         (new-obj-off (obj-off name lev kind type pos off)))
+    (set! fun-stack (flatten (append fun-stack (list new-obj-off))))
+    new-obj-off))
 
 ;引数
 ;vardeclのlist
@@ -63,7 +69,8 @@
 ;アドレス割り当てを行ったあとのin:fundef
 (define (sub-assign-add-intermed st)
   (cond ((in:fundef? st)
-         (let* ((def-obj (in:fundef-var st))
+         (let* ((meaningless (set! fun-stack '()))
+                (def-obj (in:fundef-var st))
                 ;vardeclのlist
                 (vardecl-list (in:fundef-parms st))
                 (meaningless (set! sp 0))
@@ -74,6 +81,7 @@
                       convert-vardecl
                       (assign-add-cmpd body sp))))
         (else st)))
+
 (define (assign-add-intermed in)
   (map sub-assign-add-intermed in))
 
@@ -105,10 +113,114 @@
         ))
 
 
+;引数
+;obj
+;戻り値
+;off-obj
+;objを受け取ってdef-stackの中から対応するobj-offを返す関数
+;大域変数の場合はそのままobjを返す.
+(define (ref-obj ob)
+  (let* ((name (obj-name ob))
+         (lev (obj-lev ob))
+         (kind (obj-kind ob))
+         (type (obj-type ob))
+         ;flagにはobjが配列型のとき1が入る.
+         (flag (cond ((type_array? type) 1)
+                     (else 0)))
+         (pos (obj-pos ob)))
+    (cond ((equal? 0 lev) ob)
+          (else (flatten (list (filter (lambda (x)
+                                         (and (equal? name (obj-off-name x))
+                                              (equal? lev (obj-off-lev x))
+                                              (equal? kind (obj-off-kind x))
+                                              ;配列型の際は参照してくるアドレスを工夫する必要がある.
+                                              (cond ((equal? 1 flag) #t)
+                                                    (else (equal? type (obj-off-type x))))
+                                              (equal? pos (obj-off-pos x))))
+                                       fun-stack)))))))
+                                       
+;引数
+;中間命令文
+;戻り値
+;varexp内のobjにオフセットを付加した中間命令文を返す.
+(define (ref-add i)
+  (cond ((obj? i) (ref-obj i))
+        ((in:compdstmt? i)
+         (let* ((decls (in:compdstmt-decls i))
+                (stmts (in:compdstmt-stmts i)))
+           (in:compdstmt decls 
+                         (map ref-add stmts))))
+        ((in:emptystmt? i) i)
+        ((in:letstmt? i) 
+         (let* ((var (in:letstmt-var i))
+                (exp (in:letstmt-exp i)))
+           (in:letstmt (ref-add var) (ref-add exp))))
+        ((in:writestmt? i)
+         (let* ((dest (in:writestmt-dest i))
+                (src (in:writestmt-src i)))
+           (in:writestmt (ref-add dest) (ref-add src))))
+        ((in:readstmt? i)
+         (let* ((dest (in:readstmt-dest i))
+                (src (in:readstmt-src i)))
+           (in:readstmt (ref-add dest) (ref-add src))))
+        ((in:ifstmt? i)
+         (let* ((var (in:ifstmt-var i))
+                (stmt1 (in:ifstmt-stmt1 i))
+                (stmt2 (in:ifstmt-stmt2 i)))
+           (in:ifstmt (ref-add var) (ref-add stmt1) (ref-add stmt2))))
+        ((in:whilestmt? i)
+         (let* ((var (in:whilestmt-var i))
+                (stmt (in:whilestmt-stmt i)))
+           (in:whilestmt (ref-add var) (ref-add stmt))))
+        ((in:callstmt? i)
+         (let* ((dest (in:callstmt-dest i))
+                 (f (in:callstmt-f i))
+                 (vars (in:callstmt-vars i)))
+           (in:callstmt (ref-add dest) f (map ref-add vars))))
+        ((in:returnstmt? i)
+         (let* ((var (in:returnstmt-var i)))
+           (in:returnstmt (ref-add var))))
+        ((in:printstmt? i)
+         (let* ((var (in:printstmt-var i)))
+           (in:printstmt (ref-add var))))
+        ((in:varexp? i)
+         (let* ((var (in:varexp-var i)))
+           (in:varexp (ref-add var))))
+        ((in:intexp i) i)
+        ((in:aopexp? i)
+         (let* ((op (in:aopexp-op i))
+                (var1 (in:aopexp-var1 i))
+                (var2 (in:aopexp-var2 i)))
+           (in:aopexp op (ref-add var1) (ref-add var2))))
+        ((in:relopexp? i)
+         (let* ((op (in:relopexp-op i))
+                (var1 (in:relopexp-var1 i))
+                (var2 (in:relopexp-var2 i)))
+           (in:relopexp op (ref-add var1) (ref-add var2))))
+        ((in:addrexp? i)
+         (let* ((var (in:addrexp-var i)))
+           (in:addrexp (ref-add var))))
+        (else (error i))))
+
+;varexpが出現するのはfundef内部のin:compdstmt内のみ
+(define (ref-add-intermed i)
+  (map (lambda (x) 
+         (cond ((in:fundef? x) 
+                (let* ((var (in:fundef-var x))
+                       (parms (in:fundef-parms x))
+                       (body (in:fundef-body x)))
+                  (in:fundef var parms (ref-add body))))
+               (else x)))
+       i))
+         
+                                   
+
+
 
 ;テスト
 (define test-ass (open-input-file "test01.c"))
 (port-count-lines! test-ass)
 (display 
  (format "\n\n;;;;;;;;;;;;;;;;;;;;;;;;;;;以下が相対番地割り当ての実行結果です;;;;;;;;;;;;;;;;;;;;;;;;.\n"))
-(assign-add-intermed (gen-optimized-intermed (sem-analyze-tree (k08:parse-port test-ass))))
+(ref-add-intermed 
+ (assign-add-intermed (gen-optimized-intermed (sem-analyze-tree (k08:parse-port test-ass)))))

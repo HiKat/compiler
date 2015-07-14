@@ -32,10 +32,14 @@
 ;offsetを加えたvardeclのlist
 (define (convert-iter i j vardecl-list)
   (cond ((equal? '() vardecl-list)  '())
-        (else (flatten 
+        (else 
+         (let* ((car-convert (list (in:vardecl (convert-obj (in:vardecl-var (car vardecl-list)) i)))))
+           (set! sp (+ j i))
+           (flatten 
                (append 
-                (list (in:vardecl (convert-obj (in:vardecl-var (car vardecl-list)) i)))
-                (list (convert-iter (+ j i) j (cdr vardecl-list))))))))
+                car-convert
+                ;(list (convert-iter (+ j i) j (cdr vardecl-list)))
+                (list (convert-iter sp j (cdr vardecl-list)))))))))
 ;引数
 ;プログラムを中間命令文に変換したもの
 ;戻り値
@@ -45,10 +49,12 @@
          (let* ((def-obj (in:fundef-var st))
                 ;vardeclのlist
                 (vardecl-list (in:fundef-parms st))
+                (meaningless (set! sp 0))
+                (convert-vardecl (convert-iter 4 4 vardecl-list))
+                (meaningless (set! sp 0))
                 (body (in:fundef-body st)))
-           (set! sp 0)
            (in:fundef def-obj 
-                      (convert-iter 4 4 vardecl-list) 
+                      convert-vardecl
                       (assign-add-cmpd body sp))))
         (else st)))
 (define (assign-add-intermed in)
@@ -63,7 +69,7 @@
   (cond ((in:compdstmt? st)
          (let* ((decls (in:compdstmt-decls st))
                 (stmts (in:compdstmt-stmts st)))
-           (set! sp (+ sp (* -4 (length decls))))
+           ;(set! sp (+ sp (* -4 (length decls))))
            (in:compdstmt 
             (convert-iter i -4 decls) 
             (map (lambda (x) (assign-add-cmpd x sp)) stmts))))

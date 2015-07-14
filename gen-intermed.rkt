@@ -327,8 +327,10 @@
   (optimize-intermed (gen-intermed tree)))
 
 ;テスト
+#;(begin
 (define p (open-input-file "test01.c"))
 (port-count-lines! p)
 (display 
  (format "\n\n;;;;;;;;;;;;;;;;;;;;;;;;;;;以下が中間命令生成の実行結果です;;;;;;;;;;;;;;;;;;;;;;;;.\n"))
 (gen-optimized-intermed (sem-analyze-tree (k08:parse-port p)))
+)

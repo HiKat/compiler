@@ -27,19 +27,36 @@
 ;引数
 ;vardeclのlist
 ;iはスタートの位置
-;jは次の位置との差
+;jは次の位置との差(基本的には4)
 ;戻り値
 ;offsetを加えたvardeclのlist
 (define (convert-iter i j vardecl-list)
   (cond ((equal? '() vardecl-list)  '())
         (else 
-         (let* ((car-convert (list (in:vardecl (convert-obj (in:vardecl-var (car vardecl-list)) i)))))
-           (set! sp (+ j i))
+         (let* ((ob (in:vardecl-var (car vardecl-list)))
+                ;flagは取り出したobjが配列型であるとき1が入る.
+                (flag (cond ((type_array? (obj-type ob)) 1)
+                            (else 0)))
+                ;car-convertはvardeclからなるlistの先頭のみをにオフセットを付加したもの.
+                (car-convert (cond ((equal? 1 flag) 
+                                    (list (in:vardecl 
+                                           (convert-obj 
+                                            ob 
+                                            (+ i 
+                                               (* j
+                                                  (- (type_array-size (obj-type ob)) 
+                                                     1)))))))
+                                   ((equal? 0 flag)
+                                    (list (in:vardecl (convert-obj ob i)))))))
+           (cond ((equal? 0 flag) (set! sp (+ j i)))
+                 ((equal? 1 flag) (set! sp (+ j (+ i 
+                                                   (* j
+                                                      (- (type_array-size (obj-type ob)) 
+                                                         1)))))))
            (flatten 
-               (append 
-                car-convert
-                ;(list (convert-iter (+ j i) j (cdr vardecl-list)))
-                (list (convert-iter sp j (cdr vardecl-list)))))))))
+            (append 
+             car-convert
+             (list (convert-iter sp j (cdr vardecl-list)))))))))
 ;引数
 ;プログラムを中間命令文に変換したもの
 ;戻り値

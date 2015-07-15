@@ -14,7 +14,12 @@
 ;spの位置
 (define sp 0)
 ;関数内で作成されたオフセットとobjの対応.
-(define fun-stack '())
+(define temp-stack '())
+;構造体fun-stack内のfunは関数のobj
+;varsはその関数内でvardeclによって宣言されたobj-offのlist
+(struct fun-stack (fun vars) #:transparent)
+;stackはfun-stackのlist
+(define stack '())
 
 
 ;オフセットを追加したdecl構造体obj-off
@@ -27,7 +32,7 @@
          (type (obj-type ob))
          (pos (obj-pos ob))
          (new-obj-off (obj-off name lev kind type pos off)))
-    (set! fun-stack (flatten (append fun-stack (list new-obj-off))))
+    (set! temp-stack (flatten (append temp-stack (list new-obj-off))))
     new-obj-off))
 
 ;引数
@@ -69,17 +74,20 @@
 ;アドレス割り当てを行ったあとのin:fundef
 (define (sub-assign-add-intermed st)
   (cond ((in:fundef? st)
-         (let* ((meaningless (set! fun-stack '()))
+         (let* ((meaningless (set! temp-stack '()))
                 (def-obj (in:fundef-var st))
                 ;vardeclのlist
                 (vardecl-list (in:fundef-parms st))
                 (meaningless (set! sp 0))
                 (convert-vardecl (convert-iter 4 4 vardecl-list))
                 (meaningless (set! sp 0))
-                (body (in:fundef-body st)))
+                (body (in:fundef-body st))
+                (assigned-body (assign-add-cmpd body sp))
+                (meaningless 
+                 (set! stack (flatten (append stack (list (fun-stack def-obj temp-stack)))))))
            (in:fundef def-obj 
                       convert-vardecl
-                      (assign-add-cmpd body sp))))
+                      assigned-body)))
         (else st)))
 
 (define (assign-add-intermed in)
@@ -119,7 +127,7 @@
 ;off-obj
 ;objを受け取ってdef-stackの中から対応するobj-offを返す関数
 ;大域変数の場合はそのままobjを返す.
-(define (ref-obj ob)
+(define (ref-obj ob fun)
   (let* ((name (obj-name ob))
          (lev (obj-lev ob))
          (kind (obj-kind ob))
@@ -130,24 +138,34 @@
          (pos (obj-pos ob)))
     (cond ((equal? 0 lev) ob)
           ((equal? flag 0)
-           (car (flatten (list (filter (lambda (x)
+           (car (flatten 
+                 (list 
+                  (filter (lambda (x)
+                            (and (equal? name (obj-off-name x))
+                                 (equal? lev (obj-off-lev x))
+                                 (equal? kind (obj-off-kind x))
+                                 ;配列型の際は参照してくるアドレスを工夫する必要がある.
+                                 (equal? type (obj-off-type x))
+                                 (equal? pos (obj-off-pos x))))
+                          ;listはstack内のfun-stackのうちfunがvarと一致するfun-stackのvarsから
+                          ;探索を行う.
+                          (fun-stack-vars 
+                           (car (filter (lambda (x) (equal? fun (fun-stack-fun x))) stack))))))))
+          ((equal? flag 1)
+           (let* ((off (type_array-size (obj-type ob)))
+                  (base (car (flatten 
+                              (list 
+                               (filter (lambda (x)
                                          (and (equal? name (obj-off-name x))
                                               (equal? lev (obj-off-lev x))
                                               (equal? kind (obj-off-kind x))
                                               ;配列型の際は参照してくるアドレスを工夫する必要がある.
-                                              (equal? type (obj-off-type x))
+                                              (type_array? (obj-off-type x))
                                               (equal? pos (obj-off-pos x))))
-                                       fun-stack)))))
-          ((equal? flag 1)
-           (let* ((off (type_array-size (obj-type ob)))
-                  (base (car (flatten (list (filter (lambda (x)
-                                                  (and (equal? name (obj-off-name x))
-                                                       (equal? lev (obj-off-lev x))
-                                                       (equal? kind (obj-off-kind x))
-                                                       ;配列型の際は参照してくるアドレスを工夫する必要がある.
-                                                       (type_array? (obj-off-type x))
-                                                       (equal? pos (obj-off-pos x))))
-                                                fun-stack)))))
+                                       ;listはstack内のfun-stackのうちfunがvarと一致するfun-stackのvarsから
+                                       ;探索を行う
+                                       (fun-stack-vars 
+                                        (car (filter (lambda (x) (equal? fun (fun-stack-fun x))) stack))))))))
                   (name (obj-off-name base))
                   (lev (obj-off-lev base))
                   (kind (obj-off-kind base))
@@ -161,63 +179,63 @@
 ;中間命令文
 ;戻り値
 ;varexp内のobjにオフセットを付加した中間命令文を返す.
-(define (ref-add i)
-  (cond ((obj? i) (ref-obj i))
+(define (ref-add i fun)
+  (cond ((obj? i) (ref-obj i fun))
         ((in:compdstmt? i)
          (let* ((decls (in:compdstmt-decls i))
                 (stmts (in:compdstmt-stmts i)))
            (in:compdstmt decls 
-                         (map ref-add stmts))))
+                         (map (lambda (x) (ref-add x fun)) stmts))))
         ((in:emptystmt? i) i)
         ((in:letstmt? i) 
          (let* ((var (in:letstmt-var i))
                 (exp (in:letstmt-exp i)))
-           (in:letstmt (ref-add var) (ref-add exp))))
+           (in:letstmt (ref-add var fun) (ref-add exp fun))))
         ((in:writestmt? i)
          (let* ((dest (in:writestmt-dest i))
                 (src (in:writestmt-src i)))
-           (in:writestmt (ref-add dest) (ref-add src))))
+           (in:writestmt (ref-add dest fun) (ref-add src fun))))
         ((in:readstmt? i)
          (let* ((dest (in:readstmt-dest i))
                 (src (in:readstmt-src i)))
-           (in:readstmt (ref-add dest) (ref-add src))))
+           (in:readstmt (ref-add dest fun) (ref-add src fun))))
         ((in:ifstmt? i)
          (let* ((var (in:ifstmt-var i))
                 (stmt1 (in:ifstmt-stmt1 i))
                 (stmt2 (in:ifstmt-stmt2 i)))
-           (in:ifstmt (ref-add var) (ref-add stmt1) (ref-add stmt2))))
+           (in:ifstmt (ref-add var fun) (ref-add stmt1 fun) (ref-add stmt2 fun))))
         ((in:whilestmt? i)
          (let* ((var (in:whilestmt-var i))
                 (stmt (in:whilestmt-stmt i)))
-           (in:whilestmt (ref-add var) (ref-add stmt))))
+           (in:whilestmt (ref-add var fun) (ref-add stmt fun))))
         ((in:callstmt? i)
          (let* ((dest (in:callstmt-dest i))
                  (f (in:callstmt-f i))
                  (vars (in:callstmt-vars i)))
-           (in:callstmt (ref-add dest) f (map ref-add vars))))
+           (in:callstmt (ref-add dest fun) f (map (lambda (x) (ref-add x fun)) vars))))
         ((in:returnstmt? i)
          (let* ((var (in:returnstmt-var i)))
-           (in:returnstmt (ref-add var))))
+           (in:returnstmt (ref-add var fun))))
         ((in:printstmt? i)
          (let* ((var (in:printstmt-var i)))
-           (in:printstmt (ref-add var))))
+           (in:printstmt (ref-add var fun))))
         ((in:varexp? i)
          (let* ((var (in:varexp-var i)))
-           (in:varexp (ref-add var))))
+           (in:varexp (ref-add var fun))))
         ((in:intexp i) i)
         ((in:aopexp? i)
          (let* ((op (in:aopexp-op i))
                 (var1 (in:aopexp-var1 i))
                 (var2 (in:aopexp-var2 i)))
-           (in:aopexp op (ref-add var1) (ref-add var2))))
+           (in:aopexp op (ref-add var1 fun) (ref-add var2 fun))))
         ((in:relopexp? i)
          (let* ((op (in:relopexp-op i))
                 (var1 (in:relopexp-var1 i))
                 (var2 (in:relopexp-var2 i)))
-           (in:relopexp op (ref-add var1) (ref-add var2))))
+           (in:relopexp op (ref-add var1 fun) (ref-add var2 fun))))
         ((in:addrexp? i)
          (let* ((var (in:addrexp-var i)))
-           (in:addrexp (ref-add var))))
+           (in:addrexp (ref-add var fun))))
         (else (error i))))
 
 ;varexpが出現するのはfundef内部のin:compdstmt内のみ
@@ -227,7 +245,7 @@
                 (let* ((var (in:fundef-var x))
                        (parms (in:fundef-parms x))
                        (body (in:fundef-body x)))
-                  (in:fundef var parms (ref-add body))))
+                  (in:fundef var parms (ref-add body var))))
                (else x)))
        i))
          
@@ -240,11 +258,8 @@
 (port-count-lines! test-ass)
 (define test-intermed 
   (assign-add-intermed 
-   (gen-optimized-intermed (sem-analyze-tree (k08:parse-port test-ass)))
-   )
-  )
+   (gen-optimized-intermed (sem-analyze-tree (k08:parse-port test-ass)))))
 test-intermed
 (display 
  (format "\n\n\n\n\n;;;;;;;;;;;;;;;;;;;;;;;;;;;以下が相対番地割り当ての実行結果です;;;;;;;;;;;;;;;;;;;;;;;;.\n"))
 (ref-add-intermed test-intermed)
-

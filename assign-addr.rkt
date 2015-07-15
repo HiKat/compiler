@@ -129,15 +129,33 @@
                      (else 0)))
          (pos (obj-pos ob)))
     (cond ((equal? 0 lev) ob)
-          (else (flatten (list (filter (lambda (x)
+          ((equal? flag 0)
+           (car (flatten (list (filter (lambda (x)
                                          (and (equal? name (obj-off-name x))
                                               (equal? lev (obj-off-lev x))
                                               (equal? kind (obj-off-kind x))
                                               ;配列型の際は参照してくるアドレスを工夫する必要がある.
-                                              (cond ((equal? 1 flag) #t)
-                                                    (else (equal? type (obj-off-type x))))
+                                              (equal? type (obj-off-type x))
                                               (equal? pos (obj-off-pos x))))
-                                       fun-stack)))))))
+                                       fun-stack)))))
+          ((equal? flag 1)
+           (let* ((off (type_array-size (obj-type ob)))
+                  (base (car (flatten (list (filter (lambda (x)
+                                                  (and (equal? name (obj-off-name x))
+                                                       (equal? lev (obj-off-lev x))
+                                                       (equal? kind (obj-off-kind x))
+                                                       ;配列型の際は参照してくるアドレスを工夫する必要がある.
+                                                       (type_array? (obj-off-type x))
+                                                       (equal? pos (obj-off-pos x))))
+                                                fun-stack)))))
+                  (name (obj-off-name base))
+                  (lev (obj-off-lev base))
+                  (kind (obj-off-kind base))
+                  (type (obj-off-type base))
+                  (pos (obj-off-pos base))
+                  (base-add (obj-off-off base))
+                  (array-add (in:aopexp '+ (in:aopexp '* (in:intexp 4) off) base-add)))
+             (obj-off name lev kind type pos array-add))))))
                                        
 ;引数
 ;中間命令文
@@ -220,7 +238,13 @@
 ;テスト
 (define test-ass (open-input-file "test01.c"))
 (port-count-lines! test-ass)
+(define test-intermed 
+  (assign-add-intermed 
+   (gen-optimized-intermed (sem-analyze-tree (k08:parse-port test-ass)))
+   )
+  )
+test-intermed
 (display 
- (format "\n\n;;;;;;;;;;;;;;;;;;;;;;;;;;;以下が相対番地割り当ての実行結果です;;;;;;;;;;;;;;;;;;;;;;;;.\n"))
-(ref-add-intermed 
- (assign-add-intermed (gen-optimized-intermed (sem-analyze-tree (k08:parse-port test-ass)))))
+ (format "\n\n\n\n\n;;;;;;;;;;;;;;;;;;;;;;;;;;;以下が相対番地割り当ての実行結果です;;;;;;;;;;;;;;;;;;;;;;;;.\n"))
+(ref-add-intermed test-intermed)
+

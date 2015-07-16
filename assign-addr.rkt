@@ -176,7 +176,7 @@
               (type (obj-off-type base))
               (pos (obj-off-pos base))
               (base-add (obj-off-off base))
-              (array-add (in:aopexp '+ (in:aopexp '* (in:intexp wordsize) off) base-add)))
+              (array-add (in:aopexp '+ (in:aopexp '* (in:intexp wordsize) (ref-add off fun)) base-add)))
          (obj-off name lev kind type pos array-add))))))
 
 ;引数
@@ -252,8 +252,8 @@
                   (in:fundef var parms (ref-add body var))))
                (else x)))
        i))
-         
-                                   
+
+        
 
 
 

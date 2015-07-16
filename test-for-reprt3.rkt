@@ -20,12 +20,12 @@
 (port-count-lines! test2)
 (port-count-lines! test3)
 (port-count-lines! test4)
-#;(display 
+(display 
  (format "\n\n\n\n\n;;;;;;;;;;;;;;;;;;;;;;;;;;;以下が意味解析sem-analyze-treeの実行結果です;;;;;;;;;;;;;;;;;;;;;;;;.\n"))
-;(sem-analyze-tree (k08:parse-port test))
+(sem-analyze-tree (k08:parse-port test))
 
 (display 
- (format "\n\n\n\n\n;;;;;;;;;;;;;;;;;;;;;;;;;;;以下が中間命令生成gen-optimize-intermedの実行結果です;;;;;;;;;;;;;;;;;;;;;;;;.\n"))
+ (format "\n\n\n\n\n;;;;;;;;;;;;;;;;;;;;;;;;;;;以下が中間命令生成gen-optimized-intermedの実行結果です;;;;;;;;;;;;;;;;;;;;;;;;.\n"))
 (gen-optimized-intermed (sem-analyze-tree (k08:parse-port test2)))
 
 (display 

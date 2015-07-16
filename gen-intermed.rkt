@@ -17,7 +17,6 @@
 (define intermed-code (list '()))
 (define temp-decl (list '()))
 (define intermed-decllist (list '()))
-(define int-load '())
 ;一時変数を作成する関数.
 ;引数無し
 ;返り値
@@ -52,7 +51,7 @@
 (define (gen-intermed st) 
   (let* ((out (map syn-to-inter st))
          (temp-decl-space temp-decl))
-    (flatten (list int-load temp-decl-space out))))
+    (flatten (list temp-decl-space out))))
 
 ;引数
 ;抽象構文構造体

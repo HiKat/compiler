@@ -1,0 +1,182 @@
+\documentclass[a4j,dvipdfmx]{jarticle}
+\usepackage[dvipdfmx]{graphicx}
+\usepackage{multirow}
+\usepackage[dvipdfmx]{color}
+\usepackage{lscape}
+\usepackage{ascmac}
+\usepackage{here}
+\usepackage{txfonts}
+\usepackage{listings, jlisting}
+\renewcommand{\lstlistingname}{リスト}
+\lstset{
+  basicstyle=\ttfamily\scriptsize,
+  commentstyle=\textit,
+  classoffset=1,
+  keywordstyle=\bfseries,
+  frame=tRBl,
+  framesep=5pt,
+  showstringspaces=true,
+  numbers=left,
+  stepnumber=1,
+  numberstyle=\tiny,
+  tabsize=2
+}
+%subsubsubsectionの定義
+\makeatletter
+\newcommand{\subsubsubsection}{\@startsection{paragraph}{4}{\z@}%
+  {1.0\Cvs \@plus.5\Cdp \@minus.2\Cdp}%
+  {.1\Cvs \@plus.3\Cdp}%
+  {\reset@font\sffamily\normalsize}
+}
+\makeatother
+\setcounter{secnumdepth}{4}
+%ここまでsubsubsubsectionの定義
+
+\begin{document}
+
+\title{計算機科学実験及び演習3\\ソフトウェア実験中間レポート2}
+\author{工学部情報学科3回生 1029255242\\勝見久央}
+\date{作成日: \today} % コンパイル時の日付が自動で挿入される
+\maketitle
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{課題8}
+この課題では
+\begin{itemize}
+\item 単項演算 -x
+\item else節のないif文 
+\item for文 for(e1, e2, e3) s
+\item 配列参照式 e1[e2]
+\end{itemize}
+のシンタックスシュガーを含めたプログラムの抽象構文木への変換処理を実装した.
+シンタックスシュガーの実装においてはそれぞれを
+\begin{itemize}
+\item \begin{verbatim}0-x\end{verbatim}
+\item \begin{verbatim}if(condition){compound-statement}else{}\end{verbatim}
+\item \begin{verbatim}e1; while(e2){s e3;}\end{verbatim}
+\item \begin{verbatim}*(e1+e2)（結果として発生する式&(*e)の形はeに変換）\end{verbatim}
+\end{itemize}
+と変換した.
+さらに、組み込み関数printのプロトタイプ宣言を抽象構文着生成の段階でプログラムに付加する
+ようにした.
+\subsection{課題8の回答}
+コードは次のようになった.
+\lstinputlisting[caption=シンタックスシュガーを含む抽象構文木への変換処理]{./kadai08.rkt}
+\subsection{設計方針}
+この課題は前節の課題5で作成した抽象構文木作成の手続きに
+上記のシンタックスシュガーの変換処理とprint関数のプロトタイプ宣言を付け加えるだけである.
+具体的にはシンタックスシュガーに当てはまる文字列を受け取った際に、
+返す構文木をシンタックスシュガーに対応する構文木に変更し、プログラムを読み込むと同時に
+その先頭に組込み関数printのプロトタイプ宣言を表す構文木を付加するようにしただけである.
+\subsection{各部の説明}
+単項演算のシンタックスシュガーは次のようになる.
+\begin{lstlisting}[caption=単項演算のシンタックスシュガー]
+((- unary_expr)
+ ;シンタックスシュガー
+ (stx:alge_exp_st 'sub 
+    (stx:constant_st 0 'syntax-sugar) $2 $1-start-pos))
+\end{lstlisting}
+
+else節のないif文のシンタックスシュガーは次のようなる.
+\begin{lstlisting}[caption=if文のシンタックスシュガー]
+((if l_small_paren expression r_small_paren statement)
+ ;シンタックスシュガー
+ (stx:if_else_st $3 
+                  $5 
+                  (stx:null_statement_st 'null) 
+                  $1-start-pos 
+                  'syntax-sygar))
+\end{lstlising}
+for文のシンタックスシュガーは次のようになる.
+なお、for文を表す構造体は条件節の式の有無に応じて8パターン
+存在するが、ここではその一つを紹介する.
+\begin{lstlisting}[caption=for文のシンタックスシュガー]
+((for l_small_paren expression 
+                  semicolon expression 
+                  semicolon expression 
+                  r_small_paren statement)
+                ;シンタックスシュガー   
+                (stx:compound_sta_st 
+                 (cons 
+                  $3
+                  (stx:while_st $5 
+                                (stx:compound_sta_st (cons $9 $7)) 
+                                'syntax-sugar))))
+\end{lstlisting}
+配列参照式のシンタックスシュガーは次のようになる.
+\begin{lstlisting}[caption=配列参照式のシンタックスシュガー]
+((postfix_expr l_mid_paren expression r_mid_paren)
+                   ;(stx:array_var_st $1 $3  $1-start-pos)
+                   ;配列参照式のシンタックスシュガー
+                   (stx:unary_exp_st 'ast 
+                                     (stx:alge_exp_st 'add $1 $3 'syntax-sugar) 
+                                     'syntax-sugar))
+\end{lstlisting}
+
+\begin{lstlisting}
+(unary_expr ((postfix_expr) $1)
+                ((- unary_expr)
+                 ;シンタックスシュガー
+                 (stx:alge_exp_st 'sub 
+                                  (stx:constant_st 0 'syntax-sugar) 
+                                  $2 
+                                  $1-start-pos))
+                ((& unary_expr)
+                 (if (stx:exp_in_paren_st? $2) 
+                     (if (stx:unary_exp_st? (stx:exp_in_paren_st-exp $2)) 
+                         (if (equal? 'ast 
+                                     (stx:unary_exp_st-mark (stx:exp_in_paren_st-exp $2)))
+                             ;間接参照式のシンタックスシュガー
+                             (stx:unary_exp_st-op (stx:exp_in_paren_st-exp $2))
+                             (stx:unary_exp_st 'amp $2 $1-start-pos))
+                         (stx:unary_exp_st 'amp $2 $1-start-pos))
+                     (if (stx:unary_exp_st? $2)
+                         (if (equal? 'ast (stx:unary_exp_st-mark $2)) 
+                             (stx:unary_exp_st-op $2) 
+                             (stx:unary_exp_st 'amp $2 $1-start-pos))
+                         (stx:unary_exp_st 'amp $2 $1-start-pos))))
+                ((* unary_expr)
+                 (stx:unary_exp_st 'ast $2 $1-start-pos)))
+\end{lstlisting}
+また、pirnt関数のプロトタイプ宣言は次のように実装した.
+\begin{lstlisting}[caption=print関数のプロトタイプ]
+(program 
+　　((program_with_print) 
+        (cons 
+          (stx:func_proto_st
+             (stx:spec_st 'void 'print-proto)
+             (stx:func_declarator_st 
+　　　　　　　　　'print 
+                (stx:para_declaration_st 
+　　　　　　　　　　(stx:spec_st 'int 'print-proto) 
+                 (stx:id_st 'v 'print-proto))
+                'print-proto)) 
+             $1)))
+\end{lstlisting}
+\section{課題10}
+この課題では、課題8で生成された抽象構文木に対して
+\begin{itemize}
+\item 意味解析
+\item 式の形の検査
+\item 式の型の検査
+\end{itemize}
+行う手続きを作成する.それぞれのソースコードは次のようになった.
+\lstinputlisting[caption=意味解析について(README.md)]{./README.md}
+\lstinputlisting[caption=意味解析を行う処理 semantic-analy.rkt]{./semantic-analy.rkt}
+\lstinputlisting[caption=式の形の検査を行う処理 analy-form.rkt]{./analy-form.rkt}
+\lstinputlisting[caption=式の型の検査を行う処理 analy-type.rkt]{./analy-type.rkt}
+\section{実行結果}
+これらのプログラムを使って次のテストプログラムを解析した.
+\lstinputlisting[caption=テストプログラム]{./kadai01.c}
+実行結果は次のようになった.
+\lstinputlisting[caption=課題8の実行結果]{./report2-result.rkt}
+\section{感想}
+今回の実験では前回作成したソースコードを文字列として受け取りそれを抽象構文木に変換して
+構造体の形で表示するというプログラムを改良し、シンタックスシュガーを識別して
+抽象構文木を作り直し、それを意味解析、
+形解析、型解析を適用するという処理を行うプログラムを作成したが、予想以上に苦労した.
+そもそもプログラム自体は提出期限内に完成したものだと思い込んでいるとバグが見つかり、
+大幅な改変をせざるを得なくなってしまった.
+その際に自分の書いたコード中で何を行っている処理なのかをすぐに把握できずにかなり苦労したので、
+これからはlet文で使う値を先に全て取り出してコメントに書いておくなど、工夫の余地も
+大きいと感じた.
+\end{document}

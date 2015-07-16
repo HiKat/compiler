@@ -1,21 +1,6 @@
 # compiler
-[markdawn記法](http://kojika17.com/2013/01/starting-markdown.html)  　
-[Racket公式ドキュメント](http://docs.racket-lang.org/reference/exns.html?q=error#%28def._%28%28quote._~23~25kernel%29._error%29%29)  
-関数の外部仕様決定->テスト書く->書き始める　習慣付け！!   
-確定してないところは#tとかで置き換えてとりあえず形だけでも書いていく.  
-##prefixの指定  
-(require (prefix-in env: "myenv.rkt"))  
-(require (prefix-in stx: "mysyntax.rkt"))    
-(require (prefix-in k08: "kadai08.rkt"))  
-(require "mymap.rkt")  
-(require (prefix-in ch: "check-env.rkt"))  
-
-
-
-##意味解析部
+##意味解析部  
 ###analy-declaration_st(チェック部分開発途中)  
-;__analy-declaration_st.rkt__  
-
 ;(stx:declaration_st...) と  
 ;__分析に使う環境env__と   
 ;__current-lev__  
@@ -25,9 +10,7 @@
 ;同時にlistの形で環境に追加.  
 ;同時に環境のチェックも行う.  
 
-###analy-func_proto_st(チェック部分開発途中)  
-;__analy-func_proto_st.rkt__
-
+###analy-func_proto_st  
 ;(stx:func_proto_st...)  
 ;を受け取って  
 ;(stx:func_proto_st (stx:spec_st...)     
@@ -39,9 +22,7 @@
 ;パラメータのobject(obj name 1 'parm type)の(list obj...)を  
 ;パラメータ専用の環境をまず初期化してから登録  
 
-###analy-func_def_st(チェック部分、compound-statement引き渡し開発途中)  
-;__analy-func_def_st.rkt__  
-
+###analy-func_def_st  
 ;stx:func_def_stを  
 ;引数に取り   
 ;(stx:func_def_st stx:spec_st   
@@ -53,9 +34,7 @@
 ;同時にパラメータのオブジェクトをパラメータ専用の環境に追加、チェック  
 ;同時に関数宣言のオブジェクトを環境に追加、チェック 
 
-###analy-compound_st
-;__analy-compound_st.rkt__  
-
+###analy-compound_st  
 ;stx:compound_stか  
 ;stx:compound_dec_stか  
 ;stx:compound_sta_stか  
@@ -73,8 +52,6 @@
 ;終了時に1つ下げる  
 
 ###analy-compdecl  
-;__analy-compound_st.rkt__   
-
 ;__analy-declaration_stの派生__  
 ;(list* (stx:declaration_st...)...)と  
 ;lev（解析中のcompound-statementのブロックレベル）  
@@ -84,9 +61,7 @@
 ;_analy-declarationとは違って外部の大域の環境を更新しない._  
 ;compound-statementの意味解析結果の環境としては(list* obj)を直接使用することとする.  
 
-###analy-compstate 
-;__analy-compound_st.rkt__   
-
+###analy-compstate  
 ;levと  
 ;envと  
 ;compound_stなどに入るstatementを  

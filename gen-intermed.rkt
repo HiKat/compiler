@@ -44,7 +44,7 @@
          (new-obj (obj (array_base name lev kind) 'temp 'array-base 'temp 'temp)))
     ;(set! temp-name new-name)
     ;(set! intermed-code (flatten (append intermed-code (list (in:vardecl new-obj)))))
-    (set! temp-decl (flatten (append temp-decl (list (in:vardecl new-obj)))))
+    ;(set! temp-decl (flatten (append temp-decl (list (in:vardecl new-obj)))))
     new-obj))
 ;上で使う
 (struct array_base (name lev kind) #:transparent)
@@ -80,25 +80,34 @@
     ((stx:declaration_st? st) 
      (let* (;declarator-listはobjのlistもしくはobj単体 
             (decl-ls (stx:declaration_st-declarator-list st))
-            (meaningless (set! intermed-code '()))
+            ;(meaningless (set! intermed-code '()))
             (meaningless (set! temp-space '())))
        (cond ((obj? decl-ls) 
               (cond ((type_array? (obj-type decl-ls)) 
-                     (begin 
-                       (make-base-temp decl-ls) 
-                       ;(error)
-                       (in:vardecl (decl-ls))))
+                     (let* ((base-temp (make-base-temp decl-ls)))
+                       (list 
+                        (in:vardecl (decl-ls))
+                        (in:vardecl base-temp))))
                     (else (in:vardecl (decl-ls)))))
              ((list? decl-ls) 
-              (flatten (append intermed-code 
-                               (map (lambda (x) 
-                                      (cond ((type_array? (obj-type x)) 
-                                             (begin 
-                                               (make-base-temp x) 
-                                               ;(error)
-                                               (in:vardecl x)))
-                                            (else (in:vardecl x)))) 
-                                    decl-ls))))
+              #;(flatten 
+                 (append intermed-code 
+                         (map (lambda (x) 
+                                (cond ((type_array? (obj-type x)) 
+                                       (begin 
+                                         (make-base-temp x) 
+                                         ;(error)
+                                         (in:vardecl x)))
+                                      (else (in:vardecl x)))) 
+                              decl-ls)))
+              (flatten 
+               (map (lambda (x) 
+                      (cond ((type_array? (obj-type x)) 
+                             (list
+                              (in:vardecl x)
+                              (in:vardecl (make-base-temp x))))
+                            (else (in:vardecl x)))) 
+                    decl-ls)))
              (error (format "\n check syn-to-code! ~a\n" st)))))
     ((stx:func_def_st? st) (let* ((fun-dec (stx:func_def_st-func-declarator-st st))
                                   (fun-obj (stx:func_declarator_st-name fun-dec))

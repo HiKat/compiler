@@ -242,6 +242,8 @@
         ((in:addrexp? i)
          (let* ((var (in:addrexp-var i)))
            (in:addrexp (ref-add var fun))))
+        ((equal? '() i)
+         (in:emptystmt))
         (else (error i))))
 
 ;varexpが出現するのはfundef内部のin:compdstmt内のみ

@@ -17,6 +17,10 @@
 (define intermed-code (list '()))
 (define temp-decl (list '()))
 (define intermed-decllist (list '()))
+;syn-to-interで配列型を拾ったときに使用するスペース
+;使うときは必ず初期化.
+(define temp-space '())
+
 ;一時変数を作成する関数.
 ;引数無し
 ;返り値
@@ -27,6 +31,14 @@
          (new-name (string->symbol (string-append "temp" (number->string temp))))
          (new-obj (obj new-name 'temp 'temp 'temp 'temp)))
     (set! temp new-temp)
+    ;(set! temp-name new-name)
+    ;(set! intermed-code (flatten (append intermed-code (list (in:vardecl new-obj)))))
+    (set! temp-decl (flatten (append temp-decl (list (in:vardecl new-obj)))))
+    new-obj))
+
+;配列のベースアドレスを格納するための一時変数を作成するための
+(define (make-base-temp array-obj)
+  (let* ((new-obj (obj array-obj 'temp 'array-base 'temp 'temp)))
     ;(set! temp-name new-name)
     ;(set! intermed-code (flatten (append intermed-code (list (in:vardecl new-obj)))))
     (set! temp-decl (flatten (append temp-decl (list (in:vardecl new-obj)))))
@@ -63,11 +75,25 @@
     ((stx:declaration_st? st) 
      (let* (;declarator-listはobjのlistもしくはobj単体 
             (decl-ls (stx:declaration_st-declarator-list st))
-            (meaningless (set! intermed-code '())))
+            (meaningless (set! intermed-code '()))
+            (meaningless (set! temp-space '())))
        (cond ((obj? decl-ls) 
-              (in:vardecl (decl-ls)))
+              (cond ((type_array? (obj-type decl-ls)) 
+                     (begin 
+                       (make-base-temp decl-ls) 
+                       ;(error)
+                       (in:vardecl (decl-ls))))
+                    (else (in:vardecl (decl-ls)))))
              ((list? decl-ls) 
-              (flatten (append intermed-code (map (lambda (x) (in:vardecl x)) decl-ls))))
+              (flatten (append intermed-code 
+                               (map (lambda (x) 
+                                      (cond ((type_array? (obj-type x)) 
+                                             (begin 
+                                               (make-base-temp x) 
+                                               ;(error)
+                                               (in:vardecl x)))
+                                            (else (in:vardecl x)))) 
+                                    decl-ls))))
              (error (format "\n check syn-to-code! ~a\n" st)))))
     ((stx:func_def_st? st) (let* ((fun-dec (stx:func_def_st-func-declarator-st st))
                                   (fun-obj (stx:func_declarator_st-name fun-dec))

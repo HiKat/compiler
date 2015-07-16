@@ -70,6 +70,10 @@
          (temp-decl-space temp-decl))
     (flatten (list temp-decl-space out))))
 
+;以下で使う
+;arには配列のobjが入る.
+(struct array_base_add (ar) #:transparent)
+
 ;引数
 ;抽象構文構造体
 ;戻り値
@@ -90,22 +94,16 @@
                         (in:vardecl base-temp))))
                     (else (in:vardecl (decl-ls)))))
              ((list? decl-ls) 
-              #;(flatten 
-                 (append intermed-code 
-                         (map (lambda (x) 
-                                (cond ((type_array? (obj-type x)) 
-                                       (begin 
-                                         (make-base-temp x) 
-                                         ;(error)
-                                         (in:vardecl x)))
-                                      (else (in:vardecl x)))) 
-                              decl-ls)))
               (flatten 
                (map (lambda (x) 
                       (cond ((type_array? (obj-type x)) 
-                             (list
-                              (in:vardecl x)
-                              (in:vardecl (make-base-temp x))))
+                             (let* ((base-temp (make-base-temp x)))
+                               (set! intermed-code 
+                                     (flatten (append intermed-code 
+                                                      (list (in:letstmt base-temp (array_base_add x))))))
+                               (list
+                                (in:vardecl x)
+                                (in:vardecl base-temp))))
                             (else (in:vardecl x)))) 
                     decl-ls)))
              (error (format "\n check syn-to-code! ~a\n" st)))))

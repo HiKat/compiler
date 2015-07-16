@@ -244,7 +244,36 @@
            (in:addrexp (ref-add var fun))))
         ((equal? '() i)
          (in:emptystmt))
+        ;gen-intermed.rkt内で定義した構造体
+        ;これを配列宣言のobjのオフセットを入れる.
+        ((array_base_add? i)
+         (find-base i fun))
         (else (error i))))
+
+;引数
+;i（array_base_add）
+;fun
+;stack内の適切な位置からarray_base_add-arを手がかりに
+;arで示された配列のベースアドレスを探しだして
+;(in:intexp ベースアドレス)
+;に変換する.
+(define (find-base i fun)
+  (let* ((name (obj-name (array_base_add-ar i)))
+         (lev (obj-lev (array_base_add-ar i)))
+         (kind (obj-kind (array_base_add-ar i)))
+         (type (obj-type (array_base_add-ar i))))
+    (in:intexp (obj-off-off
+                (car (flatten 
+                      (list 
+                       (filter (lambda (x)
+                                 (and (equal? name (obj-off-name x))
+                                      (equal? lev (obj-off-lev x))
+                                      (equal? kind (obj-off-kind x))
+                                      (equal? type (obj-off-type x))))
+                               ;listはstack内のfun-stackのうちfunがvarと一致するfun-stackのvarsから
+                               ;探索を行う
+                               (fun-stack-vars 
+                                (car (filter (lambda (x) (equal? fun (fun-stack-fun x))) stack)))))))))))
 
 ;varexpが出現するのはfundef内部のin:compdstmt内のみ
 (define (ref-add-intermed i)

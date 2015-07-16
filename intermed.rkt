@@ -4,7 +4,7 @@
 ;; 変数宣言
 (struct vardecl (var) #:transparent)
 ;; 関数定義
-(struct fundef (var parms body) #:transparent) ; parms は
+(struct fundef (var parms body) #:transparent) 
 ; vardecl のリスト
 ;;;; 文
 ;; 空文: ;

@@ -11,6 +11,7 @@
 (require "gen-intermed.rkt")
 (provide (all-defined-out))
 
+(define wordsize 4)
 ;spの位置
 (define sp 0)
 ;関数内で作成されたオフセットとobjの対応.
@@ -79,7 +80,7 @@
                 ;vardeclのlist
                 (vardecl-list (in:fundef-parms st))
                 (meaningless (set! sp 0))
-                (convert-vardecl (convert-iter 4 4 vardecl-list))
+                (convert-vardecl (convert-iter wordsize wordsize vardecl-list))
                 (meaningless (set! sp 0))
                 (body (in:fundef-body st))
                 (assigned-body (assign-add-cmpd body sp))
@@ -104,7 +105,7 @@
                 (stmts (in:compdstmt-stmts st)))
            ;(set! sp (+ sp (* -4 (length decls))))
            (in:compdstmt 
-            (convert-iter i -4 decls) 
+            (convert-iter i (- 0 wordsize) decls) 
             (map (lambda (x) (assign-add-cmpd x sp)) stmts))))
         ((in:ifstmt? st)
          (let* ((var (in:ifstmt-var st))
@@ -136,45 +137,48 @@
          (flag (cond ((type_array? type) 1)
                      (else 0)))
          (pos (obj-pos ob)))
-    (cond ((equal? 0 lev) ob)
-          ((equal? flag 0)
-           (car (flatten 
-                 (list 
-                  (filter (lambda (x)
-                            (and (equal? name (obj-off-name x))
-                                 (equal? lev (obj-off-lev x))
-                                 (equal? kind (obj-off-kind x))
-                                 ;配列型の際は参照してくるアドレスを工夫する必要がある.
-                                 (equal? type (obj-off-type x))
-                                 (equal? pos (obj-off-pos x))))
-                          ;listはstack内のfun-stackのうちfunがvarと一致するfun-stackのvarsから
-                          ;探索を行う.
-                          (fun-stack-vars 
-                           (car (filter (lambda (x) (equal? fun (fun-stack-fun x))) stack))))))))
-          ((equal? flag 1)
-           (let* ((off (type_array-size (obj-type ob)))
-                  (base (car (flatten 
-                              (list 
-                               (filter (lambda (x)
-                                         (and (equal? name (obj-off-name x))
-                                              (equal? lev (obj-off-lev x))
-                                              (equal? kind (obj-off-kind x))
-                                              ;配列型の際は参照してくるアドレスを工夫する必要がある.
-                                              (type_array? (obj-off-type x))
-                                              (equal? pos (obj-off-pos x))))
-                                       ;listはstack内のfun-stackのうちfunがvarと一致するfun-stackのvarsから
-                                       ;探索を行う
-                                       (fun-stack-vars 
-                                        (car (filter (lambda (x) (equal? fun (fun-stack-fun x))) stack))))))))
-                  (name (obj-off-name base))
-                  (lev (obj-off-lev base))
-                  (kind (obj-off-kind base))
-                  (type (obj-off-type base))
-                  (pos (obj-off-pos base))
-                  (base-add (obj-off-off base))
-                  (array-add (in:aopexp '+ (in:aopexp '* (in:intexp 4) off) base-add)))
-             (obj-off name lev kind type pos array-add))))))
-                                       
+    (cond 
+      ;配列型でないとき
+      ((equal? 0 lev) ob)
+      ((equal? flag 0)
+       (car (flatten 
+             (list 
+              (filter (lambda (x)
+                        (and (equal? name (obj-off-name x))
+                             (equal? lev (obj-off-lev x))
+                             (equal? kind (obj-off-kind x))
+                             ;配列型の際は参照してくるアドレスを工夫する必要がある.
+                             (equal? type (obj-off-type x))
+                             (equal? pos (obj-off-pos x))))
+                      ;listはstack内のfun-stackのうちfunがvarと一致するfun-stackのvarsから
+                      ;探索を行う.
+                      (fun-stack-vars 
+                       (car (filter (lambda (x) (equal? fun (fun-stack-fun x))) stack))))))))
+      ;配列型のとき
+      ((equal? flag 1)
+       (let* ((off (type_array-size (obj-type ob)))
+              (base (car (flatten 
+                          (list 
+                           (filter (lambda (x)
+                                     (and (equal? name (obj-off-name x))
+                                          (equal? lev (obj-off-lev x))
+                                          (equal? kind (obj-off-kind x))
+                                          ;配列型の際は参照してくるアドレスを工夫する必要がある.
+                                          (type_array? (obj-off-type x))
+                                          (equal? pos (obj-off-pos x))))
+                                   ;listはstack内のfun-stackのうちfunがvarと一致するfun-stackのvarsから
+                                   ;探索を行う
+                                   (fun-stack-vars 
+                                    (car (filter (lambda (x) (equal? fun (fun-stack-fun x))) stack))))))))
+              (name (obj-off-name base))
+              (lev (obj-off-lev base))
+              (kind (obj-off-kind base))
+              (type (obj-off-type base))
+              (pos (obj-off-pos base))
+              (base-add (obj-off-off base))
+              (array-add (in:aopexp '+ (in:aopexp '* (in:intexp wordsize) off) base-add)))
+         (obj-off name lev kind type pos array-add))))))
+
 ;引数
 ;中間命令文
 ;戻り値
@@ -254,6 +258,7 @@
 
 
 ;テスト
+#;(begin
 (define test-ass (open-input-file "test01.c"))
 (port-count-lines! test-ass)
 (define test-intermed 
@@ -263,3 +268,4 @@ test-intermed
 (display 
  (format "\n\n\n\n\n;;;;;;;;;;;;;;;;;;;;;;;;;;;以下が相対番地割り当ての実行結果です;;;;;;;;;;;;;;;;;;;;;;;;.\n"))
 (ref-add-intermed test-intermed)
+)

@@ -141,19 +141,22 @@
       ;配列型でないとき
       ((equal? 0 lev) ob)
       ((equal? flag 0)
-       (car (flatten 
-             (list 
-              (filter (lambda (x)
-                        (and (equal? name (obj-off-name x))
-                             (equal? lev (obj-off-lev x))
-                             (equal? kind (obj-off-kind x))
-                             ;配列型の際は参照してくるアドレスを工夫する必要がある.
-                             (equal? type (obj-off-type x))
-                             (equal? pos (obj-off-pos x))))
-                      ;listはstack内のfun-stackのうちfunがvarと一致するfun-stackのvarsから
-                      ;探索を行う.
-                      (fun-stack-vars 
-                       (car (filter (lambda (x) (equal? fun (fun-stack-fun x))) stack))))))))
+       (let* ((l 
+               (flatten 
+                (list 
+                 (filter (lambda (x)
+                           (and (equal? name (obj-off-name x))
+                                (equal? lev (obj-off-lev x))
+                                (equal? kind (obj-off-kind x))
+                                ;配列型の際は参照してくるアドレスを工夫する必要がある.
+                                (equal? type (obj-off-type x))
+                                (equal? pos (obj-off-pos x))))
+                         ;listはstack内のfun-stackのうちfunがvarと一致するfun-stackのvarsから
+                         ;探索を行う.
+                         (fun-stack-vars 
+                          (car (filter (lambda (x) (equal? fun (fun-stack-fun x))) stack))))))))
+         (cond ((equal? '() l) ob)
+               (else (car l)))))
       ;配列型のとき
       ((equal? flag 1)
        (let* ((off (type_array-size (obj-type ob)))
@@ -257,6 +260,7 @@
 ;arで示された配列のベースアドレスを探しだして
 ;(in:intexp ベースアドレス)
 ;に変換する.
+;ただしこのlevが0の時については考える必要あり.
 (define (find-base i fun)
   (let* ((name (obj-name (array_base_add-ar i)))
          (lev (obj-lev (array_base_add-ar i)))

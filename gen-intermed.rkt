@@ -38,11 +38,16 @@
 
 ;配列のベースアドレスを格納するための一時変数を作成するための
 (define (make-base-temp array-obj)
-  (let* ((new-obj (obj array-obj 'temp 'array-base 'temp 'temp)))
+  (let* ((name (obj-name array-obj))
+         (lev (obj-lev array-obj))
+         (kind (obj-kind array-obj))
+         (new-obj (obj (array_base name lev kind) 'temp 'array-base 'temp 'temp)))
     ;(set! temp-name new-name)
     ;(set! intermed-code (flatten (append intermed-code (list (in:vardecl new-obj)))))
     (set! temp-decl (flatten (append temp-decl (list (in:vardecl new-obj)))))
     new-obj))
+;上で使う
+(struct array_base (name lev kind) #:transparent)
 
 
 ;代入する際に冗長な表現を削除する関数.
@@ -297,13 +302,15 @@
                              (array-type (type_array-type (obj-type st)))
                              (array-size (type_array-size (obj-type st)))
                              (pos (obj-pos st)))
-                        (obj name lev kind (type_array array-type (syn-to-inter array-size)) pos))
-                      ;(error "ERROR")
-                      )
+                        (obj name lev kind 
+                             (type_array array-type (syn-to-inter 
+                                                     (stx:alge_exp_st 
+                                                      'add 
+                                                      (obj (array_base name lev kind) 'temp 'array-base 'temp 'temp)
+                                                      (stx:alge_exp_st 'mul (stx:constant_st 4 'syntax-sugar-gen-intermed) array-size 'syntax-sugar-gen-intermed)
+                                                      'syntax-sugar-gen-intermed))) pos)))
                      (else 
-                      (in:varexp st)
-                      ;(error "ERROR")
-                      )))
+                      (in:varexp st))))
     (else (error (format "\n check syn-to-code! ~a\n" st)))))
 
 

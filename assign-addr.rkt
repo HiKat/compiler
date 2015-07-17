@@ -304,7 +304,7 @@
 
 
 ;テスト
-(begin
+#;(begin
 (define test-ass (open-input-file "test01.c"))
 (port-count-lines! test-ass)
 (define test-intermed 

@@ -1,9 +1,12 @@
-
 #lang racket
-
+(require (prefix-in k08: "kadai08.rkt"))
 (require (prefix-in itmd: "intermed.rkt"))
 (require (prefix-in assn: "assign-addr.rkt"))
+(require "gen-intermed.rkt")
+(require "semantic-analy.rkt")
+(require "myenv.rkt")
 (require rackunit)
+(require racket/trace)
 
 ;;;;;;;;;;;; アセンブリの一行一行を表す構造体.;;;;;;;;;;;;;
 
@@ -95,7 +98,12 @@
 ;戻り値
 ;シンボル '|77($fp)| など
 (define (addr->sym sym)
-  (string->symbol (format "~a($fp)" (assn:obj-off-off sym))))
+  (cond ((assn:obj-off? sym) (string->symbol (format "~a($fp)" (assn:obj-off-off sym))))
+        ((and (obj? sym) (array_base? (obj-name sym))) 
+         "これは大域変数の配列のベースアドレスであるので後で実装.")
+        ((and (obj? sym) (type_array? (obj-type sym)))
+         (type_array-size (obj-type sym)))
+        (else (error (format "debug\n~a\n" sym)))))
 
 ; obj-off構造体destと中間命令の式 e を受け取って「e を評価して
 ; dest に結果を書き込む」という動作をする命令列を生成する関数.
@@ -154,12 +162,16 @@
       (list (instr 'lw `(,reg1 ,var1))
             (instr 'lw `(,reg2 ,var2))
             (instr op `(,reg1 ,reg1 ,reg2))
-            (instr 'sw `(,reg1 ,dest))))]))
+            (instr 'sw `(,reg1 ,dest))))]
+   (else (error (format "debug\n~a\n" e)))))
 
 ; 中間命令をアセンブリに変換. localvarsinbytes と argsinbytes は
 ; return を変換する際に $sp や $fp を操作するために必要.
 (define (intermed-stmt->code localvarsinbytes argsinbytes s)
   (cond
+    ;
+    ;(#t (error (format "debag\n~a\n" s)))
+    ;
    [(itmd:emptystmt? s)
     (list (instr 'nop '()))]
    [(itmd:writestmt? s)
@@ -192,8 +204,22 @@
    [(itmd:ifstmt? s)
     (let* ([sym (itmd:ifstmt-var s)]
 	   [sym (addr->sym sym)]
-	   [stmts1 (itmd:ifstmt-stmt1 s)]
-	   [stmts2 (itmd:ifstmt-stmt2 s)]
+	   [stmts1 (let* ((stmt1 (itmd:ifstmt-stmt1 s)))
+                     (cond ((itmd:compdstmt? stmt1)
+                            (itmd:compdstmt-stmts stmt1))
+                           ((itmd:emptystmt? stmt1)
+                            (list itmd:emptystmt))
+                           ((assn:obj-off? stmt1)
+                            (list stmt1))
+                           (else (error (format "debag\n~a\n" stmt1)))))]
+	   [stmts2 (let* ((stmt2 (itmd:ifstmt-stmt2 s)))
+                     (cond ((itmd:compdstmt? stmt2)
+                            (itmd:compdstmt-stmts stmt2))
+                           ((itmd:emptystmt? stmt2)
+                            (list itmd:emptystmt))
+                           ((assn:obj-off? stmt2)
+                            (list stmt2))
+                           (else (error (format "debag\n~a\n" stmt2)))))]
 	   ; then 節,else 節の命令列を作っておく
 	   [code1 (flatten (map (lambda (stmt) (intermed-stmt->code localvarsinbytes argsinbytes stmt)) stmts1))]
 	   [code2 (flatten (map (lambda (stmt) (intermed-stmt->code localvarsinbytes argsinbytes stmt)) stmts2))]
@@ -218,8 +244,10 @@
    [(itmd:whilestmt? s)
     (let* ([var (itmd:whilestmt-var s)]
            [var (addr->sym var)]
-           [stmt (itmd:whilestmt-stmt s)]
-           [code1 (flatten (map (lambda (st)(intermed-stmt->code localvarsinbytes argsinbytes st)) stmt))]
+           [stmt (itmd:compdstmt-stmts (itmd:whilestmt-stmt s))]
+           [code1 
+            (flatten 
+             (map (lambda (st)(intermed-stmt->code localvarsinbytes argsinbytes st)) stmt))]
            [label1 (nextlabel)]
            [label2 (nextlabel)]
            )
@@ -240,19 +268,21 @@
            (instr 'jr `($ra)))
      )]
    [(itmd:callstmt? s)
-   (let* [(func (itmd:callstmt-f s))
+   (let* 
+       #;[(func (itmd:callstmt-f s))
           (sourvars (itmd:callstmt-vars s))
           (sourvars (addr->sym sourvars))
           (dest (itmd:callstmt-dest s))
-          (dest (addr->sym dest))
-          ]
-     (list (instr 'lw `(,reg1 ,sourvars))
+          (dest (addr->sym dest))]
+     ((meanigless '()))
+     #;(list (instr 'lw `(,reg1 ,sourvars))
            (instr 'sw `(,reg1 ,dest))
            (instr 'lw `(,reg1 ,dest))
            (instr 'sw `(,reg1 ,sourvars))
            (instr 'jal `(,func))
-           (instr 'sw `(,retreg )))
-     )]
+           (instr 'sw `(,retreg)))
+     ;あとから実装
+     '())]
    [(itmd:printstmt? s)
     (let* ([src (itmd:printstmt-var s)]
 	   [symsrc (addr->sym src)])
@@ -260,7 +290,13 @@
 	    (instr 'lw `(,reg1 ,symsrc))
 	    (instr 'move `($a0 ,reg1))
 	    (instr 'syscall '())))]
+   [(itmd:compdstmt? s)
+    (let* ((stmts (itmd:compdstmt-stmts s)))
+      (flatten 
+       (list (map (lambda (x) (intermed-stmt->code localvarsinbytes argsinbytes x)) stmts))))]
+   [else (error (format "debug\n~a\n" s))]
    ))
+(trace intermed-stmt->code)
 
 (define (intermed-fundef->code fd)
   (let* #;([f (itmd:fundef-f fd)]
@@ -281,15 +317,28 @@
     '()
     ))
 
-
-(define (intermed-prog->code p)
-  (let* #;([fds (itmd:prog-fundefs p)]
-	 [localvarsize (itmd:prog-localvarsize p)]
-	 [main (itmd:prog-mainstmts p)]
-	 [fdscode (flatten (map intermed-fundef->code fds))]
-	 [maincode (flatten (map (lambda (s) (intermed-stmt->code localvarsize 0 s)) main))])
-    ()
-    #;(flatten
+;引数
+;itme-and-stack
+(define (intermed-prog->code it-and-st)
+  (let* ((itmd (assn:itmd-and-stack-it it-and-st))
+         ;fdsはmani関数以外のfundefのlist
+         [fds (filter (lambda (x) (itmd:fundef? x)) itmd)]
+	 [localvarsize (* assn:wordsize (length (filter (lambda (x) (itmd:vardecl? x)) itmd)))]
+         ;mainはmain関数のfundef
+	 [main (car 
+                (filter 
+                 (lambda (x) (equal? 'main (obj-name (itmd:fundef-var x)))) 
+                 fds))]
+	 [fdscode 
+          (flatten (map intermed-fundef->code fds))]
+         ;
+         ;(debag (error (format "debag\n~a\n" (itmd:compdstmt-stmts (itmd:fundef-body main)))))
+         ;
+	 [maincode 
+          (flatten (map 
+                    (lambda (s) (intermed-stmt->code localvarsize 0 s)) 
+                    (itmd:compdstmt-stmts (itmd:fundef-body main))))])
+    (flatten
      (list
       (dir '.text '())
       (dir '.globl `(main))
@@ -298,8 +347,17 @@
       (savecode localvarsize 0)
       maincode
       ; これはいらん気がする
-      (restorecode localvarsize 0)))
-    '()))
- 
+      (restorecode localvarsize 0)))))
+
+;テスト
+(define p (open-input-file "test01.c"))
+(port-count-lines! p)
+(define test-itmd
+  (assn:gen-assigned-itmd
+   (assn:assign-add-intermed 
+    (gen-optimized-intermed (sem-analyze-tree (k08:parse-port p))))))
+
+(intermed-prog->code test-itmd)
+
 
 (provide (all-defined-out))

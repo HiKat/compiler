@@ -54,10 +54,13 @@
 ;引数はletstmt
 ;戻り値は適切な letstmt
 (define (correct-let ls)
-  (cond ;(letstmt var1 (letstmt var2 exp))を(letstmt var1 exp)に 
-    ((in:letstmt? (in:letstmt-exp ls))
-     (in:letstmt (in:letstmt-var ls) (in:letstmt-exp (in:letstmt-exp ls))))
-    (else ls)))
+  ;(letstmt var1 (letstmt var2 exp))を(letstmt var1 exp)に 
+  (cond ((in:letstmt? ls)
+         (cond 
+           ((in:letstmt? (in:letstmt-exp ls))
+            (in:letstmt (in:letstmt-var ls) (in:letstmt-exp (in:letstmt-exp ls))))
+           (else ls)))
+        (else ls)))
 
 
 ;引数
@@ -126,6 +129,7 @@
                        (list (cond ((stx:unary_exp_st? dest) (in:writestmt dest src))
                                    ((stx:unary_exp_st? src) (in:readstmt dest src))
                                    (else (in:letstmt dest (syn-to-inter src)))))))
+         
          (cond ((stx:unary_exp_st? dest) (in:writestmt (syn-to-inter dest) src))
                ((stx:unary_exp_st? src) (in:readstmt (syn-to-inter dest) src))
                (else (in:letstmt (syn-to-inter dest) (in:varexp (syn-to-inter src))))))
@@ -288,7 +292,10 @@
      (let* ((vars (flatten (stx:func_st-para st)));varsは図べて一旦変数に格納してそれを関数呼び出しに入れる.
             (f (stx:func_st-name st))
             (temp (syn-to-inter (make-temp)))
-            (let-var (map (lambda (x) (correct-let (in:letstmt (make-temp) (syn-to-inter x)))) vars)))
+            (let-var 
+             (map 
+              (lambda (x) (correct-let (in:letstmt (make-temp) (in:varexp (syn-to-inter x))))) 
+              vars)))
        (begin 
          (set! 
           intermed-code
@@ -297,10 +304,9 @@
            (flatten (list
                      let-var
                      (correct-let 
-                      (in:letstmt temp 
-                                  (in:callstmt temp 
-                                               f 
-                                               (map (lambda (x) (in:letstmt-var x)) let-var))))))))
+                      (in:callstmt temp 
+                                   f 
+                                   (map (lambda (x) (in:letstmt-var x)) let-var)))))))
          temp)))
     ((obj? st) (cond ((type_array? (obj-type st))
                       (let* ((name (obj-name st))

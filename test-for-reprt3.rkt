@@ -34,9 +34,9 @@
  (gen-optimized-intermed (sem-analyze-tree (k08:parse-port test3))))
 
 (display 
- (format "\n\n\n\n\n;;;;;;;;;;;;;;;;;;;;;;;;;;;以下が相対番地割り当て（参照）ref-add-intermedの実行結果です;;;;;;;;;;;;;;;;;;;;;;;;.\n"))
-(ref-add-intermed 
- (assign-add-intermed 
-  (gen-optimized-intermed (sem-analyze-tree (k08:parse-port test4)))))
+ (format "\n\n\n\n\n;;;;;;;;;;;;;;;;;;;;;;;;;;;以下が相対番地割り当て（参照）gen-assigned-intermedの実行結果です;;;;;;;;;;;;;;;;;;;;;;;;.\n"))
+(gen-assigned-itmd
+  (assign-add-intermed 
+   (gen-optimized-intermed (sem-analyze-tree (k08:parse-port test4)))))
 
 

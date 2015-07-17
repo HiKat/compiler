@@ -290,19 +290,26 @@
                (else x)))
        i))
 
+;gen-assigned-itmdの戻り値
+(struct itmd-and-stack (it st) #:transparent)
+
+(define (gen-assigned-itmd i)
+  (let* ((output (itmd-and-stack (ref-add-intermed i) stack))
+         ;念のためstackは空にしておく.
+         (meanigless (set! stack '())))
+  output))
+
         
 
 
 
 ;テスト
-#;(begin
+(begin
 (define test-ass (open-input-file "test01.c"))
 (port-count-lines! test-ass)
 (define test-intermed 
   (assign-add-intermed 
    (gen-optimized-intermed (sem-analyze-tree (k08:parse-port test-ass)))))
-test-intermed
 (display 
  (format "\n\n\n\n\n;;;;;;;;;;;;;;;;;;;;;;;;;;;以下が相対番地割り当ての実行結果です;;;;;;;;;;;;;;;;;;;;;;;;.\n"))
-(ref-add-intermed test-intermed)
-)
+(gen-assigned-itmd test-intermed))

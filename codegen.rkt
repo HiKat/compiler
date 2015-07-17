@@ -136,17 +136,25 @@
            [sym2 (itmd:aopexp-var2 e)]
 	   [sym1 (addr->sym sym1)]
 	   [sym2 (addr->sym sym2)]
-	   [symdest (addr->sym dest)])
+	   [dest (addr->sym dest)])
       ; sym1 と sym2 の指す先の値を一時レジスタに読み込んで
       (list (instr 'lw `(,reg1 ,sym1))
 	    (instr 'lw `(,reg2 ,sym2))
 	    ; その値を op で計算し,
 	    (instr op `(,reg1 ,reg1 ,reg2))
 	    ; その結果を dest の指す先に書き込む
-	    (instr 'sw `(,reg1 ,symdest))))]
+	    (instr 'sw `(,reg1 ,dest))))]
    [(itmd:relopexp? e)
-    (error 'intermed-exp->code "Not implemented.")
-   ]))
+    (let* ((op (string->symbol (format "s~a" (itmd:relopexp-op e))))
+           (var1 (itmd:relopexp-var1 e))
+           (var2 (itmd:relopexp-var2 e))
+           (var1 (addr->sym var1))
+           (var2 (addr->sym var2))
+           (dest (addr->sym dest)))
+      (list (instr 'lw `(,reg1 ,var1))
+            (instr 'lw `(,reg2 ,var2))
+            (instr op `(,reg1 ,reg1 ,reg2))
+            (instr 'sw `(,reg1 ,dest))))]))
 
 ; 中間命令をアセンブリに変換. localvarsinbytes と argsinbytes は
 ; return を変換する際に $sp や $fp を操作するために必要.
@@ -168,8 +176,14 @@
 	    ; reg2 の値をアドレスと思ってそのアドレスに reg1 を書き込む
 	    (instr 'sw `(,reg1 ,destderef))))]
    [(itmd:readstmt? s)
-    ; 実装せよ.
-    (error 'intermed-stmt->code "Not implemented.")]
+    (let* ([dest (itmd:readstmt-dest s)]
+           [symdest (addr->sym dest)]
+           [srcderef (string->symbol (format "0(~a)" (symbol->string reg1)))]
+           [src (itmd:readstmt-src s)]
+           [symsrc (addr->sym src)])
+      (list (instr 'lw `(,reg1 ,symsrc))
+            (instr 'lw `(,reg1 ,srcderef))
+            (instr 'sw `(,reg1 ,symdest))))]
    [(itmd:letstmt? s)
     (let* ([dest (itmd:letstmt-var s)]
 	   [exp (itmd:letstmt-exp s)])
@@ -202,12 +216,43 @@
 		; then 節に対応する命令の末尾でここに飛んでくる.
 		(label label2))))]
    [(itmd:whilestmt? s)
-    ; 実装せよ
-    (error 'intermed-stmt->code "Not implemented.")]
+    (let* ([var (itmd:whilestmt-var s)]
+           [var (addr->sym var)]
+           [stmt (itmd:whilestmt-stmt s)]
+           [code1 (flatten (map (lambda (st)(intermed-stmt->code localvarsinbytes argsinbytes st)) stmt))]
+           [label1 (nextlabel)]
+           [label2 (nextlabel)]
+           )
+      (flatten (list 
+                (label label1)
+                (instr 'lw `(,reg1 ,var))
+                (instr 'beqz `(,reg1 ,label2))
+                code1
+                (label label1) 
+                (label label2)
+                )))]
    [(itmd:returnstmt? s)
-    (error 'intermed-stmt->code "Not implemented.")]
+   (let* ((var (itmd:returnstmt-var s))
+          (var (addr->sym var)))
+     (list (instr 'lw `(,reg1 ,var))
+           (instr 'move `(,retreg ,reg1))
+           (restorecode localvarsinbytes argsinbytes)
+           (instr 'jr `($ra)))
+     )]
    [(itmd:callstmt? s)
-    (error 'intermed-stmt->code "Not implemented.")]
+   (let* [(func (itmd:callstmt-f s))
+          (sourvars (itmd:callstmt-vars s))
+          (sourvars (addr->sym sourvars))
+          (dest (itmd:callstmt-dest s))
+          (dest (addr->sym dest))
+          ]
+     (list (instr 'lw `(,reg1 ,sourvars))
+           (instr 'sw `(,reg1 ,dest))
+           (instr 'lw `(,reg1 ,dest))
+           (instr 'sw `(,reg1 ,sourvars))
+           (instr 'jal `(,func))
+           (instr 'sw `(,retreg )))
+     )]
    [(itmd:printstmt? s)
     (let* ([src (itmd:printstmt-var s)]
 	   [symsrc (addr->sym src)])
@@ -217,8 +262,7 @@
 	    (instr 'syscall '())))]
    ))
 
-(define/contract (intermed-fundef->code fd)
-  (-> itmd:fundef? code?)
+(define (intermed-fundef->code fd)
   (let* #;([f (itmd:fundef-f fd)]
 	 [localvarsize (itmd:fundef-localvarsize fd)]
 	 [args (itmd:fundef-args fd)]

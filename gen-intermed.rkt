@@ -367,8 +367,9 @@
 (define (gen-optimized-intermed tree)
   (optimize-intermed (gen-intermed tree)))
 
+
 ;テスト
-(begin
+#;(begin
 (define p (open-input-file "test01.c"))
 (port-count-lines! p)
 (display 

@@ -128,7 +128,7 @@
                                    (else (in:letstmt dest (syn-to-inter src)))))))
          (cond ((stx:unary_exp_st? dest) (in:writestmt (syn-to-inter dest) src))
                ((stx:unary_exp_st? src) (in:readstmt (syn-to-inter dest) src))
-               (else (in:letstmt (syn-to-inter dest) (syn-to-inter src)))))
+               (else (in:letstmt (syn-to-inter dest) (in:varexp (syn-to-inter src))))))
          ;dest
          ))
     ((stx:logic_exp_st? st) 
@@ -195,11 +195,11 @@
             (temp1 (syn-to-inter op1))
             (temp2 (syn-to-inter op2))
             (temp3 (syn-to-inter (make-temp)))
-            (op1-type (cond ((in:varexp? op1) (cond ((type_pointer? (obj-type (in:varexp-var op1))) 'int-pointer)
-                                                    (else 'int)))
+            (op1-type (cond ((obj? op1) (cond ((type_pointer? (obj-type op1)) 'int-pointer)
+                                              (else 'int)))
                             (else 'int)))
-            (op2-type (cond ((in:varexp? op2) (cond ((type_pointer? (obj-type (in:varexp-var op1))) 'int-pointer)
-                                                    (else 'int)))
+            (op2-type (cond ((obj? op2) (cond ((type_pointer? (obj-type op2)) 'int-pointer)
+                                              (else 'int)))
                             (else 'int))))
        (cond ((and (equal? 'int-pointer op1-type) (equal? 'int op2-type)) 
               (begin
@@ -317,7 +317,9 @@
                                                       (stx:alge_exp_st 'mul (stx:constant_st 4 'syntax-sugar-gen-intermed) array-size 'syntax-sugar-gen-intermed)
                                                       'syntax-sugar-gen-intermed))) pos)))
                      (else 
-                      (in:varexp st))))
+                      ;(in:varexp st)
+                      st
+                      )))
     (else (error (format "\n check syn-to-code! ~a\n" st)))))
 
 
@@ -366,7 +368,7 @@
   (optimize-intermed (gen-intermed tree)))
 
 ;テスト
-#;(begin
+(begin
 (define p (open-input-file "test01.c"))
 (port-count-lines! p)
 (display 

@@ -375,7 +375,7 @@
 
 
 ;テスト
-#;(begin
+(begin
 (define p (open-input-file "test01.c"))
 (port-count-lines! p)
 (display 

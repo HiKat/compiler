@@ -160,6 +160,7 @@
       ;配列型のとき
       ((equal? flag 1)
        (let* ((off (type_array-size (obj-type ob)))
+              (off (ref-obj off fun))
               (base (car (flatten 
                           (list 
                            (filter (lambda (x)

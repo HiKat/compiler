@@ -10,8 +10,8 @@
 
 ;テスト
 
-(begin
-  (define p1 (open-input-file "basic/arith.sc"))
+#;(begin
+  (define p1 (open-input-file "basic/global.sc"))
   (port-count-lines! p1)
   (display 
    (format "\n\n;;;;;;;;;;;;;;;;;;;;;;;;;;;以下が意味解析の実行結果です;;;;;;;;;;;;;;;;;;;;;;;;.\n"))
@@ -24,8 +24,8 @@
    (format "\n\n;;;;;;;;;;;;;;;;;;;;;;;;;;;以下が中間命令生成の実行結果です;;;;;;;;;;;;;;;;;;;;;;;;.\n"))
   (gen-optimized-intermed (sem-analyze-tree (k08:parse-port p))))
 
-#;(begin
-  (define test-ass (open-input-file "test01.c"))
+(begin
+  (define test-ass (open-input-file "basic/global.sc"))
   (port-count-lines! test-ass)
   (define test-intermed 
     (assign-add-intermed 
@@ -58,4 +58,4 @@
           (sem-analyze-tree 
            (k08:parse-port file-port))))))))))
 
-(compiler "basic/arith.sc")
+;(compiler "basic/global.sc")

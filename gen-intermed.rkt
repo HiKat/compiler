@@ -196,6 +196,12 @@
                       ((equal? 'div op) '/)))
             (op1 (stx:alge_exp_st-op1 st))
             (op2 (stx:alge_exp_st-op2 st))
+            ;配列のサイズtype_arrayの要素sizeに数字がそのまま入っている
+            ;場合があるためそのときはconstant_stに入れる.
+            (op1 (cond ((number? op1) (stx:constant_st op1 'no))
+                       (else op1)))
+            (op2 (cond ((number? op2) (stx:constant_st op2 'no))
+                       (else op2)))
             (temp1 (syn-to-inter op1))
             (temp2 (syn-to-inter op2))
             (temp3 (syn-to-inter (make-temp)))
@@ -330,7 +336,7 @@
                                                       (stx:alge_exp_st 'mul (stx:constant_st 4 'syntax-sugar-gen-intermed) array-size 'syntax-sugar-gen-intermed)
                                                       'syntax-sugar-gen-intermed))) pos)))
                      (else st)))
-    (else (error (format "\n check syn-to-inter! ~a\n" st)))))
+    (else (error (format "\n check syn-to-inter!! ~a\n" st)))))
 
 
 

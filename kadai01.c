@@ -1,5 +1,4 @@
 int comp_num(int a, int b);
-int sort_array[8];
 
 
 int comp_num(int a, int b){
@@ -13,6 +12,7 @@ int main(){
     int i;
     int j;
     int h;
+    int sort_array[8];
 
     sort_array[0] = 6;
     sort_array[1] = 4;

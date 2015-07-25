@@ -70,6 +70,36 @@
 ;返す関数
 ;同時にenvをもとにstatement内の定義をチェックする.  
 
+##アセンブリ生成部分  
+###addf->sym  
+;obj-offを受け取って,それを $fp 経由でアクセスするための    
+;アドレス式に変換する関数.  
+;引数    
+;構造体obj-off  
+;戻り値  
+;シンボル '|77($fp)| など  
+  
+###intermed-exp->code  
+;obj-off構造体destと中間命令の式 e を受け取って「e を評価して  
+;dest に結果を書き込む」という動作をする命令列を生成する関数.  
+;引数  
+;obj-off構造体と    
+;中間命令の式  
+;intexp,varexp,aopexp,relopexp  
+;戻り値  
+;アセンブリ  
+
+###intermed-stmt->code  
+;引数   
+:localvarsinbytes  
+;argsinbytes  
+;中間命令文の構造体  
+;emptystmt,writestmt,readstmt,letstmt,ifstmt,whilestmt,returnstmt,callstmt,printstmt  
+;
+
+
+
+
 
 
 

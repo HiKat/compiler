@@ -289,25 +289,30 @@
             (meaningless (set! temp-decl original-temp-decl)))
        (in:compdstmt (flatten (append decl stmt-temp-decl)) (flatten (append stmt-intermed stmt)))))          
     ((stx:func_st? st) 
-     (let* ((vars (flatten (stx:func_st-para st)));varsは図べて一旦変数に格納してそれを関数呼び出しに入れる.
-            (f (stx:func_st-name st))
-            (temp (syn-to-inter (make-temp)))
-            (let-var 
-             (map 
-              (lambda (x) (correct-let (in:letstmt (make-temp) (in:varexp (syn-to-inter x))))) 
-              vars)))
-       (begin 
-         (set! 
-          intermed-code
-          (append 
-           intermed-code
-           (flatten (list
-                     let-var
-                     (correct-let 
-                      (in:callstmt temp 
-                                   f 
-                                   (map (lambda (x) (in:letstmt-var x)) let-var)))))))
-         temp)))
+     (cond 
+       ((equal? 'print (obj-name (stx:func_st-name st))) 
+        (let* ((vars (flatten (stx:func_st-para st))));varsは図べて一旦変数に格納してそれを関数呼び出しに入れる.
+          (in:printstmt (syn-to-inter (car vars)))))
+       (else (let* ((vars (flatten (stx:func_st-para st)));varsは図べて一旦変数に格納してそれを関数呼び出しに入れる.
+                    (f (stx:func_st-name st))
+                    (temp (syn-to-inter (make-temp)))
+                    (let-var 
+                     (map 
+                      (lambda (x) (correct-let (in:letstmt (make-temp) (in:varexp (syn-to-inter x))))) 
+                      vars)))
+               (begin 
+                 (set! 
+                  intermed-code
+                  (append 
+                   intermed-code
+                   (flatten (list
+                             let-var
+                             (correct-let 
+                              (in:callstmt temp 
+                                           f 
+                                           (map (lambda (x) (in:letstmt-var x)) let-var)))))))
+                 temp))
+             )))
     ((obj? st) (cond ((type_array? (obj-type st))
                       (let* ((name (obj-name st))
                              (lev (obj-lev st))
@@ -375,7 +380,7 @@
 
 
 ;テスト
-(begin
+#;(begin
 (define p (open-input-file "test01.c"))
 (port-count-lines! p)
 (display 

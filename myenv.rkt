@@ -100,16 +100,24 @@
 
 (define (check-proto-para obj-list)
   (cond 
-    ((equal? '() obj-list) (display (format "OK! CRRECT PARAMETERS OF FUNCTION PROTOTYPE\n")))
-    ((equal? 'nopara obj-list) (display(format "OK! CRRECT PARAMETERS OF FUNCTION PROTOTYPE\n")))
+    ((equal? '() obj-list) 
+     ;(display (format "OK! CRRECT PARAMETERS OF FUNCTION PROTOTYPE\n"))
+     #t)
+    ((equal? 'nopara obj-list) 
+     ;(display(format "OK! CRRECT PARAMETERS OF FUNCTION PROTOTYPE\n"))
+     #t)
     ((in-env? (obj-name (car obj-list)) (cdr obj-list))
      (error (format "ERROR! REDEFINITION OF '~a' AT ~a IN PARAMETERS OF FUNCTION PROTOTYPE" 
                     (obj-name (car obj-list)) (obj-pos (car obj-list)))))
     (else (check-proto-para (cdr obj-list)))))
 (define (check-def-para obj-list)
   (cond 
-    ((equal? '() obj-list) (display (format "OK! CRRECT PARAMETERS OF FUNCTION PROTOTYPE.\n")))
-    ((equal? 'nopara obj-list) (display(format "OK! CRRECT PARAMETERS OF FUNCTION PROTOTYPE.\n")))
+    ((equal? '() obj-list) 
+     ;(display (format "OK! CRRECT PARAMETERS OF FUNCTION PROTOTYPE.\n"))
+     #t)
+    ((equal? 'nopara obj-list) 
+     ;(display(format "OK! CRRECT PARAMETERS OF FUNCTION PROTOTYPE.\n"))
+     #t)
     ((in-env? (obj-name (car obj-list)) (cdr obj-list))
      (error (format "ERROR! SOME REDEFINITION OF '~a' AT ~a IN PARAMETERS OF FUNCTION DEFINITION"
                     (obj-name (car obj-list)) (obj-pos (car obj-list)))))
@@ -124,8 +132,10 @@
                       (format "ERROR! INVALID FUNCTION PROTOTYPE '~a' AT ~a"
                                     (obj-name obj) (obj-pos obj))))
                     (else 
-                     (display (format "OK! CRRECT FUNCTION PROTOTYPE OF '~a'.\n" 
-                                      (obj-name obj))))))
+                     #;(display 
+                      (format "OK! CRRECT FUNCTION PROTOTYPE OF '~a'.\n" (obj-name obj)))
+                     #t
+                     )))
    env))
 (define (check-func obj env)
   (map 
@@ -134,7 +144,9 @@
                           (equal? 'fun (obj-kind x)))
                      (error (format "ERROR! REDEFINITION OF '~a' AT ~a"
                                     (obj-name obj) (obj-pos obj))))
-                    (else (display (format "OK! CRRECT FUNCTION PROTOTYPE OF '~a'.\n" (obj-name obj))))))
+                    (else 
+                     ;(display (format "OK! CRRECT FUNCTION PROTOTYPE OF '~a'.\n" (obj-name obj)))
+                     #t)))
    env))  
 
 ;引数stはstx:id_stもしくはstx:id_ast_st
@@ -152,11 +164,12 @@
                       ((stx:id_ast_st? st) 'n)
                       ((stx:array_var_st? st) 'y)))
            
-           (same-name-list (cond ((equal? '() env) 
-                                  (error (format "ERROR! AN UNDEFINED IDENTIFIER OF VAR '~a' AT ~a" name pos)))
-                                 (else (flatten (map (lambda (x) (cond ((equal? name (obj-name x)) x)
-                                                                       (else '())))
-                                                     env)))))
+           (same-name-list 
+            (cond ((equal? '() env) 
+                   (error (format "ERROR! AN UNDEFINED IDENTIFIER OF VAR '~a' AT ~a" name pos)))
+                  (else (flatten (map 
+                                  (lambda (x) (cond ((equal? name (obj-name x)) x) (else '())))
+                                  env)))))
            (correct-var-obj (cond 
                               ((equal? '() same-name-list) 
                                (error (format "ERROR! AN UNDEFINED IDENTIFIER OF VAR '~a' AT ~a" name pos)))
@@ -201,14 +214,7 @@
                 (else (car (flatten (map (lambda (x) (cond ((equal? lev (obj-lev x)) x)
                                                         (else '())))
                                       ls))))))))
-                 
-                   
-
-
-
-                              
                                         
-                              
                                      
 (define (check-func-ref st lev env)
   (let* ((name (stx:func_st-name st))
@@ -234,9 +240,11 @@
 (define (check-comp-env comp-env)
   ;(display (format "~a\n" comp-env))
   (cond ((equal? 'nodecl comp-env)
-         (display (format "OK! NO DECLARATIONS IN COMPONUND STATEMENT\n")))
+         ;(display (format "OK! NO DECLARATIONS IN COMPONUND STATEMENT\n"))
+         #t)
         ((equal? '() (cdr comp-env)) 
-         (display (format "OK! CORRENCT DECLARATIONS IN COMPONUND STATEMENT!\n")))
+         ;(display (format "OK! CORRENCT DECLARATIONS IN COMPONUND STATEMENT!\n"))
+         #t)
         (else (cond ((in-env? (obj-name (car comp-env)) (cdr comp-env))
                      (error "ERROR! REDEFINITION OF "(obj-name (car comp-env))))
                     (else (check-comp-env (cdr comp-env)))))))

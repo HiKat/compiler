@@ -109,7 +109,7 @@
                                 (in:vardecl base-temp))))
                             (else (in:vardecl x)))) 
                     decl-ls)))
-             (error (format "\n check syn-to-code! ~a\n" st)))))
+             (error (format "\n check syn-to-inter! ~a\n" st)))))
     ((stx:func_def_st? st) (let* ((fun-dec (stx:func_def_st-func-declarator-st st))
                                   (fun-obj (stx:func_declarator_st-name fun-dec))
                                   ;fun-para-listはパラメータのobjのlistもしくはその単体.
@@ -293,13 +293,15 @@
        ((equal? 'print (obj-name (stx:func_st-name st))) 
         (let* ((vars (flatten (stx:func_st-para st))));varsは図べて一旦変数に格納してそれを関数呼び出しに入れる.
           (in:printstmt (syn-to-inter (car vars)))))
-       (else (let* ((vars (flatten (stx:func_st-para st)));varsは図べて一旦変数に格納してそれを関数呼び出しに入れる.
+       (else (let* ((vars (stx:func_st-para st));varsは図べて一旦変数に格納してそれを関数呼び出しに入れる.
                     (f (stx:func_st-name st))
                     (temp (syn-to-inter (make-temp)))
-                    (let-var 
-                     (map 
-                      (lambda (x) (correct-let (in:letstmt (make-temp) (in:varexp (syn-to-inter x))))) 
-                      vars)))
+                    (let-var
+                     (cond ((equal? 'nopara vars)'())
+                           (else (map 
+                                  (lambda (x) 
+                                    (correct-let (in:letstmt (make-temp) (in:varexp (syn-to-inter x))))) 
+                                  vars)))))
                (begin 
                  (set! 
                   intermed-code
@@ -327,11 +329,8 @@
                                                       (obj (array_base name lev kind) 'temp 'array-base 'temp 'temp)
                                                       (stx:alge_exp_st 'mul (stx:constant_st 4 'syntax-sugar-gen-intermed) array-size 'syntax-sugar-gen-intermed)
                                                       'syntax-sugar-gen-intermed))) pos)))
-                     (else 
-                      ;(in:varexp st)
-                      st
-                      )))
-    (else (error (format "\n check syn-to-code! ~a\n" st)))))
+                     (else st)))
+    (else (error (format "\n check syn-to-inter! ~a\n" st)))))
 
 
 

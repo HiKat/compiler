@@ -1,97 +1,80 @@
-	.text	
- w:
- 	subu	$sp,$sp,28
+.text	
+ fib:
+ 	subu	$sp,$sp,56
  	sw	$ra,4($sp)
  	sw	$fp,0($sp)
- 	addiu	$fp,$sp,20
- 	li	$t0,0
- 	sw	$t0,-4($fp)
- 	li	$t0,0
- 	sw	$t0,-8($fp)
- 	lw	$t0,4($fp)
- 	lw	$t1,-8($fp)
- 	sgt	$t0,$t0,$t1
- 	sw	$t0,-12($fp)
- 	lw	$t0,-4($fp)
- 	sw	$t0,0($fp)
- 	lw	$t0,-12($fp)
- 	beqz	$t0,L1
- L0:
- 	lw	$t0,0($fp)
- 	lw	$t1,4($fp)
- 	+	$t0,$t0,$t1
- 	sw	$t0,-4($fp)
+ 	addiu	$fp,$sp,48
  	li	$t0,1
  	sw	$t0,-8($fp)
  	lw	$t0,4($fp)
  	lw	$t1,-8($fp)
- 	-	$t0,$t0,$t1
+ 	sub	$t0,$t0,$t1
  	sw	$t0,-12($fp)
- 	lw	$t0,-4($fp)
- 	sw	$t0,0($fp)
  	lw	$t0,-12($fp)
- 	sw	$t0,4($fp)
- 	lw	$t0,-12($fp)
- 	beqz	$t0,L1
- 	j	L0
- L1:
- 	lw	$t0,0($fp)
- 	move	$v0,$t0
- 	lw	$fp,0($sp)
- 	lw	$ra,4($sp)
- 	addiu	$sp,$sp,28
- 	jr	$ra
- 	jf	$ra
- 	lw	$fp,0($sp)
- 	lw	$ra,4($sp)
- 	addiu	$sp,$sp,28
- 	jr	$ra
- main:
- 	subu	$sp,$sp,28
- 	sw	$ra,4($sp)
- 	sw	$fp,0($sp)
- 	addiu	$fp,$sp,24
- 	li	$t0,10
- 	sw	$t0,-8($fp)
- 	lw	$t0,-8($fp)
  	sw	$t0,-4($fp)
  	lw	$t0,-4($fp)
  	sw	$t0,4($sp)
- 	jal	w
+ 	jal	fib
  	sw	$v0,0($fp)
- 	li	$t0,55
- 	sw	$t0,-12($fp)
+ 	li	$t0,2
+ 	sw	$t0,-24($fp)
+ 	lw	$t0,4($fp)
+ 	lw	$t1,-24($fp)
+ 	sub	$t0,$t0,$t1
+ 	sw	$t0,-28($fp)
+ 	lw	$t0,-28($fp)
+ 	sw	$t0,-20($fp)
+ 	lw	$t0,-20($fp)
+ 	sw	$t0,4($sp)
+ 	jal	fib
+ 	sw	$v0,-16($fp)
  	lw	$t0,0($fp)
- 	lw	$t1,-12($fp)
- 	seq	$t0,$t0,$t1
- 	sw	$t0,-16($fp)
- 	li	$v0,1
- 	lw	$t0,-16($fp)
- 	move	$a0,$t0
- 	syscall	
+ 	lw	$t1,-16($fp)
+ 	add	$t0,$t0,$t1
+ 	sw	$t0,-32($fp)
+ 	li	$t0,2
+ 	sw	$t0,-36($fp)
+ 	lw	$t0,4($fp)
+ 	lw	$t1,-36($fp)
+ 	slt	$t0,$t0,$t1
+ 	sw	$t0,-40($fp)
+ 	lw	$t0,-40($fp)
+ 	beqz	$t0,L0
+ 	lw	$t0,4($fp)
+ 	move	$v0,$t0
  	lw	$fp,0($sp)
  	lw	$ra,4($sp)
- 	addiu	$sp,$sp,28
+ 	addiu	$sp,$sp,56
+ 	jr	$ra
+ 	jr	$ra
+ 	j	L1
+ L0:
+ 	lw	$t0,-32($fp)
+ 	move	$v0,$t0
+ 	lw	$fp,0($sp)
+ 	lw	$ra,4($sp)
+ 	addiu	$sp,$sp,56
+ 	jr	$ra
+ 	jr	$ra
+ L1:
+ 	lw	$fp,0($sp)
+ 	lw	$ra,4($sp)
+ 	addiu	$sp,$sp,56
  	jr	$ra
  main:
  	subu	$sp,$sp,8
  	sw	$ra,4($sp)
  	sw	$fp,0($sp)
  	addiu	$fp,$sp,4
- main:
- 	subu	$sp,$sp,28
- 	sw	$ra,4($sp)
- 	sw	$fp,0($sp)
- 	addiu	$fp,$sp,24
- 	li	$t0,10
+ 	li	$t0,24
  	sw	$t0,-8($fp)
  	lw	$t0,-8($fp)
  	sw	$t0,-4($fp)
  	lw	$t0,-4($fp)
  	sw	$t0,4($sp)
- 	jal	w
+ 	jal	fib
  	sw	$v0,0($fp)
- 	li	$t0,55
+ 	li	$t0,46368
  	sw	$t0,-12($fp)
  	lw	$t0,0($fp)
  	lw	$t1,-12($fp)
@@ -101,10 +84,6 @@
  	lw	$t0,-16($fp)
  	move	$a0,$t0
  	syscall	
- 	lw	$fp,0($sp)
- 	lw	$ra,4($sp)
- 	addiu	$sp,$sp,28
- 	jr	$ra
  	lw	$fp,0($sp)
  	lw	$ra,4($sp)
  	addiu	$sp,$sp,8

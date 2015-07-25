@@ -73,9 +73,9 @@
           (flatten 
            (map 
             (lambda (x) (intermed-fundef->code x st))
-            fds))]
+            (remove main fds)))]
 	 [maincode 
-          (intermed-fundef->code main st)])
+          (intermed-stmt->code localvarsize 0 (itmd:fundef-body main))])
     (flatten
      (list
       (dir '.text '())
@@ -239,7 +239,7 @@
      (list (instr 'lw `(,reg1 ,var))
            (instr 'move `(,retreg ,reg1))
            (restorecode localvarsinbytes argsinbytes)
-           (instr `jf `($ra))))]
+           (instr `jr `($ra))))]
    [(itmd:callstmt? s)
     ;内部手続
     ;引数varlistは引数のlist
@@ -302,7 +302,12 @@
       (list (instr 'lw `(,reg1 ,symsrc))
             (instr 'sw `(,reg1 ,symdest))))]
    [(itmd:aopexp? e)
-    (let* ([op (itmd:aopexp-op e)]
+    (let* ([op (string->symbol 
+                (format "~a" 
+                        (cond ((equal? '+ (itmd:aopexp-op e)) 'add)
+                              ((equal? '- (itmd:aopexp-op e)) 'sub)
+                              ((equal? '* (itmd:aopexp-op e)) 'mul)
+                              ((equal? '/ (itmd:aopexp-op e)) 'div))))]
            [sym1 (itmd:aopexp-var1 e)]
            [sym2 (itmd:aopexp-var2 e)]
 	   [sym1 (addr->sym sym1)]

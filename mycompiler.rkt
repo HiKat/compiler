@@ -9,6 +9,14 @@
 (require "printcode.rkt")
 
 ;テスト
+
+(begin
+  (define p1 (open-input-file "basic/arith.sc"))
+  (port-count-lines! p1)
+  (display 
+   (format "\n\n;;;;;;;;;;;;;;;;;;;;;;;;;;;以下が意味解析の実行結果です;;;;;;;;;;;;;;;;;;;;;;;;.\n"))
+  (sem-analyze-tree (k08:parse-port p1)))
+
 #;(begin
   (define p (open-input-file "test01.c"))
   (port-count-lines! p)
@@ -50,4 +58,4 @@
           (sem-analyze-tree 
            (k08:parse-port file-port))))))))))
 
-(compiler "while.sc")
+(compiler "basic/arith.sc")

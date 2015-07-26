@@ -168,7 +168,10 @@
                                           (equal? lev (obj-off-lev x))
                                           (equal? kind (obj-off-kind x))
                                           ;配列型の際は参照してくるアドレスを工夫する必要がある.
-                                          (type_array? (obj-off-type x))
+                                          ;配列型がポインタ型としても書かれることへの対応
+                                          ;cf) basic/global.sc
+                                          (or (type_array? (obj-off-type x))
+                                              (type_pointer? (obj-off-type x)))
                                           (equal? pos (obj-off-pos x))))
                                    ;listはstack内のfun-stackのうちfunがvarと一致するfun-stackのvarsから
                                    ;探索を行う
@@ -306,11 +309,11 @@
 
 ;テスト
 #;(begin
-(define test-ass (open-input-file "test01.c"))
-(port-count-lines! test-ass)
-(define test-intermed 
+(define test-ass1 (open-input-file "basic/global.sc"))
+(port-count-lines! test-ass1)
+(define test-intermed1 
   (assign-add-intermed 
-   (gen-optimized-intermed (sem-analyze-tree (k08:parse-port test-ass)))))
+   (gen-optimized-intermed (sem-analyze-tree (k08:parse-port test-ass1)))))
 (display 
  (format "\n\n\n\n\n;;;;;;;;;;;;;;;;;;;;;;;;;;;以下が相対番地割り当ての実行結果です;;;;;;;;;;;;;;;;;;;;;;;;.\n"))
-(gen-assigned-itmd test-intermed))
+(gen-assigned-itmd test-intermed1))

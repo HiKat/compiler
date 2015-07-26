@@ -18,13 +18,13 @@
   (sem-analyze-tree (k08:parse-port p1)))
 
 #;(begin
-  (define p (open-input-file "test01.c"))
+  (define p (open-input-file "basic/global.sc"))
   (port-count-lines! p)
   (display 
    (format "\n\n;;;;;;;;;;;;;;;;;;;;;;;;;;;以下が中間命令生成の実行結果です;;;;;;;;;;;;;;;;;;;;;;;;.\n"))
   (gen-optimized-intermed (sem-analyze-tree (k08:parse-port p))))
 
-(begin
+#;(begin
   (define test-ass (open-input-file "basic/global.sc"))
   (port-count-lines! test-ass)
   (define test-intermed 

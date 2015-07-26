@@ -123,18 +123,14 @@
     ((stx:assign_exp_st? st) 
      (let* ((dest (stx:assign_exp_st-dest st))
             (src (stx:assign_exp_st-src st)))
-       (begin
-         #;(set! intermed-code 
-               (append intermed-code
-                       (list (cond ((stx:unary_exp_st? dest) (in:writestmt dest src))
-                                   ((stx:unary_exp_st? src) (in:readstmt dest src))
-                                   (else (in:letstmt dest (syn-to-inter src)))))))
-         
-         (cond ((stx:unary_exp_st? dest) (in:writestmt (syn-to-inter dest) src))
-               ((stx:unary_exp_st? src) (in:readstmt (syn-to-inter dest) src))
-               (else (in:letstmt (syn-to-inter dest) (in:varexp (syn-to-inter src))))))
-         ;dest
-         ))
+       (begin  
+         (cond ((and (stx:unary_exp_st? dest) 
+                     (not (stx:unary_exp_st? src)))
+                (in:writestmt (syn-to-inter dest) (syn-to-inter src)))
+               ((and (stx:unary_exp_st? src)
+                     (not (not (stx:unary_exp_st? src))))
+                (in:readstmt (syn-to-inter dest) (syn-to-inter src)))
+               (else (in:letstmt (syn-to-inter dest) (in:varexp (syn-to-inter src))))))))
     ((stx:logic_exp_st? st) 
      (let* ((op (stx:logic_exp_st-log-ope st))
             (op1 (stx:logic_exp_st-op1 st))
@@ -243,7 +239,7 @@
      (let* ((op (stx:unary_exp_st-mark st))
             (op1 (stx:unary_exp_st-op st)))
        (cond ((equal? 'amp op) (in:addrexp (syn-to-inter op1)))
-             (else st))))
+             ((equal? 'ast op) op1))))
     ((stx:constant_st? st) 
      (let* ((num (stx:constant_st-cons st))
             (temp (syn-to-inter (make-temp))))
@@ -389,8 +385,8 @@
 
 
 ;テスト
-#;(begin
-(define p-g-itmd (open-input-file "basic/logic.sc"))
+(begin
+(define p-g-itmd (open-input-file "basic/swap.sc"))
 (port-count-lines! p-g-itmd)
 (display 
  (format "\n\n;;;;;;;;;;;;;;;;;;;;;;;;;;;以下が中間命令生成の実行結果です;;;;;;;;;;;;;;;;;;;;;;;;.\n"))

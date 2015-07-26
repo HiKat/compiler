@@ -8,7 +8,8 @@
 (require "myenv.rkt")
 (require "printcode.rkt")
 
-(define sc-program "error/type01.sc")
+;basic/[arith.sc/array.sc/cmp.sc/fib.sc/gcd.sc/global.sc/logic.sc/scope.sc/swap.sc/while.sc]
+(define sc-program "basic/swap.sc")
 
 ;テスト
 

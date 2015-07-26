@@ -309,7 +309,7 @@
 
 ;テスト
 #;(begin
-(define test-ass1 (open-input-file "basic/global.sc"))
+(define test-ass1 (open-input-file "basic/swap.sc"))
 (port-count-lines! test-ass1)
 (define test-intermed1 
   (assign-add-intermed 

@@ -345,7 +345,7 @@
 
 
 ;テスト
-(begin
+#;(begin
   (define testcg (open-input-file "error/type01.sc"))
   (port-count-lines! testcg)
   (define test-intermedcg 
@@ -356,7 +356,7 @@
   (define test-ass-itmdcg (assn:gen-assigned-itmd test-intermedcg))
   test-ass-itmdcg)
 
-(begin
+#;(begin
     (display 
      (format "\n\n\n\n\n;;;;;;;;;;;;;;;;;;;;;;;;;;;以下がアセンブリ生成の実行結果です;;;;;;;;;;;;;;;;;;;;;;;;.\n"))
     (intermed-prog->code test-ass-itmdcg))

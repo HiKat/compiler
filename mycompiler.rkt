@@ -1,6 +1,6 @@
 #lang racket
 (require "semantic-analy.rkt")
-(require (prefix-in k08: "kadai08.rkt"))
+(require "kadai08.rkt")
 (require "gen-intermed.rkt")
 (require "codegen.rkt")
 (require "intermed.rkt")
@@ -9,7 +9,7 @@
 (require "printcode.rkt")
 
 ;basic/[arith.sc/array.sc/cmp.sc/fib.sc/gcd.sc/global.sc/logic.sc/scope.sc/swap.sc/while.sc]
-(define sc-program "basic/swap.sc")
+(define sc-program "basic/fib.sc")
 
 ;テスト
 
@@ -18,21 +18,21 @@
   (port-count-lines! p1)
   (display 
    (format "\n\n;;;;;;;;;;;;;;;;;;;;;;;;;;;以下が意味解析の実行結果です;;;;;;;;;;;;;;;;;;;;;;;;.\n"))
-  (sem-analyze-tree (k08:parse-port p1)))
+  (sem-analyze-tree (parse-port p1)))
 
 #;(begin
   (define p (open-input-file sc-program))
   (port-count-lines! p)
   (display 
    (format "\n\n;;;;;;;;;;;;;;;;;;;;;;;;;;;以下が中間命令生成の実行結果です;;;;;;;;;;;;;;;;;;;;;;;;.\n"))
-  (gen-optimized-intermed (sem-analyze-tree (k08:parse-port p))))
+  (gen-optimized-intermed (sem-analyze-tree (parse-port p))))
 
 #;(begin
   (define test-ass (open-input-file sc-program))
   (port-count-lines! test-ass)
   (define test-intermed 
     (assign-add-intermed 
-     (gen-optimized-intermed (sem-analyze-tree (k08:parse-port test-ass)))))
+     (gen-optimized-intermed (sem-analyze-tree (parse-port test-ass)))))
   (display 
    (format "\n\n\n\n\n;;;;;;;;;;;;;;;;;;;;;;;;;;;以下が相対番地割り当ての実行結果です;;;;;;;;;;;;;;;;;;;;;;;;.\n"))
   (define test-ass-itmd (gen-assigned-itmd test-intermed))
@@ -59,7 +59,20 @@
         (assign-add-intermed 
          (gen-optimized-intermed 
           (sem-analyze-tree 
-           (k08:parse-port file-port))))))))))
+           (parse-port file-port))))))))))
 
-(compiler sc-program)
+;(compiler sc-program)
+
+
+;(compiler "basic/arith.sc")
+;(compiler "basic/array.sc")
+;(compiler "basic/cmp.sc")
+(compiler "basic/fib.sc")
+;(compiler "basic/gcd.sc")
+;global変数のアドレスの割当がわからない.
+;(compiler "basic/global.sc")
+;(compiler "basic/logic.sc")
+;(compiler "basic/scope.sc")
+;(compiler "basic/swap.sc")
+;(compiler "basic/while.sc")
 

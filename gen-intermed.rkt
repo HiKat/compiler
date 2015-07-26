@@ -148,13 +148,16 @@
                  intermed-code
                  (append 
                   intermed-code 
-                  (flatten (list (in:ifstmt temp1 
-                                            (correct-let 
-                                             (in:letstmt temp3 (in:intexp 1))) 
-                                            (in:ifstmt temp2 
-                                                       (in:intexp 1) 
-                                                       (correct-let 
-                                                        (in:letstmt temp3 (in:intexp 0)))))))))
+                  (flatten 
+                   (list 
+                    (in:ifstmt temp1 
+                               (correct-let 
+                                (in:letstmt temp3 (in:intexp 1))) 
+                               (in:ifstmt temp2 
+                                          (correct-let 
+                                           (in:letstmt temp3 (in:intexp 1))) 
+                                          (correct-let 
+                                           (in:letstmt temp3 (in:intexp 0)))))))))
                 temp3))
              ((equal? 'and op)
               (begin 
@@ -164,7 +167,8 @@
                                                         (in:ifstmt temp2 
                                                                    (correct-let 
                                                                     (in:letstmt temp3 (in:intexp 1))) 
-                                                                   (correct-let (in:letstmt temp3 (in:intexp 0)))) 
+                                                                   (correct-let 
+                                                                    (in:letstmt temp3 (in:intexp 0)))) 
                                                         (correct-let 
                                                          (in:letstmt temp3 (in:intexp 0))))))))
                 temp3)))))                              
@@ -386,9 +390,9 @@
 
 ;テスト
 #;(begin
-(define p (open-input-file "test01.c"))
-(port-count-lines! p)
+(define p-g-itmd (open-input-file "basic/logic.sc"))
+(port-count-lines! p-g-itmd)
 (display 
  (format "\n\n;;;;;;;;;;;;;;;;;;;;;;;;;;;以下が中間命令生成の実行結果です;;;;;;;;;;;;;;;;;;;;;;;;.\n"))
-(gen-optimized-intermed (sem-analyze-tree (k08:parse-port p)))
+(gen-optimized-intermed (sem-analyze-tree (k08:parse-port p-g-itmd)))
 )

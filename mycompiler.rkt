@@ -13,21 +13,21 @@
 
 ;テスト
 
-(begin
+#;(begin
   (define p1 (open-input-file sc-program))
   (port-count-lines! p1)
   (display 
    (format "\n\n;;;;;;;;;;;;;;;;;;;;;;;;;;;以下が意味解析の実行結果です;;;;;;;;;;;;;;;;;;;;;;;;.\n"))
   (sem-analyze-tree (k08:parse-port p1)))
 
-(begin
+#;(begin
   (define p (open-input-file sc-program))
   (port-count-lines! p)
   (display 
    (format "\n\n;;;;;;;;;;;;;;;;;;;;;;;;;;;以下が中間命令生成の実行結果です;;;;;;;;;;;;;;;;;;;;;;;;.\n"))
   (gen-optimized-intermed (sem-analyze-tree (k08:parse-port p))))
 
-(begin
+#;(begin
   (define test-ass (open-input-file sc-program))
   (port-count-lines! test-ass)
   (define test-intermed 

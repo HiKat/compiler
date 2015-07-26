@@ -340,13 +340,19 @@
             (instr 'lw `(,reg2 ,var2))
             (instr op `(,reg1 ,reg1 ,reg2))
             (instr 'sw `(,reg1 ,dest))))]
+   [(itmd:addrexp? e)
+    (let* ([arg (itmd:addrexp-var e)]
+	   [symsrc (addr->sym arg)]
+           [symdest (addr->sym dest)])
+      (list (instr 'la `(,reg1 ,symsrc))
+            (instr 'sw `(,reg1 ,symdest))))]
    (else (error (format "debug in intermed-exp->code \n~a\n" e)))))
 
 
 
 ;テスト
 #;(begin
-  (define testcg (open-input-file "error/type01.sc"))
+  (define testcg (open-input-file "basic/swap.sc"))
   (port-count-lines! testcg)
   (define test-intermedcg 
     (assn:assign-add-intermed 

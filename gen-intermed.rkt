@@ -130,7 +130,13 @@
                ((and (stx:unary_exp_st? src)
                      (not (not (stx:unary_exp_st? src))))
                 (in:readstmt (syn-to-inter dest) (syn-to-inter src)))
-               (else (in:letstmt (syn-to-inter dest) (in:varexp (syn-to-inter src))))))))
+               (else (in:letstmt (syn-to-inter dest) 
+                                 (cond ((or (in:intexp? (syn-to-inter src))
+                                            (in:aopexp? (syn-to-inter src))
+                                            (in:relopexp? (syn-to-inter src))
+                                            (in:addrexp? (syn-to-inter src)))
+                                        (syn-to-inter src))
+                                       (else (in:varexp (syn-to-inter src))))))))))
     ((stx:logic_exp_st? st) 
      (let* ((op (stx:logic_exp_st-log-ope st))
             (op1 (stx:logic_exp_st-op1 st))
@@ -296,17 +302,26 @@
        (in:compdstmt (flatten (append decl stmt-temp-decl)) (flatten (append stmt-intermed stmt)))))          
     ((stx:func_st? st) 
      (cond 
+       ;組み込み関数printのとき
        ((equal? 'print (obj-name (stx:func_st-name st))) 
-        (let* ((vars (flatten (stx:func_st-para st))));varsは図べて一旦変数に格納してそれを関数呼び出しに入れる.
+        (let* ((vars (flatten (stx:func_st-para st))))
           (in:printstmt (syn-to-inter (car vars)))))
-       (else (let* ((vars (stx:func_st-para st));varsは図べて一旦変数に格納してそれを関数呼び出しに入れる.
+       ;それ以外
+       (else (let* ((vars (stx:func_st-para st))
                     (f (stx:func_st-name st))
+                    (return-type (type_fun-out (obj-type f)))
                     (temp (syn-to-inter (make-temp)))
                     (let-var
                      (cond ((equal? 'nopara vars)'())
                            (else (map 
                                   (lambda (x) 
-                                    (correct-let (in:letstmt (make-temp) (in:varexp (syn-to-inter x))))) 
+                                    (correct-let (in:letstmt (make-temp) 
+                                                             (cond ((or (in:intexp? (syn-to-inter x))
+                                                                        (in:aopexp? (syn-to-inter x))
+                                                                        (in:relopexp? (syn-to-inter x))
+                                                                        (in:addrexp? (syn-to-inter x)))
+                                                                    (syn-to-inter x))
+                                                                   (else (in:varexp (syn-to-inter x))))))) 
                                   vars)))))
                (begin 
                  (set! 
@@ -319,8 +334,8 @@
                               (in:callstmt temp 
                                            f 
                                            (map (lambda (x) (in:letstmt-var x)) let-var)))))))
-                 temp))
-             )))
+                 (cond ((equal? 'void return-type) '())
+                       (else temp)))))))
     ((obj? st) (cond ((type_array? (obj-type st))
                       (let* ((name (obj-name st))
                              (lev (obj-lev st))
@@ -385,7 +400,7 @@
 
 
 ;テスト
-(begin
+#;(begin
 (define p-g-itmd (open-input-file "basic/swap.sc"))
 (port-count-lines! p-g-itmd)
 (display 

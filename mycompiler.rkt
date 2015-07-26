@@ -8,7 +8,7 @@
 (require "myenv.rkt")
 (require "printcode.rkt")
 
-(define sc-program "basic/scope.sc")
+(define sc-program "error/type01.sc")
 
 ;テスト
 

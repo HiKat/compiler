@@ -68,8 +68,13 @@
           (* assn:wordsize (length (filter (lambda (x) (itmd:vardecl? x)) itmd)))]
          ;mainはmain関数のfundef
 	 [main 
-          (car (filter (lambda (x) (equal? 'main (obj-name (itmd:fundef-var x)))) fds))]
-	 [fdscode 
+          (car 
+           (cond ((equal? 
+                   '() 
+                   (filter (lambda (x) (equal? 'main (obj-name (itmd:fundef-var x)))) fds))
+                  (error (format "ERROR! NO MAIN FUNCTION!")))
+                 (else (filter (lambda (x) (equal? 'main (obj-name (itmd:fundef-var x)))) fds))))]
+         [fdscode 
           (flatten 
            (map 
             (lambda (x) (intermed-fundef->code x st))
@@ -340,8 +345,8 @@
 
 
 ;テスト
-#;(begin
-  (define testcg (open-input-file "test01.c"))
+(begin
+  (define testcg (open-input-file "error/type01.sc"))
   (port-count-lines! testcg)
   (define test-intermedcg 
     (assn:assign-add-intermed 
@@ -351,7 +356,7 @@
   (define test-ass-itmdcg (assn:gen-assigned-itmd test-intermedcg))
   test-ass-itmdcg)
 
-#;(begin
+(begin
     (display 
      (format "\n\n\n\n\n;;;;;;;;;;;;;;;;;;;;;;;;;;;以下がアセンブリ生成の実行結果です;;;;;;;;;;;;;;;;;;;;;;;;.\n"))
     (intermed-prog->code test-ass-itmdcg))

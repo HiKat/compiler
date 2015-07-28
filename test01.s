@@ -1,4 +1,4 @@
-.text	
+	.text	
  main:
  	subu	$sp,$sp,8
  	sw	$ra,4($sp)

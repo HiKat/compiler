@@ -9,7 +9,7 @@
 (require "printcode.rkt")
 
 ;basic/[arith.sc/array.sc/cmp.sc/fib.sc/gcd.sc/global.sc/logic.sc/scope.sc/swap.sc/while.sc]
-(define sc-program "basic/fib.sc")
+(define sc-program "test02.sc")
 
 ;テスト
 
@@ -27,7 +27,7 @@
    (format "\n\n;;;;;;;;;;;;;;;;;;;;;;;;;;;以下が中間命令生成の実行結果です;;;;;;;;;;;;;;;;;;;;;;;;.\n"))
   (gen-optimized-intermed (sem-analyze-tree (parse-port p))))
 
-#;(begin
+(begin
   (define test-ass (open-input-file sc-program))
   (port-count-lines! test-ass)
   (define test-intermed 
@@ -38,10 +38,10 @@
   (define test-ass-itmd (gen-assigned-itmd test-intermed))
   test-ass-itmd)
 
+;(define test-asmbl (intermed-prog->code test-ass-itmd))
 #;(begin
   (display 
    (format "\n\n\n\n\n;;;;;;;;;;;;;;;;;;;;;;;;;;;以下がアセンブリ生成の実行結果です;;;;;;;;;;;;;;;;;;;;;;;;.\n"))
-  (define test-asmbl (intermed-prog->code test-ass-itmd))
   test-asmbl)
 
 #;(begin
@@ -67,12 +67,13 @@
 ;(compiler "basic/arith.sc")
 ;(compiler "basic/array.sc")
 ;(compiler "basic/cmp.sc")
-(compiler "basic/fib.sc")
-;(compiler "basic/gcd.sc")
+;(compiler "basic/fib.sc")
+;(compiler "basic/gcd.sc")ｒ
 ;global変数のアドレスの割当がわからない.
 ;(compiler "basic/global.sc")
 ;(compiler "basic/logic.sc")
 ;(compiler "basic/scope.sc")
 ;(compiler "basic/swap.sc")
 ;(compiler "basic/while.sc")
+(compiler "test02.sc")
 

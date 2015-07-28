@@ -1,5 +1,5 @@
 int main() {
     int a;
-    a = 99;
+    print(8);
     return a;
 }

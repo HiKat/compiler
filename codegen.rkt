@@ -230,12 +230,13 @@
            [label1 (nextlabel)]
            [label2 (nextlabel)])
       (flatten (list 
-                (instr 'lw `(,reg1 ,var))
-                (instr 'beqz `(,reg1 ,label2))
                 (label label1)
-                code1
                 (instr 'lw `(,reg1 ,var))
                 (instr 'beqz `(,reg1 ,label2))
+                ;(label label1)
+                code1
+                ;(instr 'lw `(,reg1 ,var))
+                ;(instr 'beqz `(,reg1 ,label2))
                 (instr 'j `(,label1)) 
                 (label label2))))]
    [(itmd:returnstmt? s)

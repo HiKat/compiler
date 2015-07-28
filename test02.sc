@@ -1,5 +1,6 @@
 int main() {
     int a;
     a = 99;
-    return a;
+    print(a);
+    return 100;
 }

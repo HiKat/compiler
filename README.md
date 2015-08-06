@@ -3,7 +3,7 @@
 実装言語はRacket  
 [Racket公式ドキュメント](http://docs.racket-lang.org/)  
 #Small CのBNF  
-<program> := <external-declaration> | <program><external-declaration>  
+\<program> := <external-declaration> | <program><external-declaration>  
 <external-declaration> := <declaration> | <function-prototyep> | <function-definition>  
 <declaration> := <type-specifier> <declrator-list> ;  
 <declarator-list> := <declarator> | <declarator-list> , <declarator>  

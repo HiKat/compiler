@@ -3,6 +3,7 @@
 実装言語はRacket  
 [Racket公式ドキュメント](http://docs.racket-lang.org/)  
 #Small CのBNF  
+(opt付きはなくても良い)  
 \<program> := \<external-declaration> | \<program>\<external-declaration>  
 \<external-declaration> := \<declaration> | \<function-prototyep> | \<function-definition>  
 \<declaration> := \<type-specifier> \<declrator-list> ;  
@@ -16,12 +17,12 @@
 \<parameter-declaration> := \<type-specifier> \<parameter-declarator>  
 \<parameter-declarator> := \<identifer> | * \<identifier>  
 \<type-specifer> := int | void  
-\<statement> := ; | <expression> ; | <compound-statement> | if ( <expression> ) <statement> | if ( <expression> ) <statement> else <statement> | while ( <expression> ) <statement> | for ( <expression>opt ; <expression>opt ; <expression>opt ) <statement> | return <expression>opt ;  
+\<statement> := ; | \<expression> ; | \<compound-statement> | if ( \<expression> ) \<statement> | if ( \<expression> ) \<statement> else \<statement> | while ( \<expression> ) \<statement> | for ( \<expression>opt ; \<expression>opt ; \<expression>opt ) \<statement> | return \<expression>opt ;  
 
 
 
 
-#現在作成中  
+#以下現在作成中  
 
 
 

@@ -9,7 +9,7 @@
 (require "printcode.rkt")
 
 ;basic/[arith.sc/array.sc/cmp.sc/fib.sc/gcd.sc/global.sc/logic.sc/scope.sc/swap.sc/while.sc]
-(define sc-program "test02.sc")
+(define sc-program "test01.sc")
 
 ;テスト
 
@@ -75,5 +75,5 @@
 ;(compiler "basic/scope.sc")
 ;(compiler "basic/swap.sc")
 ;(compiler "basic/while.sc")
-(compiler "test02.sc")
+(compiler "test01.sc")
 

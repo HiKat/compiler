@@ -1,108 +1,27 @@
-# compiler
-##意味解析部  
-###analy-declaration_st(チェック部分開発途中)  
-;(stx:declaration_st...) と  
-;__分析に使う環境env__と   
-;__current-lev__  
-;を受け取って  
-;(stx;declaration_st type-spec (list (obj...) (obj...)...))  
-;を返す.  
-;同時にlistの形で環境に追加.  
-;同時に環境のチェックも行う.  
-
-###analy-func_proto_st  
-;(stx:func_proto_st...)  
-;を受け取って  
-;(stx:func_proto_st (stx:spec_st...)     
-;                   (stx:func_declarator/_ast/_st 関数名  
-;                                (list obj...)))  
-;を返し    
-;同時に関数プロトタイプのobject(obj name 0 'proto type)を  
-;環境に登録.  
-;パラメータのobject(obj name 1 'parm type)の(list obj...)を  
-;パラメータ専用の環境をまず初期化してから登録  
-
-###analy-func_def_st  
-;stx:func_def_stを  
-;引数に取り   
-;(stx:func_def_st stx:spec_st   
-;                 (func_declarator_st '関数宣言のオブジェクト'  
-;                                     'パラメータのオブジェクトのlist')  
-;                 compound-statement)  
-;(compound-statement部分については関数analy-compound_stに任せる.)  
-;を返す.  
-;同時にパラメータのオブジェクトをパラメータ専用の環境に追加、チェック  
-;同時に関数宣言のオブジェクトを環境に追加、チェック 
-
-###analy-compound_st  
-;stx:compound_stか  
-;stx:compound_dec_stか  
-;stx:compound_sta_stか  
-;stx:compound_null_stと 
-;lev  
-;を受け取って    
-;(stx:compound_st declaration-list statement-list)  
-;を返す.    
-;ただし   
-;declaration-listが無いときは'nodecl  
-;statement-listが無いときは'nostat  
-;を入れる  
-;同時に  
-;意味解析開始時にcurrent-levをひとつ上げる  
-;終了時に1つ下げる  
-
-###analy-compdecl  
-;__analy-declaration_stの派生__  
-;(list* (stx:declaration_st...)...)と  
-;lev（解析中のcompound-statementのブロックレベル）  
-;を引数に取り  
-;(list* obj)　　
-;を返す関数  
-;_analy-declarationとは違って外部の大域の環境を更新しない._  
-;compound-statementの意味解析結果の環境としては(list* obj)を直接使用することとする.  
-
-###analy-compstate  
-;levと  
-;envと  
-;compound_stなどに入るstatementを  
-;引数に取り  
-;それぞれのobjを  
-;返す関数
-;同時にenvをもとにstatement内の定義をチェックする.  
-
-##アセンブリ生成部分  
-###addf->sym  
-;obj-offを受け取って,それを $fp 経由でアクセスするための    
-;アドレス式に変換する関数.  
-;引数    
-;構造体obj-off  
-;戻り値  
-;シンボル '|77($fp)| など  
-  
-###intermed-exp->code  
-;obj-off構造体destと中間命令の式 e を受け取って「e を評価して  
-;dest に結果を書き込む」という動作をする命令列を生成する関数.  
-;引数  
-;obj-off構造体と    
-;中間命令の式  
-;intexp,varexp,aopexp,relopexp  
-;戻り値  
-;アセンブリ  
-
-###intermed-stmt->code  
-;引数   
-:localvarsinbytes  
-;argsinbytes  
-;中間命令文の構造体  
-;emptystmt,writestmt,readstmt,letstmt,ifstmt,whilestmt,returnstmt,callstmt,printstmt  
-;
+#コンパイラ  
+計算機科学実験3Bソフトウェアで作成したC言語のサブセット言語のSmall Cのコンパイラ.  
+実装言語はRacket  
+[Racket公式ドキュメント](http://docs.racket-lang.org/)  
+#Small CのBNF  
+<program> := <external-declaration> | <program><external-declaration>  
+<external-declaration> := <declaration> | <function-prototyep> | <function-definition>  
+<declaration> := <type-specifier> <declrator-list> ;  
+<declarator-list> := <declarator> | <declarator-list> , <declarator>  
+<declarator> := <direct-declarator>  | * <direct-declaraotr>  
+<direct-declrator> := <identifier>  | <identifier> [ <constant> ]  
+<function-prototype> := <type-specfier> <function-declarator> ;  
+<function-declarator> := <identifier> ( <parameter-type-list>opt ) | * <identifier> ( <parameter-type-list>opt )  
+<function-defintion> := <type-specifier> <function-declarator> <compound-statement>  
+<parameter-type-list> := <parameter-declaration> | <parameter-type-list> , <parameter-declaration>  
+<parameter-declaration> := <type-specifier> <parameter-declarator>  
+<parameter-declarator> := <identifer> | * <identifier>  
+<type-specifer> := int | void  
+<statement> := ; | <expression> ; | <compound-statement> | if ( <expression> ) <statement> | if ( <expression> ) <statement> else <statement> | while ( <expression> ) <statement> | for ( <expression>opt ; <expression>opt ; <expression>opt ) <statement> | return <expression>opt ;  
 
 
 
 
-
-
-
+#現在作成中  
 
 
 

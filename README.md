@@ -2,8 +2,7 @@
 計算機科学実験3Bソフトウェアで作成したC言語のサブセット言語のSmall Cのコンパイラ.  
 実装言語はRacket  
 [Racket公式ドキュメント](http://docs.racket-lang.org/)  
-#Small CのBNF  
-#現在作成中  
+#Small CのBNF（現在作成中）    
 (opt付きはなくても良い)  
 \<program> := \<external-declaration> | \<program>\<external-declaration>  
 \<external-declaration> := \<declaration> | \<function-prototyep> | \<function-definition>  

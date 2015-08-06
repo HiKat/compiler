@@ -82,13 +82,18 @@
         (else (map (lambda (x) (cond ((and (equal? (obj-name x) (obj-name obj))
                                            (equal? 'fun (obj-kind x))
                                            (equal? 0 (obj-lev obj)))
-                                      (error (format "ERROR! REDEFINITION OF '~a' AT ~a" 
-                                                     (obj-name obj)(obj-pos obj))))
+                                      (begin
+                                        (eprintf (format "ERROR! REDEFINITION OF '~a' AT ~a" 
+                                                         (obj-name obj)(obj-pos obj)))
+                                        (error (format "ERROR! REDEFINITION OF '~a' AT ~a" 
+                                                         (obj-name obj)(obj-pos obj)))))
                                      ((and (equal? (obj-name x) (obj-name obj))
                                            (equal? 'var (obj-kind x))
                                            (equal? (obj-lev x) (obj-lev obj)))
-                                      (error (format "ERROR! REDEFINITION OF '~a' AT ~a" 
-                                                     (obj-name obj)(obj-pos obj))))
+                                      (begin (eprintf (format "ERROR! REDEFINITION OF '~a' AT ~a" 
+                                                              (obj-name obj)(obj-pos obj)))
+                                             (error (format "ERROR! REDEFINITION OF '~a' AT ~a" 
+                                                            (obj-name obj)(obj-pos obj)))))
                                      ((and (equal? (obj-name x) (obj-name obj))
                                            (equal? 'parm (obj-kind x)))
                                       (begin
@@ -107,8 +112,10 @@
      ;(display(format "OK! CRRECT PARAMETERS OF FUNCTION PROTOTYPE\n"))
      #t)
     ((in-env? (obj-name (car obj-list)) (cdr obj-list))
-     (error (format "ERROR! REDEFINITION OF '~a' AT ~a IN PARAMETERS OF FUNCTION PROTOTYPE" 
-                    (obj-name (car obj-list)) (obj-pos (car obj-list)))))
+     (begin (eprintf (format "ERROR! REDEFINITION OF '~a' AT ~a IN PARAMETERS OF FUNCTION PROTOTYPE" 
+                             (obj-name (car obj-list)) (obj-pos (car obj-list))))
+            (error (format "ERROR! REDEFINITION OF '~a' AT ~a IN PARAMETERS OF FUNCTION PROTOTYPE" 
+                           (obj-name (car obj-list)) (obj-pos (car obj-list))))))
     (else (check-proto-para (cdr obj-list)))))
 (define (check-def-para obj-list)
   (cond 
@@ -119,8 +126,10 @@
      ;(display(format "OK! CRRECT PARAMETERS OF FUNCTION PROTOTYPE.\n"))
      #t)
     ((in-env? (obj-name (car obj-list)) (cdr obj-list))
-     (error (format "ERROR! SOME REDEFINITION OF '~a' AT ~a IN PARAMETERS OF FUNCTION DEFINITION"
-                    (obj-name (car obj-list)) (obj-pos (car obj-list)))))
+     (begin (eprintf (format "ERROR! SOME REDEFINITION OF '~a' AT ~a IN PARAMETERS OF FUNCTION DEFINITION"
+                             (obj-name (car obj-list)) (obj-pos (car obj-list))))
+            (error (format "ERROR! SOME REDEFINITION OF '~a' AT ~a IN PARAMETERS OF FUNCTION DEFINITION"
+                           (obj-name (car obj-list)) (obj-pos (car obj-list))))))
     (else (check-proto-para (cdr obj-list)))))
 (define (check-proto obj env)
   (map 
@@ -128,9 +137,12 @@
    (lambda (x)(cond ((and (equal? (obj-name x) (obj-name obj))
                           (equal? 0 (obj-lev x))
                           (not (equal? (obj-type x) (obj-type obj))))
-                     (error 
-                      (format "ERROR! INVALID FUNCTION PROTOTYPE '~a' AT ~a"
-                                    (obj-name obj) (obj-pos obj))))
+                     (begin
+                       (eprintf 
+                        (format "ERROR! INVALID FUNCTION PROTOTYPE '~a' AT ~a"
+                                (obj-name obj) (obj-pos obj)))
+                       (error (format "ERROR! INVALID FUNCTION PROTOTYPE '~a' AT ~a"
+                                      (obj-name obj) (obj-pos obj)))))
                     (else 
                      #;(display 
                       (format "OK! CRRECT FUNCTION PROTOTYPE OF '~a'.\n" (obj-name obj)))
@@ -142,8 +154,10 @@
    ;関数定義とnameが同じ、kindが'funかどうかをmapで一つづつ判定する.
    (lambda (x)(cond ((and (equal? (obj-name x) (obj-name obj))
                           (equal? 'fun (obj-kind x)))
-                     (error (format "ERROR! REDEFINITION OF '~a' AT ~a"
-                                    (obj-name obj) (obj-pos obj))))
+                     (begin (eprintf (format "ERROR! REDEFINITION OF '~a' AT ~a"
+                                    (obj-name obj) (obj-pos obj)))
+                            (error (format "ERROR! REDEFINITION OF '~a' AT ~a"
+                                           (obj-name obj) (obj-pos obj)))))
                     (else 
                      ;(display (format "OK! CRRECT FUNCTION PROTOTYPE OF '~a'.\n" (obj-name obj)))
                      #t)))
@@ -166,13 +180,15 @@
            
            (same-name-list 
             (cond ((equal? '() env) 
-                   (error (format "ERROR! AN UNDEFINED IDENTIFIER OF VAR '~a' AT ~a" name pos)))
+                   (begin (eprintf (format "ERROR! AN UNDEFINED IDENTIFIER OF VAR '~a' AT ~a" name pos))
+                          (error (eprintf (format "ERROR! AN UNDEFINED IDENTIFIER OF VAR '~a' AT ~a" name pos)))))
                   (else (flatten (map 
                                   (lambda (x) (cond ((equal? name (obj-name x)) x) (else '())))
                                   env)))))
            (correct-var-obj (cond 
                               ((equal? '() same-name-list) 
-                               (error (format "ERROR! AN UNDEFINED IDENTIFIER OF VAR '~a' AT ~a" name pos)))
+                               (begin (eprintf (format "ERROR! AN UNDEFINED IDENTIFIER OF VAR '~a' AT ~a" name pos))
+                                      (error (format "ERROR! AN UNDEFINED IDENTIFIER OF VAR '~a' AT ~a" name pos))))
                               (else (flatten (map (lambda(x) 
                                                     (cond ((and (equal? name (obj-name x))
                                                                 (or (equal? 'var (obj-kind x))
@@ -184,7 +200,8 @@
                                                           (else'())))
                                                   env))))))
       (cond ((equal? '() correct-var-obj)
-             (error (format "ERROR! AN UNDEFINED IDENTIFIER OF VAR! '~a' AT ~a" name pos)))
+             (begin (eprintf (format "ERROR! AN UNDEFINED IDENTIFIER OF VAR! '~a' AT ~a" name pos))
+                    (error (format "ERROR! AN UNDEFINED IDENTIFIER OF VAR! '~a' AT ~a" name pos))))
             (else (cond ((equal? 'n array-or-not) (find-correct-var correct-var-obj lev))
                         ((equal? 'y array-or-not)
                          (let* ((num (stx:array_var_st-num st))
@@ -204,7 +221,9 @@
 (define (find-correct-var ls lev)
   (cond 
     ;デバグ用.通常はこの分岐には入らないはず.
-    ((and (equal? 0 lev) (<= 2 (length ls))) (error (format "ERROR! IN FIND-CORRECT-VAR ~a ~a" ls lev)))
+    ((and (equal? 0 lev) (<= 2 (length ls))) (begin
+                                               (eprintf (format "ERROR! IN FIND-CORRECT-VAR ~a ~a" ls lev))
+                                               (error (format "ERROR! IN FIND-CORRECT-VAR ~a ~a" ls lev))))
     ((and (equal? 0 lev) (equal? 1 (length ls))) (car ls))
     (else (cond ((equal? '() 
                         (flatten (map (lambda (x) (cond ((equal? lev (obj-lev x)) x)
@@ -228,12 +247,16 @@
                                                   x)
                                                  ((and (equal? name (obj-name x))
                                                        (equal? 'var (obj-kind x))) 
-                                                  (error "ERROR AN UNDEFINED IDENTIFIER " name))
+                                                  (begin (eprintf "ERROR AN UNDEFINED IDENTIFIER " name)
+                                                         (error (eprintf "ERROR AN UNDEFINED IDENTIFIER " name))))
                                                  (else (obj 'invalid 'invalid 'invalid 'invalid 'invalid)))
-                                           (error "ERROR AN UNDEFINED IDENTIFIER OF FUNCTION" name)))
+                                           (begin (eprintf 
+                                                   (format"ERROR AN UNDEFINED IDENTIFIER OF FUNCTION ~a at ~a" name st))
+                                                  (error (format"ERROR AN UNDEFINED IDENTIFIER OF FUNCTION ~a at ~a" name st)))))
                            env))))
     (if (equal? 'invalid (obj-type referred-obj))
-        (error "ERROR! INVALID IDENTIFIER" name)
+        (begin (eprintf (format "ERROR! INVALID IDENTIFIER ~a" name))
+               (error (format "ERROR! INVALID IDENTIFIER ~a" name)))
         referred-obj)))
 
 ;comp-env内のみで二重定義などが無いかどうかをチェックする.
@@ -246,7 +269,8 @@
          ;(display (format "OK! CORRENCT DECLARATIONS IN COMPONUND STATEMENT!\n"))
          #t)
         (else (cond ((in-env? (obj-name (car comp-env)) (cdr comp-env))
-                     (error "ERROR! REDEFINITION OF "(obj-name (car comp-env))))
+                     (begin (eprintf (format "ERROR! REDEFINITION OF ~a" (obj-name (car comp-env))))
+                            (error (format "ERROR! REDEFINITION OF ~a" (obj-name (car comp-env))))))
                     (else (check-comp-env (cdr comp-env)))))))
          
 

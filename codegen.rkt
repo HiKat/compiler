@@ -17,6 +17,8 @@
 (struct label (name) #:transparent)
 ;ディレクティブ
 (struct dir (label args) #:transparent)
+;global変数の宣言
+(struct global (name size) #:transparent)
 ;コメント
 (struct comment (arg) #:transparent)
 ;ラベル生成用maxlabel、nextlabel、rest
@@ -42,32 +44,49 @@
   (cond 
     ((assn:obj-off? sym) 
      (cond ((type_array? (assn:obj-off-type sym)) 
-            (string->symbol (format "~a($fp)" (assn:obj-off-off (assn:obj-off-off sym)))))
+            ;意味としては[(assn:obj-off-off (assn:obj-off-off sym))($fp)]($fp)
+            (string->symbol (format "~a($fp)" (assn:obj-off-off sym))))
            (else (string->symbol (format "~a($fp)" (assn:obj-off-off sym))))))
-    ((and (obj? sym) (array_base? (obj-name sym))) 
+    #;((and (obj? sym) (array_base? (obj-name sym))) 
      "これは大域変数の配列のベースアドレスであるので後で実装.")
-    ((and (obj? sym) (type_array? (obj-type sym)))
+    #;((and (obj? sym) (type_array? (obj-type sym)))
      (type_array-size (obj-type sym)))
+    ((itmd:intexp? sym) '())
+    ((obj? sym) (obj-name sym))
     (else (error (format "debug in addr->sym \n~a\n" sym)))))
 
 ;addrは数字
 (define (makesp of)
   (string->symbol (format "~a($sp)" of)))
 
+;gen-global-codeは大域変数の宣言部のアセンブリ
+;を生成する関数
+;global-varsはvardeclのlist
+(define (gen-global-code gloval-vars)
+  (map (lambda (x)
+         (cond ((not (type_array? (obj-type (itmd:vardecl-var x))))
+                (global (obj-name (itmd:vardecl-var x)) '()))
+               (else (global (obj-name (itmd:vardecl-var x)) 
+                             (type_array-size (obj-type (itmd:vardecl-var x)))))))
+       gloval-vars))
+
 ;引数
 ;itme-and-stack
 (define (intermed-prog->code it-and-st)
   (let* (;itmdは中間命令文のlist
          (itmd (assn:itmd-and-stack-it it-and-st))
+         ;global-varsは大域変数のlist
+         [global-vars (filter (lambda (x) (itmd:vardecl? x)) itmd)]
+         [global-code (gen-global-code global-vars)]
          ;fun-stackのlist
          (st (assn:itmd-and-stack-st it-and-st))
          ;fdsはfundefのlist
          [fds (filter (lambda (x) (itmd:fundef? x)) itmd)]
          ;localvarsizeは大域変数で確保する領域
-	 [localvarsize 
+         [localvarsize 
           (* assn:wordsize (length (filter (lambda (x) (itmd:vardecl? x)) itmd)))]
          ;mainはmain関数のfundef
-	 [main 
+         [main 
           (car 
            (cond ((equal? 
                    '() 
@@ -79,17 +98,27 @@
            (map 
             (lambda (x) (intermed-fundef->code x st))
             (remove main fds)))]
-	 [maincode 
-          (intermed-stmt->code localvarsize 0 (itmd:fundef-body main))])
+         [maincode 
+          ;(intermed-stmt->code localvarsize 0 (itmd:fundef-body main))
+          (intermed-fundef->code main st)])
     (flatten
      (list
+      (dir '.data '())
+      global-code
       (dir '.text '())
       ;(dir '.globl '(main))
       fdscode
-      (label 'main)
-      (savecode localvarsize 0)
+      ;(label 'main)
+      ;(savecode localvarsize 0)
+      ;(savecode 111 0)
       maincode
-      (restorecode localvarsize 0)))))
+      ;(restorecode localvarsize 0)
+      ))))
+
+#;(list 
+   (instr 'lw `(,reg1 ,arg))
+   (instr 'sw `(,reg1 ,sp)))
+  
 
 ;fdはfundef
 ;stはfun-stackのlist
@@ -106,10 +135,30 @@
          [localandargs (assn:fun-stack-vars fst)]
          ;lacavarは局所変数のlist
          [localvar (filter (lambda (x) (> 4 (assn:obj-off-off x))) localandargs)]
+         ;array-baseは局所変数ののうち配列のベースアドレスが入るもののobj-offのlist
+         [array-base (filter (lambda (x) (array_base? (assn:obj-off-name x))) localvar)]
+         ;配列のベースアドレスが入る場所にそのオフセットを即値ロードする命令列
+         [base-inst (cond ((equal? '() array-base) '())
+                          (else (flatten 
+                                 (map 
+                                  (lambda (x) (let* ((ofs (assn:obj-off-off x)))
+                                                (list (instr 'li `(,reg1 ,ofs))
+                                                      (instr 'sw `(,reg1 ,(addr->sym x)))))) 
+                                  array-base))))]
+          #;(list (instr 'lw `(,reg1 ,arg))
+                            (instr 'sw `(,reg1 ,sp)))
          ;argsは引数のlist
          [args (filter (lambda (x) (< 0 (assn:obj-off-off x))) localandargs)]
-         ;localvarsizeは局所変数のサイズ
-         [localvarsize (* assn:wordsize (length localvar))]
+         ;localvarsizeは局所変数のサイズreg1
+         ;最初の方法では配列の領域を確保したときにサイズが
+         ;誤認識されるため修正
+         #;[localvarsize (* assn:wordsize (length localvar))]
+         ;修正後の取得方法はwordsize-(localvarの最後尾のオフセット)
+         ;ただしlocalvarが'()の時はlocalvarsizeは0になる
+         [localvarsize (cond ((equal? '() localvar) 0)
+                             (else (- assn:wordsize 
+                                      (assn:obj-off-off (list-ref localvar 
+                                                             (- (length localvar) 1))))))]
          [argsinbytes (* assn:wordsize (length args))]
          [stmts (itmd:fundef-body fd)]
          [code (intermed-stmt->code localvarsize argsinbytes stmts)])
@@ -117,6 +166,9 @@
      (list
       (label f)
       (savecode localvarsize argsinbytes)
+      ;配列のベースアドレス用の領域が確保されているときは
+      ;ここでロードする文を加えておく
+      base-inst
       code
       (restorecode localvarsize argsinbytes)))))
 
@@ -167,9 +219,14 @@
 	   [destderef (string->symbol (format "0(~a)" (symbol->string reg2)))]
 	   [src (itmd:writestmt-src s)]
 	   [symsrc (addr->sym src)])
-      (list (instr 'lw `(,reg1 ,symsrc))
-	    (instr 'lw `(,reg2 ,symdest))
-	    (instr 'sw `(,reg1 ,destderef))))]
+      (cond ((itmd:intexp? src) 
+             (list (instr 'li `(,reg1 ,(itmd:intexp-num src)))
+                   (instr 'lw `(,reg2 ,symdest))
+                   (instr 'sw `(,reg1 ,destderef))))
+            (else 
+             (list (instr 'lw `(,reg1 ,symsrc))
+                   (instr 'lw `(,reg2 ,symdest))
+                   (instr 'sw `(,reg1 ,destderef))))))]
    [(itmd:readstmt? s)
     (let* ([dest (itmd:readstmt-dest s)]
            [symdest (addr->sym dest)]
@@ -181,7 +238,7 @@
             (instr 'sw `(,reg1 ,symdest))))]
    [(itmd:letstmt? s)
     (let* ([dest (itmd:letstmt-var s)]
-	   [exp (itmd:letstmt-exp s)])
+           [exp (itmd:letstmt-exp s)])
       (intermed-exp->code dest exp))]
    [(itmd:ifstmt? s)
     (let* ([sym (itmd:ifstmt-var s)]
@@ -229,23 +286,45 @@
               stmt))]
            [label1 (nextlabel)]
            [label2 (nextlabel)])
-      (flatten (list 
-                (label label1)
-                (instr 'lw `(,reg1 ,var))
-                (instr 'beqz `(,reg1 ,label2))
-                ;(label label1)
-                code1
-                ;(instr 'lw `(,reg1 ,var))
-                ;(instr 'beqz `(,reg1 ,label2))
-                (instr 'j `(,label1)) 
-                (label label2))))]
+      (flatten 
+       (list 
+        (instr 'lw `(,reg1 ,var))
+        (label label1)
+        (instr 'beqz `(,reg1 ,label2))
+        code1
+        (instr 'j `(,label1)) 
+        (label label2))
+       ;うまくいかない
+       #;(list 
+          (label label1)
+          (instr 'lw `(,reg1 ,var))
+          (instr 'beqz `(,reg1 ,label2))
+          ;(label label1)
+          code1
+          ;(instr 'lw `(,reg1 ,var))
+          ;(instr 'beqz `(,reg1 ,label2))
+          (instr 'j `(,label1)) 
+          (label label2))
+       ;;;;;;;;;;;;;;;;deprecated;;;;;;;;;;:
+       #;(list 
+        (instr 'lw `(,reg1 ,var))
+        (instr 'beqz `(,reg1 ,label2))
+        (label label1)
+        code1
+        (instr 'lw `(,reg1 ,var))
+        (instr 'beqz `(,reg1 ,label2))
+        (instr 'j `(,label1)) 
+        (label label2))
+       ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+       ))]
    [(itmd:returnstmt? s)
-   (let* ((var (itmd:returnstmt-var s))
-          (var (addr->sym var)))
-     (list (instr 'lw `(,reg1 ,var))
-           (instr 'move `(,retreg ,reg1))
-           (restorecode localvarsinbytes argsinbytes)
-           (instr `jr `($ra))))]
+    (let* ((var (itmd:returnstmt-var s))
+           (var (addr->sym var)))
+      (list (instr 'lw `(,reg1 ,var))
+            (instr 'move `(,retreg ,reg1))
+            (restorecode localvarsinbytes argsinbytes)
+            ;(instr `jr `($ra))
+            ))]
    [(itmd:callstmt? s)
     ;内部手続
     ;引数varlistは引数のlist
@@ -255,7 +334,7 @@
       (cond ((equal? '() varlist) '())
             (else (let* ((arg (addr->sym (car varlist)))
                          (n (* 4 varnum))
-                         (sp (makesp n))
+                         (sp (makesp (- 0 n)))
                          (m (- varnum 1)))
                     (flatten 
                      (append 
@@ -271,15 +350,20 @@
           (varlist (itmd:callstmt-vars s))
           (dest (itmd:callstmt-dest s))
           (dest (addr->sym dest))]
-     (list (save-args varlist varnum)
-           (instr 'jal `(,func))
-           (instr 'sw `(,retreg ,dest))))]
+     (list
+      ;;;;;;;;;;;;;;;;;;;(display (format "debug\n"))
+      (save-args varlist varnum)
+      (instr 'jal `(,func))
+      (instr 'sw `(,retreg ,dest))))]
    [(itmd:printstmt? s)
     (let* ([src (itmd:printstmt-var s)]
 	   [symsrc (addr->sym src)])
       (list (instr 'li `($v0 1))
-	    (instr 'lw `(,reg1 ,symsrc))
-	    (instr 'move `($a0 ,reg1))
+            (instr 'lw `(,reg1 ,symsrc))
+            (instr 'move `($a0 ,reg1))
+            (instr 'syscall '())
+            (instr 'li `($v0 11))
+            (instr 'li `($a0 10))
             (instr 'syscall '())))]
    [(itmd:compdstmt? s)
     (let* ((stmts (itmd:compdstmt-stmts s)))
@@ -311,18 +395,39 @@
     (let* ([op (string->symbol 
                 (format "~a" 
                         (cond ((equal? '+ (itmd:aopexp-op e)) 'add)
+                              ((equal? 'add (itmd:aopexp-op e)) 'add)
                               ((equal? '- (itmd:aopexp-op e)) 'sub)
                               ((equal? '* (itmd:aopexp-op e)) 'mul)
-                              ((equal? '/ (itmd:aopexp-op e)) 'div))))]
+                              ((equal? 'mul (itmd:aopexp-op e)) 'mul)
+                              ((equal? '/ (itmd:aopexp-op e)) 'div)
+                              (else 
+                               (error (format "check in intermed-exp->code in aopexp"))))))]
            [sym1 (itmd:aopexp-var1 e)]
            [sym2 (itmd:aopexp-var2 e)]
 	   [sym1 (addr->sym sym1)]
 	   [sym2 (addr->sym sym2)]
 	   [dest (addr->sym dest)])
-      (list (instr 'lw `(,reg1 ,sym1))
-	    (instr 'lw `(,reg2 ,sym2))
-	    (instr op `(,reg1 ,reg1 ,reg2))
-	    (instr 'sw `(,reg1 ,dest))))]
+      (cond ((obj? (itmd:aopexp-var1 e))
+             (cond ((type_array? (obj-type (itmd:aopexp-var1 e)))
+                    (list (instr 'la `(,reg1 ,sym1))
+                          (instr 'lw `(,reg2 ,sym2))
+                          (instr op `(,reg1 ,reg1 ,reg2))
+                          (instr 'sw `(,reg1 ,dest))))
+                   (else 
+                    (list (instr 'lw `(,reg1 ,sym1))
+                          (instr 'lw `(,reg2 ,sym2))
+                          (instr op `(,reg1 ,reg1 ,reg2))
+                          (instr 'sw `(,reg1 ,dest))))))
+            ((type_array? (assn:obj-off-type (itmd:aopexp-var1 e)))
+             (list (instr 'la `(,reg1 ,sym1))
+                   (instr 'lw `(,reg2 ,sym2))
+                   (instr op `(,reg1 ,reg1 ,reg2))
+                   (instr 'sw `(,reg1 ,dest))))
+            (else
+             (list (instr 'lw `(,reg1 ,sym1))
+                   (instr 'lw `(,reg2 ,sym2))
+                   (instr op `(,reg1 ,reg1 ,reg2))
+                   (instr 'sw `(,reg1 ,dest))))))]
    [(itmd:relopexp? e)
     (let* ((op (string->symbol 
                 (format "~a" 
@@ -331,7 +436,9 @@
                               ((equal? '>= (itmd:relopexp-op e)) 'sge)
                               ((equal? '> (itmd:relopexp-op e)) 'sgt)
                               ((equal? '<= (itmd:relopexp-op e)) 'sle)
-                              ((equal? '!= (itmd:relopexp-op e)) 'sne)))))
+                              ((equal? '!= (itmd:relopexp-op e)) 'sne)
+                              (else 
+                               (error (format "check in intermed-exp->code in relopexp")))))))
            (var1 (itmd:relopexp-var1 e))
            (var2 (itmd:relopexp-var2 e))
            (var1 (addr->sym var1))
@@ -343,9 +450,14 @@
             (instr 'sw `(,reg1 ,dest))))]
    [(itmd:addrexp? e)
     (let* ([arg (itmd:addrexp-var e)]
-	   [symsrc (addr->sym arg)]
+           [symsrc (addr->sym arg)]
            [symdest (addr->sym dest)])
       (list (instr 'la `(,reg1 ,symsrc))
+            (instr 'sw `(,reg1 ,symdest))))]
+   [(assn:obj-off? e)
+    (let* ([symsrc (addr->sym e)]
+           [symdest (addr->sym dest)])
+      (list (instr 'lw `(,reg1 ,symsrc))
             (instr 'sw `(,reg1 ,symdest))))]
    (else (error (format "debug in intermed-exp->code \n~a\n" e)))))
 

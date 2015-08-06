@@ -82,7 +82,7 @@
    (src-pos);位置情報を含むオブジェクトを返す
    (debug "siple-parser.tbl")
    (error (lambda (tok-ok? tok-name tok-value start-pos end-pos)
-             (error "parse error:" tok-name tok-value)))
+              (error "parse error:" tok-name tok-value)))
    (tokens tokens-with-value tokens-without-value)
    
    ;;;;;;;;;;;;;;;;;;;;;;;;;BNFの指定;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -155,7 +155,7 @@
                      ((relational_expr less add_expr)(stx:rel_exp_st 'less $1 $3 $2-start-pos));構造体rel_exp_stを作成.
                      ((relational_expr more add_expr)(stx:rel_exp_st 'more $1 $3 $2-start-pos));構造体rel_exp_stを作成.
                      ((relational_expr and_less add_expr)(stx:rel_exp_st 'and_less $1 $3 $2-start-pos));構造体rel_exp_stを作成.
-                     ((relational_expr and_more add_expr)(stx:rel_exp_st 'adn_more $1 $3 $2-start-pos)));構造体rel_exp_stを作成.
+                     ((relational_expr and_more add_expr)(stx:rel_exp_st 'and_more $1 $3 $2-start-pos)));構造体rel_exp_stを作成.
     
     (add_expr ((mult_expr) $1)
               ((add_expr + mult_expr)(stx:alge_exp_st 'add $1 $3 $2-start-pos));構造体alge_exp_stを作成.

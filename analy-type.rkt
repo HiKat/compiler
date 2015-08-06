@@ -12,142 +12,182 @@
 ;(struct obj (name lev kind type)#:transparent)
 
 (define (analy-type t)
-  (begin (map check-type t)
-         (display "OK! THIS PROGRAM IS WELL TYPED.")))
+  (begin (map check-type (flatten t))
+         ;(display "\n debug check!\n")
+         ;(display "OK! THIS PROGRAM IS WELL TYPED.")
+         ))
 
 ;引数は構造体
 ;戻り値は'well-typed
 (define (check-type st)
-  (let* ((st (flatten st)))
-   (cond ((equal? 1 (length st)) (display (format "WELL TYPED STRUCTURE\n")))
-         (else
-  (cond 
-    ;((list? st) (map check-type st))
-    ((stx:declaration_st? st) 
-     (let* ((decl-obj-list (stx:declaration_st-declarator-list st)))
-       (map (lambda (x) 
-              (cond 
-                ;宣言した変数が配列の時
-                ;void型、voidポインタ型はエラー
-                ((type_array? (obj-type x))
-                 (cond ((or (equal? 'void 
-                                    (type_array-type (obj-type x)))
-                            (equal? (type_pointer 'pointer 'void) 
-                                    (type_array-type (obj-type x))))
+  (cond (#f '())
+        ;(equal? 1 (length st)) 
+        ;(check-type (car (flatten st)))
+        ;(error (format "debug ~a" (check-type (stx:func_proto_st? (car st))))))
+        (else
+         (cond 
+           ((and (list? st) (equal? 1 (length st))) 
+            (check-type (car st))
+            ;(error (format "debug ~a" (car st)))                                       
+            )
+           ;((list? st) (map check-type st))
+           ((stx:declaration_st? st) 
+            (let* ((decl-obj-list (stx:declaration_st-declarator-list st)))
+              (map (lambda (x) 
+                     (cond 
+                       ;宣言した変数が配列の時
+                       ;void型、voidポインタ型はエラー
+                       ((type_array? (obj-type x))
+                        (cond ((or (equal? 'void 
+                                           (type_array-type (obj-type x)))
+                                   (equal? (type_pointer 'pointer 'void) 
+                                           (type_array-type (obj-type x))))
+                               (begin (eprintf (format "ERROR NOT WELL TYPED '~a' AT ~a" 
+                                                       (obj-name x)(obj-pos x)))
+                                      (error (format "ERROR NOT WELL TYPED '~a' AT ~a" 
+                                                     (obj-name x)(obj-pos x)))))))
+                       ;宣言した変数が配列でない時
+                       ;void型、voidポインタ型はエラー
+                       (else (cond ((equal? (type_pointer 'pointer 'void) (obj-type x))
+                                    (begin (eprintf (format "ERROR NOT WELL TYPED '~a' AT ~a" 
+                                                            (obj-name x)(obj-pos x)))
+                                           (error (format "ERROR NOT WELL TYPED '~a' AT ~a" 
+                                                          (obj-name x)(obj-pos x)))))
+                                   ((equal? 'void (obj-type x))
+                                    (begin (eprintf (format "ERROR NOT WELL TYPED '~a' AT ~a" 
+                                                            (obj-name x)(obj-pos x)))
+                                           (error (format "ERROR NOT WELL TYPED '~a' AT ~a" 
+                                                          (obj-name x)(obj-pos x)))))
+                                   (else 'well-typed)))))
+                   decl-obj-list)
+              'well-typed))
+           ((stx:func_proto_st? st) 
+            ;(eprintf (format "debug ~a" st))
+            (let* ((func-declarator (stx:func_proto_st-func-declarator-st st))
+                   (func-para-list (stx:func_declarator_st-para-list func-declarator))
+                   (func-obj (stx:func_declarator_st-name func-declarator))
+                   (func-type (obj-type func-obj))
+                   (func-out-type (type_fun-out func-type)))
+              ;関数プロトタイプの
+              ;戻り値がvoidポインタはエラー
+              ;パラメータがvoid型、voidポインタはエラー
+              (cond ;戻り値がvoidのポインタ型であるとき
+                ((equal? (type_pointer 'pointer 'void )
+                         func-out-type)
+                 (begin (eprintf (format "ERROR NOT WELL TYPED '~a' AT ~a" 
+                                         (obj-name func-obj)(obj-pos func-obj)))
                         (error (format "ERROR NOT WELL TYPED '~a' AT ~a" 
-                                       (obj-name x)(obj-pos x))))))
-                ;宣言した変数が配列でない時
-                ;void型、voidポインタ型はエラー
-                (else (cond ((equal? (type_pointer 'pointer 'void) (obj-type x))
-                             (error (format "ERROR NOT WELL TYPED '~a' AT ~a" 
-                                            (obj-name x)(obj-pos x))))
-                            ((equal? 'void (obj-type x))
-                             (error (format "ERROR NOT WELL TYPED '~a' AT ~a" 
-                                            (obj-name x)(obj-pos x))))
-                            (else 'well-typed)))))
-            decl-obj-list)
-       'well-typed))
-    ((stx:func_proto_st? st) 
-     (let* ((func-declarator (stx:func_proto_st-func-declarator-st st))
-            (func-para-list (stx:func_declarator_st-para-list func-declarator))
-            (func-obj (stx:func_declarator_st-name func-declarator))
-            (func-type (obj-type func-obj))
-            (func-out-type (type_fun-out func-type)))
-       ;関数プロトタイプの
-       ;戻り値がvoidポインタはエラー
-       ;パラメータがvoid型、voidポインタはエラー
-       (cond ;戻り値がvoidのポインタ型であるとき
-         ((equal? (type_pointer 'pointer 'void )
-                  func-out-type)
-          (error (format "ERROR NOT WELL TYPED '~a' AT ~a" 
-                         (obj-name func-obj)(obj-pos func-obj))))
-         ;パラメターががvoid型、voidポインタ型であるとき
-         ;chcek-type-paraはこれらの型の以上がパラメータの中に無いかどうかを判定する.
-         ((equal? 'well-typed (check-type-para func-para-list))
-          'well-typed)
-         (else 'well-typed))))                                  
-    ((stx:func_def_st? st) 
-     ;戻り値がvoidポインタはエラー
-     ;パラメータがvoid型、voidポインタはエラー
-     (let* ((func-declarator (stx:func_def_st-func-declarator-st st))
-            (func-para-list (stx:func_declarator_st-para-list func-declarator))
-            (func-obj (stx:func_declarator_st-name func-declarator))
-            (func-type (obj-type func-obj))
-            (func-out-type (type_fun-out func-type))
-            (func-compound-state (stx:compound_st-statement-list 
-                                  (stx:func_def_st-compound-state-list st)))
-            (func-compound-decl (stx:compound_st-declaration-list 
-                                 (stx:func_def_st-compound-state-list st))))
-       (cond ((and (equal? 'well-typed 
-                           (cond ((equal? (type_pointer 'pointer 'void )
-                                          func-out-type)
-                                  (error (format "ERROR NOT WELL TYPED '~a' AT ~a" 
-                                                 (obj-name func-obj)(obj-pos func-obj))))
-                                 ((equal? 'well-typed (check-type-para func-para-list))
-                                  'well-typed)
-                                 (else 'well-typed)))
-                   ;begin文の前者がうまく実行されれば#tが出力される.
-                   ;そうでなければ勝手にエラーで止まる.
-                   (begin
-                     (cond ((equal? 'nodecl func-compound-decl) 'well-typed)
-                           (else (map check-type func-compound-decl)))
-                     (cond ((equal? 'nostat func-compound-state) 'well-typed)
-                           (else (map check-type func-compound-state)))
-                     #t))
-              'well-typed)
-             (else (error (format "ERROR NOT WELL TYPED '~a' AT ~a" 
-                                  (obj-name func-obj)(obj-pos func-obj)))))))
-    ((stx:null_statement_st? st) 'well-typed)       
-    ((stx:exp_in_paren_st? st) 
-     (check-type (stx:exp_in_paren_st-exp st)))
-    ((stx:sem_return_st? st) 
-     (cond ((equal? (stx:sem_return_st-exp st) 'noreturn) 
-            'well-typed)
-           ((type-void? (stx:sem_return_st-exp st))
-            (error (format "ERROR NOT WELL TYPED RETURN-STATEMENT AT ~a" 
-                           (stx:sem_return_st-pos st))))
-           ((and (type-int? (stx:sem_return_st-exp st))
-                 (equal? 'int (type_fun-out (obj-type (stx:sem_return_st-tag st)))))
-            'well-typed)
-           ((and (type-intp? (stx:sem_return_st-exp st))
-                 (equal? (type_pointer 'pointer 'int) 
-                         (type_fun-out (obj-type (stx:sem_return_st-tag st)))))
-            'well-typed)
-           ((and (type-intp? (stx:sem_return_st-exp st))
-                 (equal? (type_pointer 'pointer 'int) 
-                         (type_fun-out (obj-type (stx:sem_return_st-tag st)))))
-            'well-typed)
-           (else (error (format "ERROR NOT WELL TYPED RETURN-STATEMENT AT ~a" 
-                                (stx:sem_return_st-pos st))))))
-    ((stx:if_else_st? st)
-     (cond ((and (type-int? (stx:if_else_st-cond-exp st)) 
-                 (equal? 'well-typed (check-type (stx:if_else_st-state st)))
-                 (equal? 'well-typed (check-type (stx:if_else_st-else-state st))))
-            'well-typed)
-           (else (error (format "ERROR NOT WELL TYPED IF-STATEMENT AT ~a" 
-                                (stx:if_else_st-if-pos st))))))
-    ((stx:while_st? st) 
-     (cond ((and (type-int? (stx:while_st-cond-exp st))
-                 (equal? 'well-typed (check-type (stx:while_st-statement st))))
-            'well-typed)
-           (else (error (format "ERROR NOT WELL TYPED WHILE-STATEMENT AT ~a" 
-                                (stx:while_st-pos st))))))
-    ((stx:compound_st? st) 
-     (begin 
-       (cond ((equal? 'nostat (stx:compound_st-statement-list st)) 'well-typed)
-             (else (map check-type (stx:compound_st-statement-list st))))
-       (cond ((equal? 'nodecl (stx:compound_st-declaration-list st)) 'well-typed)
-             (else (map check-type (stx:compound_st-declaration-list st))))
-       ;各要素はerrorか'well-typedを返すので、mapが実行されれば
-       ;必然的にlistの要素は'well-typedになっている.
-       'well-typed))
-    (else (cond ((or (equal? 'int (type st))
-                     (equal? (type_pointer 'pointer 'int) (type st))
-                     (equal? (type_pointer 'pointer (type_pointer 'pointer 'int)) (type st))
-                     (equal? 'void (type st)))
+                                         (obj-name func-obj)(obj-pos func-obj)))))
+                ;パラメターががvoid型、voidポインタ型であるとき
+                ;chcek-type-paraはこれらの型の以上がパラメータの中に無いかどうかを判定する.
+                ((equal? 'well-typed (check-type-para func-para-list))
                  'well-typed)
-                (else (error "ERROR NOT WELL TYPED" st)))))))))
-
+                (else 'well-typed))))                                  
+           ((stx:func_def_st? st) 
+            ;(eprintf (format "debug ~a" st))
+            ;戻り値がvoidポインタはエラー
+            ;パラメータがvoid型、voidポインタはエラー
+            (let* ((func-declarator (stx:func_def_st-func-declarator-st st))
+                   (func-para-list (stx:func_declarator_st-para-list func-declarator))
+                   (func-obj (stx:func_declarator_st-name func-declarator))
+                   (func-type (obj-type func-obj))
+                   (func-out-type (type_fun-out func-type))
+                   (func-compound-state (stx:compound_st-statement-list 
+                                         (stx:func_def_st-compound-state-list st)))
+                   (func-compound-decl (stx:compound_st-declaration-list 
+                                        (stx:func_def_st-compound-state-list st))))
+              (cond ((and (equal? 'well-typed 
+                                  (cond ((equal? (type_pointer 'pointer 'void )
+                                                 func-out-type)
+                                         (begin (eprintf (format "ERROR NOT WELL TYPED '~a' AT ~a" 
+                                                                 (obj-name func-obj)(obj-pos func-obj)))
+                                                (error (format "ERROR NOT WELL TYPED '~a' AT ~a" 
+                                                               (obj-name func-obj)(obj-pos func-obj)))))
+                                        ((equal? 'well-typed (check-type-para func-para-list))
+                                         'well-typed)
+                                        (else 'well-typed)))
+                          ;begin文の前者がうまく実行されれば#tが出力される.
+                          ;そうでなければ勝手にエラーで止まる.
+                          (begin
+                            (cond ((equal? 'nodecl func-compound-decl) 'well-typed)
+                                  (else (map check-type (flatten func-compound-decl))))
+                            (cond ((equal? 'nostat func-compound-state) 'well-typed)
+                                  (else (map check-type (flatten func-compound-state))))
+                            #t))
+                     'well-typed)
+                    (else (begin (eprintf (format "ERROR NOT WELL TYPED '~a' AT ~a" 
+                                                  (obj-name func-obj)(obj-pos func-obj)))
+                                 (error (format "ERROR NOT WELL TYPED '~a' AT ~a" 
+                                                (obj-name func-obj)(obj-pos func-obj))))))))
+           ((stx:null_statement_st? st) 'well-typed)       
+           ((stx:exp_in_paren_st? st) 
+            (check-type (stx:exp_in_paren_st-exp st)))
+           ((stx:sem_return_st? st) 
+            (cond ((equal? (stx:sem_return_st-exp st) 'noreturn) 
+                   'well-typed
+                   ;(eprintf (format "debug1"))
+                   )
+                  ((type-void? (stx:sem_return_st-exp st))
+                   (begin (eprintf (format "ERROR NOT WELL TYPED RETURN-STATEMENT AT ~a" 
+                                           (stx:sem_return_st-pos st)))
+                          (error (format "ERROR NOT WELL TYPED RETURN-STATEMENT AT ~a" 
+                                         (stx:sem_return_st-pos st)))))
+                  ((and (type-int? (stx:sem_return_st-exp st))
+                        (equal? 'int 
+                                (type_fun-out (obj-type (stx:sem_return_st-tag st)))))
+                   'well-typed
+                   ;(eprintf (format "debug2"))
+                   )
+                  ((and (type-intp? (stx:sem_return_st-exp st))
+                        (equal? (type_pointer 'pointer 'int) 
+                                (type_fun-out (obj-type (stx:sem_return_st-tag st)))))
+                   'well-typed
+                   ;(eprintf (format "debug3"))
+                   )
+                  ((and (type-intp? (stx:sem_return_st-exp st))
+                        (equal? (type_pointer 'pointer 'int) 
+                                (type_fun-out (obj-type (stx:sem_return_st-tag st)))))
+                   'well-typed
+                   ;(eprintf (format "debug4"))
+                   )
+                  (else (begin (eprintf (format "ERROR NOT WELL TYPED RETURN-STATEMENT AT ~a" 
+                                                (stx:sem_return_st-pos st)))
+                               (error (format "ERROR NOT WELL TYPED RETURN-STATEMENT AT ~a" 
+                                              (stx:sem_return_st-pos st)))))))
+           ((stx:if_else_st? st)
+            (cond ((and (type-int? (stx:if_else_st-cond-exp st)) 
+                        (equal? 'well-typed (check-type (flatten (stx:if_else_st-state st))))
+                        (equal? 'well-typed (check-type (flatten (stx:if_else_st-else-state st)))))
+                   'well-typed)
+                  (else (begin (eprintf (format "ERROR NOT WELL TYPED IF-STATEMENT AT ~a" 
+                                                (stx:if_else_st-if-pos st)))
+                               (error (format "ERROR NOT WELL TYPED IF-STATEMENT AT ~a" 
+                                              (stx:if_else_st-if-pos st)))))))
+           ((stx:while_st? st) 
+            (cond ((and (type-int? (stx:while_st-cond-exp st))
+                        (equal? 'well-typed (check-type (flatten (stx:while_st-statement st)))))
+                   'well-typed)
+                  (else (begin (eprintf (format "ERROR NOT WELL TYPED WHILE-STATEMENT AT ~a" 
+                                                (stx:while_st-pos st)))
+                               (error (format "ERROR NOT WELL TYPED WHILE-STATEMENT AT ~a" 
+                                              (stx:while_st-pos st)))))))
+           ((stx:compound_st? st) 
+            (begin 
+              (cond ((equal? 'nostat (stx:compound_st-statement-list st)) 'well-typed)
+                    (else (map check-type (flatten (list (stx:compound_st-statement-list st))))))
+              (cond ((equal? 'nodecl (stx:compound_st-declaration-list st)) 'well-typed)
+                    (else (map check-type (stx:compound_st-declaration-list st))))
+              ;各要素はerrorか'well-typedを返すので、mapが実行されれば
+              ;必然的にlistの要素は'well-typedになっている.
+              'well-typed))
+           ;((list? st) (error (format "debug ~a" st)))
+           (else (cond ((or (equal? 'int (type st))
+                            (equal? (type_pointer 'pointer 'int) (type st))
+                            (equal? (type_pointer 'pointer (type_pointer 'pointer 'int)) (type st))
+                            (equal? 'void (type st)))
+                          'well-typed)
+                       (else (begin (eprintf (format "ERROR NOT WELL TYPED~a" st))
+                                    (error (format "ERROR NOT WELL TYPED~a" st))))))))))
 
 ;型は'int、(type_pointer 'pointer 'int)、(type_pointer 'pointer (type_pointer 'pointer 'int))
 (define (sametype? x y)
@@ -171,14 +211,15 @@
                      (let ((x-type (obj-type x)))
                        (begin (cond ((or (equal? 'void x-type)
                                          (equal? (type_pointer 'pointer 'void) x-type))
-                                     (error (format "ERROR NOT WELL TYPED '~a' AT ~a" 
-                                                    (obj-name x)(obj-pos x))))
+                                     (begin (eprintf (format "ERROR NOT WELL TYPED '~a' AT ~a" 
+                                                             (obj-name x)(obj-pos x)))
+                                            (error (format "ERROR NOT WELL TYPED '~a' AT ~a" 
+                                                           (obj-name x)(obj-pos x)))))
                                     (else 'well-typed))
                               'well-typed)))
                    para-list))))
 
 (define (type st)
-  (let* ((st (flatten st)))
   (cond 
     ((stx:sem_return_st? st) (type (stx:sem_return_st-exp st)))
     ((stx:exp_in_paren_st? st) (type (stx:exp_in_paren_st-exp st)))
@@ -187,33 +228,48 @@
             (type-src (type (stx:assign_exp_st-src st))))
        (cond ((equal? type-dest type-src)
               type-dest)
-             (else (error (format "ERROR NOT WELL TYPED '=' AT" 
-                                  (stx:assign_exp_st-pos st)))))))
+             (else (begin (eprintf (format "ERROR NOT WELL TYPED '=' AT ~a" 
+                                           (stx:assign_exp_st-pos st)))
+                          (error (format "ERROR NOT WELL TYPED '=' AT ~a" 
+                                         (stx:assign_exp_st-pos st))))))))
     ((stx:logic_exp_st? st) 
      (let* ((type-op1 (stx:logic_exp_st-op1 st))
             (type-op2 (stx:logic_exp_st-op2 st)))
        (cond ((and (type-int? type-op1) 
                    (type-int? type-op2))
               'int)
-             (else (error (format "ERROR NOT WELL TYPED '~a' AT ~a" 
-                                  (cond ((equal? 'or (stx:logic_exp_st-log-ope st)) '||)
-                                        ((equal? 'and (stx:logic_exp_st-log-ope st)) '&&))
-                                  (stx:logic_exp_st-pos st)))))))
+             (else (begin (eprintf (format "ERROR NOT WELL TYPED '~a' AT ~a" 
+                                           (cond ((equal? 'or (stx:logic_exp_st-log-ope st)) '||)
+                                                 ((equal? 'and (stx:logic_exp_st-log-ope st)) '&&))
+                                           (stx:logic_exp_st-pos st)))
+                          (error (format "ERROR NOT WELL TYPED '~a' AT ~a" 
+                                           (cond ((equal? 'or (stx:logic_exp_st-log-ope st)) '||)
+                                                 ((equal? 'and (stx:logic_exp_st-log-ope st)) '&&))
+                                           (stx:logic_exp_st-pos st))))))))
     
     ((stx:rel_exp_st? st) 
      (let* ((type-op1 (type (stx:rel_exp_st-op1 st)))
             (type-op2 (type (stx:rel_exp_st-op2 st))))
        (cond ((equal? type-op1 type-op2)
               'int)
-             (else (error (format "ERROR NOT WELL TYPED '~a' AT ~a" 
-                                  (cond ((equal? 'equal (stx:rel_exp_st-rel-ope st)) '==)
-                                        ((equal? 'not (stx:rel_exp_st-rel-ope st)) '!=)
-                                        ((equal? 'less (stx:rel_exp_st-rel-ope st)) '<)
-                                        ((equal? 'and_less (stx:rel_exp_st-rel-ope st)) '<=)
-                                        ((equal? 'more (stx:rel_exp_st-rel-ope st)) '>)
-                                        ((equal? 'and_more (stx:rel_exp_st-rel-ope st)) '>=)
-                                        (else (error "ERROR")))
-                                  (stx:rel_exp_st-pos st)))))))
+             (else (begin (eprintf (format "ERROR NOT WELL TYPED '~a' AT ~a" 
+                                           (cond ((equal? 'equal (stx:rel_exp_st-rel-ope st)) '==)
+                                                 ((equal? 'not (stx:rel_exp_st-rel-ope st)) '!=)
+                                                 ((equal? 'less (stx:rel_exp_st-rel-ope st)) '<)
+                                                 ((equal? 'and_less (stx:rel_exp_st-rel-ope st)) '<=)
+                                                 ((equal? 'more (stx:rel_exp_st-rel-ope st)) '>)
+                                                 ((equal? 'and_more (stx:rel_exp_st-rel-ope st)) '>=)
+                                                 (else (error "ERROR")))
+                                           (stx:rel_exp_st-pos st)))
+                          (error (format "ERROR NOT WELL TYPED '~a' AT ~a" 
+                                           (cond ((equal? 'equal (stx:rel_exp_st-rel-ope st)) '==)
+                                                 ((equal? 'not (stx:rel_exp_st-rel-ope st)) '!=)
+                                                 ((equal? 'less (stx:rel_exp_st-rel-ope st)) '<)
+                                                 ((equal? 'and_less (stx:rel_exp_st-rel-ope st)) '<=)
+                                                 ((equal? 'more (stx:rel_exp_st-rel-ope st)) '>)
+                                                 ((equal? 'and_more (stx:rel_exp_st-rel-ope st)) '>=)
+                                                 (else (error "ERROR")))
+                                           (stx:rel_exp_st-pos st))))))))
     ((stx:alge_exp_st? st) 
      (let* ((type-op1 (stx:alge_exp_st-op1 st))
             (type-op2 (stx:alge_exp_st-op2 st))
@@ -235,7 +291,8 @@
                     ((and (type-int? type-op1)
                           (type-intpp? type-op2))
                      (type_pointer 'pointer (type_pointer 'pointer 'int)))
-                    (else (error (format "ERROR NOT WELL TYPED '+' AT ~a" pos)))))
+                    (else (begin (eprintf (format "ERROR NOT WELL TYPED '+' AT ~a" pos))
+                                 (error (format "ERROR NOT WELL TYPED '+' AT ~a" pos))))))
              ((equal? 'sub ope) 
               (cond ((and (type-intp? type-op1)
                           (type-int? type-op2))
@@ -245,16 +302,21 @@
                      (type_pointer 'pointer (type_pointer 'pointer 'int)))
                     ((and (type-int? type-op1)
                           (type-int? type-op2)) 'int)
-                    (else (error (format "ERROR NOT WELL TYPED '-' AT ~a" pos)))))
+                    (else (begin (eprintf (format "ERROR NOT WELL TYPED '-' AT ~a" pos))
+                                 (error (format "ERROR NOT WELL TYPED '-' AT ~a" pos))))))
              ((or (equal? 'mul ope) 
                   (equal? 'div ope)) 
               (cond ((and (type-int? type-op1)
                           (type-int? type-op2))
                      'int)
-                    (else (error (format "ERROR NOT WELL TYPED '~a' AT ~a" 
-                                         (cond ((equal? 'mul ope) '*)
-                                               ((equal? 'div ope) '/))
-                                         pos)))))
+                    (else (begin (eprintf (format "ERROR NOT WELL TYPED '~a' AT ~a" 
+                                                  (cond ((equal? 'mul ope) '*)
+                                                        ((equal? 'div ope) '/))
+                                                  pos))
+                                 (error (format "ERROR NOT WELL TYPED '~a' AT ~a" 
+                                                (cond ((equal? 'mul ope) '*)
+                                                      ((equal? 'div ope) '/))
+                                                pos))))))
              ;デバグ用.(本来はどんなプログラムを書いてもこの分岐には入らないはず.)
              (else (error "ERROR NOT WELL TYPED" st)))))
     ((stx:unary_exp_st? st) 
@@ -263,13 +325,19 @@
             (type-op (type op))
             (pos (stx:unary_exp_st-pos st)))
        (cond ((equal? 'amp mark)
-              (cond ((equal? 'int op) 'int)
-                    (else (error (format "ERROR NOT WELL TYPED '&' AT ~a" pos)))))
+              (cond ((obj? op)
+                     (cond ((equal? 'int (type op)) (type_pointer 'pointer 'int))
+                           (else (begin (eprintf (format "ERROR NOT WELL TYPED '&' AT ~a" pos))
+                                        (error (format "ERROR NOT WELL TYPED '&' AT ~a" pos))))))
+                    (else (cond ((equal? 'int op) (type_pointer 'pointer 'int))
+                                (else (begin (eprintf (format "ERROR NOT WELL TYPED '&' AT ~a" pos))
+                                             (error (format "ERROR NOT WELL TYPED '&' AT ~a" pos))))))))
              ((equal? 'ast mark)
               (cond ((equal? (type_pointer 'pointer 'int) type-op) 'int)
                     ((equal? (type_pointer 'pointer (type_pointer 'pointer 'int)) type-op) 
                      (type_pointer 'pointer 'int))
-                    (else (error (format "ERROR NOT WELL TYPED '*' AT ~a" st)))))
+                    (else (begin (eprintf (format "ERROR NOT WELL TYPED '*' AT ~a" st))
+                                 (error (format "ERROR NOT WELL TYPED '*' AT ~a" st))))))
              ;デバグ用.(本来はどんなプログラムを書いてもこの分岐には入らないはず.)
              (else (error "ERROR NOT WELL TYPED" st)))))
     ((stx:constant_st? st) 'int)
@@ -292,43 +360,51 @@
                              (cond 
                                ((equal? 'nopara x) 'nopara)
                                (else (type x))))
-                           func-para)
-                      func-in-list)
+                           (flatten (list func-para)))
+                      (flatten (list func-in-list)))
               (cond 
                 ;関数の戻り値として許されるのは
                 ;int、intのポインタ型、void型
                 ((equal? 'int func-out) 'int)
                 ((equal? 'void func-out) 'void)
                 ((equal? (type_pointer 'pointer 'int) func-out) (type_pointer 'pointer 'int))
-                (else (error (format "ERROR NOT WELL TYPED '~a' AT ~a"
-                                     func-name pos)))))
-             (else (error (format "ERROR NOT WELL TYPED '~a' AT ~a"
-                                  func-name pos))))))
+                (else (begin (eprintf (format "ERROR NOT WELL TYPED '~a' AT ~a"
+                                              func-name pos))
+                             (error (format "ERROR NOT WELL TYPED '~a' AT ~a"
+                                            func-name pos))))))
+             (else (begin (eprintf (format "ERROR NOT WELL TYPED '~a' AT ~a" func-name pos))
+                          (error (format "ERROR NOT WELL TYPED '~a' AT ~a" func-name pos)))))))
     ((obj? st) 
      (let* ((type-obj (obj-type st)))
        (cond 
          ;配列型のとき
          ((type_array? type-obj) 
           ;ポインタ型として許されるのはintのみ
-          (cond ((equal? 'int (type_array-type type-obj)) 'int)
-                (else (error (format "ERROR NOT WELL TYPED '~a' AT ~a"
-                                     (obj-name st) (obj-pos st))))))
+          (cond ;((equal? 'int (type_array-type type-obj)) 'int)
+            ((equal? 'int (type_array-type type-obj)) (type_pointer 'pointer 'int))
+            (else (begin (eprintf (format "ERROR NOT WELL TYPED '~a' AT ~a"
+                                          (obj-name st) (obj-pos st)))
+                         (error (format "ERROR NOT WELL TYPED '~a' AT ~a"
+                                        (obj-name st) (obj-pos st)))))))
          ;配列型でないとき
          ;許されるのはint、intのポインタ型のみ
          (else 
           (cond ((equal? 'int type-obj) 'int)
                 ((equal? (type_pointer 'pointer 'int) type-obj) (type_pointer 'pointer 'int))
-                (else (error (format "ERROR NOT WELL TYPED '~a' AT ~a"
-                                     (obj-name st) (obj-pos st)))))))))   
+                (else (begin (eprintf (format "ERROR NOT WELL TYPED '~a' AT ~a"
+                                              (obj-name st) (obj-pos st)))
+                             (error (format "ERROR NOT WELL TYPED '~a' AT ~a"
+                                            (obj-name st) (obj-pos st))))))))))   
     ;デバグ用.
-    (else (error (format "ERROR! ~a" st))))))
+    (else (error (format "ERROR! ~a" st)))))
 
 
 
-
+;(display "something bad happens." (current-error-port))
+;(newline (current-error-port))
 
 ;テスト
-(define p100 (open-input-file "test01.c"))
-(port-count-lines! p100)
+;(define p100 (open-input-file "test01.c"))
+;(port-count-lines! p100)
 ;;(sem:sem-analyze-tree (k08:parse-port p100))
-(analy-type (sem:sem-analyze-tree (k08:parse-port p100)))
+;(analy-type (sem:sem-analyze-tree (k08:parse-port p100)))

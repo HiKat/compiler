@@ -1,1 +1,0 @@
-("6.1.1" ("160231ef756fd21c63f0e68605eb3949de9b4e0c" . "7a80e386bf245dcf76ad04a95c12af7e2e84f5e5") #"/Users/katsumihisao/workspace/github/compiler/mysyntax.rkt" (collects #"racket" #"main.rkt") (collects #"racket" #"runtime-config.rkt"))

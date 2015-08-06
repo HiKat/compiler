@@ -157,7 +157,9 @@
                                 (stx:null_statement_st 'null) 
                                 $1-start-pos 'syntax-sygar))
                ((if l_small_paren expression r_small_paren statement else statement)
-                (stx:if_else_st $3 $5 $7 $1-start-pos $6-start-pos))
+                (stx:if_else_st $3 
+                                $5  
+                                $7 $1-start-pos $6-start-pos))
                ((while l_small_paren expression r_small_paren statement)
                 (stx:while_st $3 $5 $1-start-pos))        
                ((for l_small_paren expression 
@@ -276,7 +278,7 @@
                      ((relational_expr and_less add_expr)
                       (stx:rel_exp_st 'and_less $1 $3 $2-start-pos))
                      ((relational_expr and_more add_expr)
-                      (stx:rel_exp_st 'adn_more $1 $3 $2-start-pos)))
+                      (stx:rel_exp_st 'and_more $1 $3 $2-start-pos)))
     
     (add_expr ((mult_expr) $1)
               ((add_expr + mult_expr)
@@ -340,7 +342,7 @@
 (define (parse-port p)
   (program-parser (lambda () (sub-program-lexer p))))
 #;(begin
-  (define p9999 (open-input-file "test03.c"))
+  (define p9999 (open-input-file "test.sc"))
   (port-count-lines! p9999)
   (parse-port p9999))
 

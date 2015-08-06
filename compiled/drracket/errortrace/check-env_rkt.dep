@@ -1,1 +1,0 @@
-("6.1.1" ("4b0462e4e3227497a12c201585bdb41412e940ee" . "0bc7b4e7c6e4ec2acc5a404d71c0b100033754ae") #"/Users/katsumihisao/workspace/github/compiler/myenv.rkt" (collects #"racket" #"main.rkt") (collects #"racket" #"runtime-config.rkt"))

@@ -55,12 +55,14 @@
 ;戻り値は適切な letstmt
 (define (correct-let ls)
   ;(letstmt var1 (letstmt var2 exp))を(letstmt var1 exp)に 
-  (cond ((in:letstmt? ls)
+  #;(cond ((in:letstmt? ls)
          (cond 
            ((in:letstmt? (in:letstmt-exp ls))
             (in:letstmt (in:letstmt-var ls) (in:letstmt-exp (in:letstmt-exp ls))))
            (else ls)))
-        (else ls)))
+        (else ls))
+  ls
+  )
 
 
 ;引数
@@ -90,16 +92,20 @@
             ;(meaningless (set! intermed-code '()))
             (meaningless (set! temp-space '())))
        (cond ((obj? decl-ls) 
-              (cond ((type_array? (obj-type decl-ls)) 
+              ;;;;;;;;;;;;;;;;;;deprecated;;;;;;;;;;;;;;;;;;;
+              #;(cond ((type_array? (obj-type decl-ls)) 
                      (let* ((base-temp (make-base-temp decl-ls)))
                        (list 
                         (in:vardecl (decl-ls))
                         (in:vardecl base-temp))))
-                    (else (in:vardecl (decl-ls)))))
+                    (else (in:vardecl (decl-ls))))
+              ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+             (in:vardecl (decl-ls)))
              ((list? decl-ls) 
               (flatten 
                (map (lambda (x) 
-                      (cond ((type_array? (obj-type x)) 
+                      ;;;;;;;;;;;;;;;;;;;deprecated;;;;;;;;;;;;;;;;;;;;;;;;;;
+                      #;(cond ((type_array? (obj-type x)) 
                              (let* ((base-temp (make-base-temp x)))
                                (set! intermed-code 
                                      (flatten (append intermed-code 
@@ -107,7 +113,9 @@
                                (list
                                 (in:vardecl x)
                                 (in:vardecl base-temp))))
-                            (else (in:vardecl x)))) 
+                            (else (in:vardecl x)))
+                      ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+                      (in:vardecl x)) 
                     decl-ls)))
              (error (format "\n check syn-to-inter! ~a\n" st)))))
     ((stx:func_def_st? st) (let* ((fun-dec (stx:func_def_st-func-declarator-st st))
@@ -120,23 +128,49 @@
                                               (else (map (lambda (x) (in:vardecl x)) fun-para-list)))
                                         (syn-to-inter fun-body)))) 
     ((stx:func_proto_st? st) '())
+    
+    
+    ;;大幅修正;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     ((stx:assign_exp_st? st) 
      (let* ((dest (stx:assign_exp_st-dest st))
-            (src (stx:assign_exp_st-src st)))
-       (begin  
-         (cond ((and (stx:unary_exp_st? dest) 
-                     (not (stx:unary_exp_st? src)))
-                (in:writestmt (syn-to-inter dest) (syn-to-inter src)))
-               ((and (stx:unary_exp_st? src)
-                     (not (not (stx:unary_exp_st? src))))
-                (in:readstmt (syn-to-inter dest) (syn-to-inter src)))
-               (else (in:letstmt (syn-to-inter dest) 
-                                 (cond ((or (in:intexp? (syn-to-inter src))
-                                            (in:aopexp? (syn-to-inter src))
-                                            (in:relopexp? (syn-to-inter src))
-                                            (in:addrexp? (syn-to-inter src)))
-                                        (syn-to-inter src))
-                                       (else (in:varexp (syn-to-inter src))))))))))
+            (src (stx:assign_exp_st-src st))
+            (syn-to-intered-src (cond ((stx:constant_st? src) 
+                                       (in:intexp (stx:constant_st-cons src))) 
+                                      (else (syn-to-inter src))))
+            ;(syn-to-intered-dest (syn-to-inter dest))
+            )
+       ;左辺がスターかどうか
+       ;スターだったらwritstmt
+       (cond ((stx:unary_exp_st? dest)
+              ;(error (format "check2~a"(stx:unary_exp_st-mark dest) ))
+              (cond ((equal? 'ast (stx:unary_exp_st-mark dest))
+                     ;(error (format "check!"))
+                     (in:writestmt (syn-to-inter (stx:unary_exp_st-op dest)) syn-to-intered-src))
+                    (else
+                     (in:letstmt 
+                      #;(cond ((obj? dest) 
+                               (cond ((type_array? (obj-type dest))
+                                      (syn-to-intered-dest))
+                                     (else dest)))
+                              (else syn-to-intered-dest))
+                      (syn-to-inter dest)
+                      #;(cond ((obj? src) (in:varexp src))
+                              ((obj? syn-to-intered-src) (in:varexp syn-to-intered-src))
+                              (else syn-to-intered-src))
+                      syn-to-intered-src
+                      ))))
+              (else (in:letstmt 
+                     #;(cond ((obj? dest) 
+                              (cond ((type_array? (obj-type dest))
+                                     (syn-to-inter dest))
+                                    (else dest)))
+                             (else syn-to-intered-dest))
+                     (syn-to-inter dest)
+                     #;(cond ((obj? src) (in:varexp src))
+                             ((obj? syn-to-intered-src) (in:varexp syn-to-intered-src))
+                             (else syn-to-intered-src))
+                     syn-to-intered-src
+                     )))))
     ((stx:logic_exp_st? st) 
      (let* ((op (stx:logic_exp_st-log-ope st))
             (op1 (stx:logic_exp_st-op1 st))
@@ -179,9 +213,10 @@
             (op (cond ((equal? 'not op) '!=)
                       ((equal? 'equal op) '==)
                       ((equal? 'less op) '<)
-                      ((equal? 'and_less op) '=<)
+                      ((equal? 'and_less op) '<=)
                       ((equal? 'more op) '>)
-                      ((equal? 'and_more op) '=<)))
+                      ((equal? 'and_more op) '>=)
+                      (else (error (format "check syn-to-inter relexp_st")))))
             (op1 (stx:rel_exp_st-op1 st))
             (op2 (stx:rel_exp_st-op2 st))
             (temp1 (syn-to-inter op1))
@@ -211,44 +246,83 @@
             (temp1 (syn-to-inter op1))
             (temp2 (syn-to-inter op2))
             (temp3 (syn-to-inter (make-temp)))
-            (op1-type (cond ((obj? op1) (cond ((type_pointer? (obj-type op1)) 'int-pointer)
-                                              (else 'int)))
+            (op1-type (cond ((obj? op1) 
+                             (cond ((or (type_pointer? (obj-type op1))
+                                        (type_array? (obj-type op1))) 'int-pointer)
+                                   (else 'int)))
                             (else 'int)))
-            (op2-type (cond ((obj? op2) (cond ((type_pointer? (obj-type op2)) 'int-pointer)
-                                              (else 'int)))
+            (op2-type (cond ((obj? op2) 
+                             (cond ((or (type_pointer? (obj-type op2))
+                                        (type_array? (obj-type op2))) 'int-pointer)
+                                   (else 'int)))
                             (else 'int))))
-       (cond ((and (equal? 'int-pointer op1-type) (equal? 'int op2-type)) 
-              (begin
-                (set! intermed-code
-                      (append 
-                       intermed-code
-                       (flatten (list (correct-let 
-                                       (in:letstmt temp3 (in:aopexp op temp1 (in:aopexp 'mul (in:intexp 4) temp2))))))))
-                temp3))
-             ((and (equal? 'int-pointer op2-type) (equal? 'int op1-type)) 
-              (begin
-                (set! intermed-code
-                      (append 
-                       intermed-code
-                       (flatten (list (correct-let 
-                                       (in:letstmt temp3 temp1 (in:aopexp op temp2 (in:aopexp 'mul (in:intexp 4)))))))))
-                temp3))
-             (else
-              (begin
-                (set! intermed-code
-                      (append 
-                       intermed-code
-                       (flatten (list 
-                                       (in:letstmt temp3 (in:aopexp op temp1 temp2))))))
-                temp3)))))
+       (cond 
+         ;配列のシンタックスシュガーに対応
+         ((and (equal? 'int-pointer op1-type) (equal? 'int op2-type)) 
+          ;;;;;;;;;;;;;;;;;;;;;;;;;;;deprecated;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+          #;(begin
+            (set! intermed-code
+                  (append 
+                   intermed-code
+                   (flatten (list (correct-let 
+                                   (in:letstmt temp3 
+                                               (in:aopexp op 
+                                                          temp1 
+                                                          (in:aopexp 'mul (in:intexp 4) temp2))))))))
+            temp3)
+          ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+          (begin 
+            (let* ((temp4 (make-temp))
+                   (temp5 (make-temp)))
+              (set! intermed-code
+                    (append 
+                     intermed-code
+                     (list
+                      (in:letstmt temp4 (in:intexp 4))
+                      (in:letstmt temp5 (in:aopexp 'mul temp2 temp4))
+                      (in:letstmt temp3 (in:aopexp 'add temp1 temp5))))))
+            temp3))
+         ;配列のシンタックスシュガーに対応
+         ((and (equal? 'int-pointer op2-type) (equal? 'int op1-type)) 
+          (begin 
+            (let* ((temp4 (make-temp))
+                   (temp5 (make-temp)))
+              (set! intermed-code
+                    (append 
+                     intermed-code
+                     (list
+                      (in:letstmt temp4 (in:intexp 4))
+                      (in:letstmt temp5 (in:aopexp 'mul temp1 temp4))
+                      (in:letstmt temp3 (in:aopexp 'add temp2 temp5))))))
+            temp3))
+         ;
+         (else
+          (begin
+            (set! intermed-code
+                  (append 
+                   intermed-code
+                   (flatten (list 
+                             (in:letstmt temp3 (in:aopexp op temp1 temp2))))))
+            temp3)))))
     ((stx:unary_exp_st? st) 
      (let* ((op (stx:unary_exp_st-mark st))
             (op1 (stx:unary_exp_st-op st)))
+       
        (cond ((equal? 'amp op) (in:addrexp (syn-to-inter op1)))
-             ((equal? 'ast op) op1))))
+             ((equal? 'ast op) (let* ((temp (make-temp))
+                                      (syn-to-intered-op1 (syn-to-inter op1)))
+                                 (set!
+                                  intermed-code
+                                  (flatten 
+                                   (append 
+                                    intermed-code 
+                                    (list (in:readstmt temp syn-to-intered-op1))))) 
+                                 temp)))))
     ((stx:constant_st? st) 
      (let* ((num (stx:constant_st-cons st))
-            (temp (syn-to-inter (make-temp))))
+            ;(temp (syn-to-inter (make-temp)))
+            (temp (make-temp))
+            )
        (begin
        (set! intermed-code
              (append 
@@ -293,19 +367,30 @@
             (decl (cond ((equal? 'nodecl decls) '())
                         (else (flatten (map syn-to-inter decls)))))
             (stmt (cond ((equal? 'nostat stmts) '())
-                           (else (flatten (map syn-to-inter stmts)))))
-            (stmt-intermed intermed-code)
+                           (else (flatten 
+                                  (map 
+                                   (lambda (x) (let* ((meaningless (set! intermed-code '()))
+                                                      (syn-to-intered-x (syn-to-inter x)))
+                                                 (flatten (append (list intermed-code)
+                                                                  (list syn-to-intered-x)))))
+                                   (flatten (list stmts)))))))
+            ;(stmt-intermed intermed-code)
             (stmt-temp-decl temp-decl)
             (meaningless (set! intermed-code original-intermed))
             (meaningless (set! temp original-temp))
             (meaningless (set! temp-decl original-temp-decl)))
-       (in:compdstmt (flatten (append decl stmt-temp-decl)) (flatten (append stmt-intermed stmt)))))          
+       (in:compdstmt (flatten (append decl stmt-temp-decl)) 
+                     ;(flatten (append stmt-intermed stmt))
+                     stmt
+                     )))          
     ((stx:func_st? st) 
      (cond 
        ;組み込み関数printのとき
        ((equal? 'print (obj-name (stx:func_st-name st))) 
         (let* ((vars (flatten (stx:func_st-para st))))
-          (in:printstmt (syn-to-inter (car vars)))))
+          ;(display (format "\n\n\ndebug !!!!!!!!!! ~a\n\n\n" (car vars)))
+          (in:printstmt (syn-to-inter (car vars)))
+          ))
        ;それ以外
        (else (let* ((vars (stx:func_st-para st))
                     (f (stx:func_st-name st))
@@ -314,14 +399,18 @@
                     (let-var
                      (cond ((equal? 'nopara vars)'())
                            (else (map 
-                                  (lambda (x) 
-                                    (correct-let (in:letstmt (make-temp) 
-                                                             (cond ((or (in:intexp? (syn-to-inter x))
-                                                                        (in:aopexp? (syn-to-inter x))
-                                                                        (in:relopexp? (syn-to-inter x))
-                                                                        (in:addrexp? (syn-to-inter x)))
-                                                                    (syn-to-inter x))
-                                                                   (else (in:varexp (syn-to-inter x))))))) 
+                                  (lambda (x)
+                                    (let* ((syn-to-intered-x (syn-to-inter x)))
+                                      (correct-let (in:letstmt (make-temp) 
+                                                               (cond ((or (in:intexp? syn-to-intered-x)
+                                                                          (in:aopexp? syn-to-intered-x)
+                                                                          (in:relopexp? syn-to-intered-x)
+                                                                          (in:addrexp? syn-to-intered-x))
+                                                                      syn-to-intered-x)
+                                                                     (else (cond ((type_array? (obj-type syn-to-intered-x))
+                                                                                  (in:addrexp syn-to-intered-x))
+                                                                                 (else 
+                                                                                  (in:varexp syn-to-intered-x))))))))) 
                                   vars)))))
                (begin 
                  (set! 
@@ -336,21 +425,32 @@
                                            (map (lambda (x) (in:letstmt-var x)) let-var)))))))
                  (cond ((equal? 'void return-type) '())
                        (else temp)))))))
-    ((obj? st) (cond ((type_array? (obj-type st))
-                      (let* ((name (obj-name st))
-                             (lev (obj-lev st))
-                             (kind (obj-kind st))
-                             (array-type (type_array-type (obj-type st)))
-                             (array-size (type_array-size (obj-type st)))
-                             (pos (obj-pos st)))
-                        (obj name lev kind 
-                             (type_array array-type (syn-to-inter 
-                                                     (stx:alge_exp_st 
-                                                      'add 
-                                                      (obj (array_base name lev kind) 'temp 'array-base 'temp 'temp)
-                                                      (stx:alge_exp_st 'mul (stx:constant_st 4 'syntax-sugar-gen-intermed) array-size 'syntax-sugar-gen-intermed)
-                                                      'syntax-sugar-gen-intermed))) pos)))
-                     (else st)))
+    ((obj? st) 
+     ;;;;;;;;;;;;;;;;;;;;;;;;deprecated;;;;;;;;;;;;;;;;;;;;;;;;;
+     #;(cond ((type_array? (obj-type st))
+            (let* ((name (obj-name st))
+                   (lev (obj-lev st))
+                   (kind (obj-kind st))
+                   (array-type (type_array-type (obj-type st)))
+                   (array-size (type_array-size (obj-type st)))
+                   (pos (obj-pos st)))
+              ;戻り値
+              (obj name lev kind 
+                   (type_array array-type (syn-to-inter 
+                                           (stx:alge_exp_st 
+                                            'add 
+                                            (obj (array_base name lev kind) 'temp 'array-base 'temp 'temp)
+                                            (stx:alge_exp_st 'mul 
+                                                             (stx:constant_st 4 'syntax-sugar-gen-intermed) 
+                                                             (syn-to-inter array-size) 
+                                                             'syntax-sugar-gen-intermed)
+                                            'syntax-sugar-gen-intermed))) pos)))
+                     (else st))
+     ;;;;;;;;;;;;;;;;;;;;;;;;;deprecated;;;;;;;;;;;;;;;;;;;;;;;;;
+     st
+     )
+    ;;;;;;;deprecated;;;;;;
+    ;((stx:exp_in_paren_st? st) (syn-to-inter (stx:exp_in_paren_st-exp st)))
     (else (error (format "\n check syn-to-inter!! ~a\n" st)))))
 
 

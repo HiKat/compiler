@@ -1,0 +1,217 @@
+	.data	
+	.text	
+ack:
+	subu	$sp,$sp,72
+	sw	$ra,4($sp)
+	sw	$fp,0($sp)
+	addiu	$fp,$sp,60
+	li	$t0,0
+	sw	$t0,0($fp)
+	lw	$t0,4($fp)
+	lw	$t1,0($fp)
+	seq	$t0,$t0,$t1
+	sw	$t0,-4($fp)
+	lw	$t0,-4($fp)
+	beqz	$t0,L0
+	li	$t0,1
+	sw	$t0,0($fp)
+	lw	$t0,8($fp)
+	lw	$t1,0($fp)
+	add	$t0,$t0,$t1
+	sw	$t0,-4($fp)
+	lw	$t0,-4($fp)
+	move	$v0,$t0
+	lw	$fp,0($sp)
+	lw	$ra,4($sp)
+	addiu	$sp,$sp,72
+	jr	$ra
+	j	L1
+L0:
+	nop	
+L1:
+	li	$t0,0
+	sw	$t0,-8($fp)
+	lw	$t0,8($fp)
+	lw	$t1,-8($fp)
+	seq	$t0,$t0,$t1
+	sw	$t0,-12($fp)
+	lw	$t0,-12($fp)
+	beqz	$t0,L2
+	li	$t0,1
+	sw	$t0,-4($fp)
+	lw	$t0,4($fp)
+	lw	$t1,-4($fp)
+	sub	$t0,$t0,$t1
+	sw	$t0,-8($fp)
+	li	$t0,1
+	sw	$t0,-16($fp)
+	lw	$t0,-8($fp)
+	sw	$t0,-12($fp)
+	lw	$t0,-16($fp)
+	sw	$t0,-20($fp)
+	lw	$t0,-12($fp)
+	sw	$t0,-8($sp)
+	lw	$t0,-20($fp)
+	sw	$t0,-4($sp)
+	jal	ack
+	sw	$v0,0($fp)
+	lw	$t0,0($fp)
+	move	$v0,$t0
+	lw	$fp,0($sp)
+	lw	$ra,4($sp)
+	addiu	$sp,$sp,72
+	jr	$ra
+	j	L3
+L2:
+	nop	
+L3:
+	li	$t0,1
+	sw	$t0,-20($fp)
+	lw	$t0,4($fp)
+	lw	$t1,-20($fp)
+	sub	$t0,$t0,$t1
+	sw	$t0,-24($fp)
+	li	$t0,1
+	sw	$t0,-40($fp)
+	lw	$t0,8($fp)
+	lw	$t1,-40($fp)
+	sub	$t0,$t0,$t1
+	sw	$t0,-44($fp)
+	lw	$t0,4($fp)
+	sw	$t0,-36($fp)
+	lw	$t0,-44($fp)
+	sw	$t0,-48($fp)
+	lw	$t0,-36($fp)
+	sw	$t0,-8($sp)
+	lw	$t0,-48($fp)
+	sw	$t0,-4($sp)
+	jal	ack
+	sw	$v0,-32($fp)
+	lw	$t0,-24($fp)
+	sw	$t0,-28($fp)
+	lw	$t0,-32($fp)
+	sw	$t0,-52($fp)
+	lw	$t0,-28($fp)
+	sw	$t0,-8($sp)
+	lw	$t0,-52($fp)
+	sw	$t0,-4($sp)
+	jal	ack
+	sw	$v0,-16($fp)
+	lw	$t0,-16($fp)
+	move	$v0,$t0
+	lw	$fp,0($sp)
+	lw	$ra,4($sp)
+	addiu	$sp,$sp,72
+	jr	$ra
+	lw	$fp,0($sp)
+	lw	$ra,4($sp)
+	addiu	$sp,$sp,72
+	jr	$ra
+main:
+	subu	$sp,$sp,100
+	sw	$ra,4($sp)
+	sw	$fp,0($sp)
+	addiu	$fp,$sp,96
+	li	$t0,3
+	sw	$t0,-4($fp)
+	li	$t0,3
+	sw	$t0,-12($fp)
+	lw	$t0,-4($fp)
+	sw	$t0,-8($fp)
+	lw	$t0,-12($fp)
+	sw	$t0,-16($fp)
+	lw	$t0,-8($fp)
+	sw	$t0,-8($sp)
+	lw	$t0,-16($fp)
+	sw	$t0,-4($sp)
+	jal	ack
+	sw	$v0,0($fp)
+	li	$t0,61
+	sw	$t0,-20($fp)
+	lw	$t0,0($fp)
+	lw	$t1,-20($fp)
+	seq	$t0,$t0,$t1
+	sw	$t0,-24($fp)
+	li	$t0,3
+	sw	$t0,-32($fp)
+	li	$t0,4
+	sw	$t0,-40($fp)
+	lw	$t0,-32($fp)
+	sw	$t0,-36($fp)
+	lw	$t0,-40($fp)
+	sw	$t0,-44($fp)
+	lw	$t0,-36($fp)
+	sw	$t0,-8($sp)
+	lw	$t0,-44($fp)
+	sw	$t0,-4($sp)
+	jal	ack
+	sw	$v0,-28($fp)
+	li	$t0,125
+	sw	$t0,-48($fp)
+	lw	$t0,-28($fp)
+	lw	$t1,-48($fp)
+	seq	$t0,$t0,$t1
+	sw	$t0,-52($fp)
+	lw	$t0,-24($fp)
+	beqz	$t0,L6
+	lw	$t0,-52($fp)
+	beqz	$t0,L4
+	li	$t0,1
+	sw	$t0,-56($fp)
+	j	L5
+L4:
+	li	$t0,0
+	sw	$t0,-56($fp)
+L5:
+	j	L7
+L6:
+	li	$t0,0
+	sw	$t0,-56($fp)
+L7:
+	li	$t0,3
+	sw	$t0,-64($fp)
+	li	$t0,5
+	sw	$t0,-72($fp)
+	lw	$t0,-64($fp)
+	sw	$t0,-68($fp)
+	lw	$t0,-72($fp)
+	sw	$t0,-76($fp)
+	lw	$t0,-68($fp)
+	sw	$t0,-8($sp)
+	lw	$t0,-76($fp)
+	sw	$t0,-4($sp)
+	jal	ack
+	sw	$v0,-60($fp)
+	li	$t0,253
+	sw	$t0,-80($fp)
+	lw	$t0,-60($fp)
+	lw	$t1,-80($fp)
+	seq	$t0,$t0,$t1
+	sw	$t0,-84($fp)
+	lw	$t0,-56($fp)
+	beqz	$t0,L10
+	lw	$t0,-84($fp)
+	beqz	$t0,L8
+	li	$t0,1
+	sw	$t0,-88($fp)
+	j	L9
+L8:
+	li	$t0,0
+	sw	$t0,-88($fp)
+L9:
+	j	L11
+L10:
+	li	$t0,0
+	sw	$t0,-88($fp)
+L11:
+	li	$v0,1
+	lw	$t0,-88($fp)
+	move	$a0,$t0
+	syscall	
+	li	$v0,11
+	li	$a0,10
+	syscall	
+	lw	$fp,0($sp)
+	lw	$ra,4($sp)
+	addiu	$sp,$sp,100
+	jr	$ra

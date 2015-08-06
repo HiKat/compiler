@@ -134,8 +134,12 @@
          (kind (obj-kind ob))
          (type (obj-type ob))
          ;flagにはobjが配列型のとき1が入る.
-         (flag (cond ((type_array? type) 1)
-                     (else 0)))
+         (flag 
+          ;;;;;;;;;deprecated;;;;;;;;;;;;;;;
+          #;(cond ((type_array? type) 1)
+                     (else 0))
+          ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+               0)
          (pos (obj-pos ob)))
     (cond 
       ;配列型でないとき
@@ -158,7 +162,8 @@
          (cond ((equal? '() l) ob)
                (else (car l)))))
       ;配列型のとき
-      ((equal? flag 1)
+      ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;deprecated;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+      #;((equal? flag 1)
        (let* ((off (type_array-size (obj-type ob)))
               (off (ref-obj off fun))
               (base (car (flatten 
@@ -185,7 +190,9 @@
               ;(base-add (obj-off-off base))
               ;(array-add (in:aopexp '+ (in:aopexp '* (in:intexp wordsize) (ref-add off fun)) base-add))
               )
-         (obj-off name lev kind type pos off))))))
+         (obj-off name lev kind type pos off)))
+      ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+      )))
 
 ;引数
 ;中間命令文
@@ -255,7 +262,7 @@
         ;これを配列宣言のobjのオフセットを入れる.
         ((array_base_add? i)
          (find-base i fun))
-        (else (error i))))
+        (else (error (format "\ncheck ~a in ref-add\n" i)))))
 
 ;引数
 ;i（array_base_add）

@@ -238,7 +238,8 @@
                                        (cond ((equal? 'nopara para-obj-list) 'nopara)
                                              (else (map (lambda (x) (obj-type x)) 
                                                         para-obj-list)))))
-                            (else (error "IN VALID FUNCTION"))))
+                            (else (begin (eprintf "INVALID FUNCTION")
+                                         (error (format "INVALID FUNCTION"))))))
          (fundef-obj (obj fundef-name 0 'fun fundef-type fundef-pos)))
     ;関数定義のオブジェクトのチェック
     (check-func fundef-obj env)
@@ -262,7 +263,8 @@
                      ((stx:compound_sta_st? st) (comp_flag 'nodecl 'normal 3))
                      ((or (stx:null_statement_st? st) 
                           (stx:compound_null_st? st)) (comp_flag 'nodecl 'nostat 4))
-                     (else (error "UNEXPECTED STRUCTURE! ERROR IN ANALY-COMPOUND." st))))
+                     (else (begin (eprintf (format "UNEXPECTED STRUCTURE! ~a ERROR IN ANALY-COMPOUND." st))
+                                  (error (format "UNEXPECTED STRUCTURE! ~a ERROR IN ANALY-COMPOUND." st))))))
          ;decl-listには(list* stx:declaration_st...)
          (decl-list (cond ((equal? 1 (comp_flag-n flag)) 
                            (stx:compound_st-declaration-list st))
@@ -380,8 +382,9 @@
                                                (stx:unary_exp_st-op st) lev env func-tag)
                                               (stx:unary_exp_st-pos st)))
                 (pos (stx:unary_exp_st-pos st)))
+           ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;deprecated;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
            ;*で表された配列参照式を判別する.
-           (cond ((equal? 'ast (stx:unary_exp_st-mark st))
+           #;(cond ((equal? 'ast (stx:unary_exp_st-mark st))
                   (cond ((stx:exp_in_paren_st? (stx:unary_exp_st-op st)) 
                          (cond ((stx:alge_exp_st? (stx:exp_in_paren_st-exp 
                                                    (stx:unary_exp_st-op st)))
@@ -402,18 +405,37 @@
                                       (else normal-out)))
                                (else normal-out)))
                         (else normal-out)))
-                 (else normal-out))))
+                 (else normal-out))
+           ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+           normal-out
+           ))
         ((stx:constant_st? st) st)
         ((stx:exp_with_semi_st? st) 
          (stx:exp_with_semi_st 
           (analy-compstate (stx:exp_with_semi_st-exp st) lev env func-tag)))
         ((stx:exp_in_paren_st? st) 
           (analy-compstate (stx:exp_in_paren_st-exp st) lev env func-tag))
+        ;この場合ではif(***) int a; else int b;みたいな書き方には
+        ;対応ができないが時間がないのでこのままで
+        ;なぜならcompound-statementに囲まれていないif文本体は
+        ;'nodeclと決め付けているから
         ((stx:if_else_st? st) 
          (stx:if_else_st 
           (analy-compstate (stx:if_else_st-cond-exp st) lev env func-tag)   
-          (analy-compstate (stx:if_else_st-state st) lev env func-tag)                        
-          (analy-compstate (stx:if_else_st-else-state st) lev env func-tag)
+          (cond ((stx:compound_st? 
+                  (analy-compstate (stx:if_else_st-state st) lev env func-tag))
+                 (analy-compstate (stx:if_else_st-state st) lev env func-tag))
+                (else 
+                 (stx:compound_st
+                  'nodecl
+                  (analy-compstate (stx:if_else_st-state st) lev env func-tag))))
+          (cond ((stx:compound_st?
+                  (analy-compstate (stx:if_else_st-else-state st) lev env func-tag))
+                 (analy-compstate (stx:if_else_st-else-state st) lev env func-tag))
+                (else
+                 (stx:compound_st
+                  'nodecl
+                  (analy-compstate (stx:if_else_st-else-state st) lev env func-tag))))
           (stx:if_else_st-if-pos st)
           (stx:if_else_st-else-pos st)))
         ((stx:while_st? st) 
@@ -472,9 +494,12 @@
           ((stx:func_proto_st? st) (analy-func_proto_st st))
           ((stx:func_def_st? st) (analy-func_def_st st))
           (else 
-           (error
-            "SYNTAX ERROR! AN EXPECTED ARGUMENT >
-            DECLARATION/FUNCTION PROTOTYPE/FUNCTION DEFINITION."))))
+           (begin (eprintf
+                   (format "SYNTAX ERROR! AN UNEXPECTED ARGUMENT >
+            DECLARATION/FUNCTION PROTOTYPE/FUNCTION DEFINITION."))
+                  (error (format "SYNTAX ERROR! AN UNEXPECTED ARGUMENT >
+            DECLARATION/FUNCTION PROTOTYPE/FUNCTION DEFINITION."))))))
+  (set! env '())
   (let* ((out-tree (map* sem-analyze-struct t)))
     (set! env '())
     out-tree))

@@ -10,7 +10,8 @@
 
 (define (analy-form t)
   (begin (map form-check t)
-         (display "OK! THIS PROGRAM IS IN A CORRECT FORM.")))
+         ;(display "OK! THIS PROGRAM IS IN A CORRECT FORM.")
+         ))
 
 (define (form-check st)
   (cond 
@@ -32,8 +33,10 @@
                                 (eq? type_array? (obj-type (stx:assign_exp_st-dest st)))))
                           (else #f)))
                 #t
-                (error (format "ERROR! AN INVALID ASSIGN EXPRESSION FORM AT ~a" 
-                               (stx:assign_exp_st-pos st))))
+                (begin (eprintf (format "ERROR! AN INVALID ASSIGN EXPRESSION FORM AT ~a" 
+                                        (stx:assign_exp_st-pos st)))
+                       (error (format "ERROR! AN INVALID ASSIGN EXPRESSION FORM AT ~a" 
+                                      (stx:assign_exp_st-pos st)))))
             (map form-check (stx:assign_exp_st-src st))))
     ((stx:logic_exp_st? st) 
      (begin (map form-check (stx:logic_exp_st-op1 st))
@@ -49,10 +52,14 @@
      (cond ((obj? (stx:unary_exp_st-op st)) 
             (cond ((eq? 'var (obj-kind (stx:unary_exp_st-op st)))
                    #t)
-                  (else (error (format "ERROR! AN INVALID & FORM AT ~a" 
-                                       (stx:unary_exp_st st))))))
-           (else (error (format "ERROR! AN INVALID & FORM AT ~a" 
-                                (stx:unary_exp_st st))))))
+                  (else (begin (eprintf (format "ERROR! AN INVALID & FORM AT ~a" 
+                                                (stx:unary_exp_st st)))
+                               (error (format "ERROR! AN INVALID & FORM AT ~a" 
+                                              (stx:unary_exp_st st)))))))
+           (else (begin (eprintf (format "ERROR! AN INVALID & FORM AT ~a" 
+                                         (stx:unary_exp_st st)))
+                        (error (format "ERROR! AN INVALID & FORM AT ~a" 
+                                       (stx:unary_exp_st st)))))))
     ((stx:constant_st? st) #t)
     ((stx:null_statement_st? st) #t)
     ((stx:exp_in_paren_st? st) 
@@ -72,6 +79,9 @@
     ((position? st) #t)
     ;デバグ用エラー発生（実際にはどのようなプログラムを読み込んでもこの分岐には入らないはず.）
     (else (error "ERROR! UNEXPECTED STRUCTURES IN AN ARGUMENT OF ANALY-FORM." st))))
+
+;(display "something bad happens." (current-error-port))
+;(newline (current-error-port))
 
 
 ;テスト

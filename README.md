@@ -3,6 +3,7 @@
 実装言語はRacket  
 [Racket公式ドキュメント](http://docs.racket-lang.org/)  
 #Small CのBNF  
+#現在作成中  
 (opt付きはなくても良い)  
 \<program> := \<external-declaration> | \<program>\<external-declaration>  
 \<external-declaration> := \<declaration> | \<function-prototyep> | \<function-definition>  
@@ -22,7 +23,47 @@
 
 
 
-#以下現在作成中  
+#実行方法  
+compiler.rkt内の関数compileの引数にファイル名を入れて実行.
+
+```lisp:compiler.rkt<!--Racket言語が対応していないので臨時でlispで-->
+(compile "basic/arith.sc")
+```
+
+テストファイルはbasic以下に。（コンパイラとして最低限の実装）その他advance以下のファイルはほとんど通らない。またerror以下のテストファイルは
+
+```lisp:compiler.rkt<!--Racket言語が対応していないので臨時でlispで-->
+(compile "error/name02.sc")
+(compile "error/name04.sc")
+(compile "error/name05.sc")
+(compile "error/name07.sc")
+(compile "error/name08.sc")
+(compile "error/name09.sc")
+(compile "error/name10.sc")
+(compile "error/name11.sc")
+(compile "error/shape01.sc")
+(compile "error/shape03.sc")
+(compile "error/type01.sc")
+(compile "error/type02.sc")
+(compile "error/type03.sc")
+(compile "error/type04.sc")
+(compile "error/type05.sc")
+(compile "error/type06.sc")
+(compile "error/type08.sc")
+(compile "error/type09.sc")
+(compile "error/type10.sc")
+(compile "error/type11.sc")
+(compile "error/type12.sc")
+(compile "error/type13.sc")
+(compile "error/type14.sc")
+(compile "error/type15.sc")
+(compile "error/type16.sc")
+(compile "error/type17.sc")
+(compile "error/type18.sc")
+```
+
+についてはエラーを検出する。（ただしエラーメッセージが適切で無いものも。）またその他のエラーついては明白に式の形がおかしいものなどもコンパイラの側が「main関数がない」といった本質的ではない部分でエラーを検出してしまっている。  
+
 
 
 
